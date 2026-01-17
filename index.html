@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Team</title>
+
+<style>
+:root{
+  --bg1:#1f8a70;
+  --bg2:#004e92;
+  --card:rgba(255,255,255,0.10);
+  --card2:rgba(0,0,0,0.20);
+  --btn:#00c9a7;
+  --btnText:#003;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  color:#fff;
+  min-height:100vh;
+  overflow-x:hidden;
+
+  /* 🎾 IMAGE DE FOND + DÉGRADÉ PAR-DESSUS */
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(31,138,112,0.90),
+      rgba(0,78,146,0.92)
+    ),
+    url("padel-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+h1,h2{ text-align:center; }
+
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:14px;
+  margin-bottom:14px;
+}
+
+input, select, button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+}
+
+button{
+  background:var(--btn);
+  color:var(--btnText);
+  font-weight:800;
+  cursor:pointer;
+}
+
+button.secondary{
+  background:rgba(255,255,255,0.15);
+  color:#fff;
+}
+
+button:disabled{
+  opacity:0.5;
+}
+
+.row{ display:flex; gap:10px; }
+.row>div{ flex:1; }
+
+.hidden{ display:none; }
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td{
+  padding:8px;
+  text-align:center;
+}
+
+th{ background:var(--card2); }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🎾 La Team</h1>
+
+<!-- RÉGLAGES -->
+<div id="setup" class="card">
+  <h2>Réglages</h2>
+
+  <label>Nombre de joueurs</label>
+  <select id="playerCount">
+    <option value="4">4 joueurs</option>
+    <option value="6">6 joueurs</option>
+    <option value="8">8 joueurs</option>
+  </select>
+
+  <div id="players"></div>
+
+  <label>Points pour gagner</label>
+  <select id="maxPoints">
+    <option>7</option>
+    <option selected>10</option>
+    <option>15</option>
+    <option>21</option>
+  </select>
+
+  <button onclick="startGame()">Démarrer</button>
+</div>
+
+<!-- JEU -->
+<div id="game" class="hidden">
+
+  <div class="card">
+    <h2>Matchs</h2>
+    <div id="courts"></div>
+
+    <div class="row">
+      <div>
+        <button id="undoBtn" class="secondary" onclick="undoLast()" disabled>↩︎ Retour</button>
+      </div>
+      <div>
+        <button id="nextRoundBtn" onclick="nextRound()" disabled>Round suivant</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Classement</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Joueur</th>
+          <th>MJ</th>
+          <th>V</th>
+          <th>+</th>
+          <th>-</th>
+          <th>Diff</th>
+        </tr>
+      </thead>
+      <tbody id="ranking"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FIN -->
+<div id="finish" class="hidden">
+  <div class="card">
+    <h2>✅ FINISH</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Joueur</th>
+          <th>MJ</th>
+          <th>V</th>
+          <th>+</th>
+          <th>-</th>
+          <th>Diff</th>
+        </tr>
+      </thead>
+      <tbody id="finalRanking"></tbody>
+    </table>
+    <button onclick="resetAll()">Voulez-vous recommencer ?</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+let players=[], matches=[], history=[];
+let round=0, maxPoints=10;
+
+function createInputs(){
+  playersDiv.innerHTML="";
+  for(let i=0;i<playerCount.value;i++){
+    playersDiv.innerHTML+=`<input placeholder="Joueur ${i+1}" id="p${i}">`;
+  }
+}
+
+const playerCount=document.getElementById("playerCount");
+const playersDiv=document.getElementById("players");
+playerCount.onchange=createInputs;
+createInputs();
+
+function startGame(){
+  players=[];
+  for(let i=0;i<playerCount.value;i++){
+    players.push({name:document.getElementById("p"+i).value||"J"+(i+1),mj:0,v:0,plus:0,minus:0});
+  }
+  maxPoints=+document.getElementById("maxPoints").value;
+  setup.classList.add("hidden");
+  game.classList.remove("hidden");
+  generateMatches();
+  render();
+}
+
+function generateMatches(){
+  matches=[];
+  for(let i=0;i<players.length;i++){
+    for(let j=i+1;j<players.length;j++){
+      for(let k=j+1;k<players.length;k++){
+        for(let l=k+1;l<players.length;l++){
+          matches.push([[i,j],[k,l]]);
+        }
+      }
+    }
+  }
+}
+
+function render(){
+  courts.innerHTML="";
+  if(round>=matches.length){
+    finishGame();
+    return;
+  }
+  const m=matches[round];
+  courts.innerHTML=`
+    <div class="card">
+      ${players[m[0][0]].name} / ${players[m[0][1]].name}
+      vs
+      ${players[m[1][0]].name} / ${players[m[1][1]].name}
+      <div class="row">
+        <select id="a">${scoreOpts()}</select>
+        <select id="b">${scoreOpts()}</select>
+      </div>
+      <button onclick="validate()">Valider</button>
+    </div>`;
+}
+
+function scoreOpts(){
+  let s="";
+  for(let i=0;i<=maxPoints;i++) s+=`<option>${i}</option>`;
+  return s;
+}
+
+function validate(){
+  history.push(JSON.parse(JSON.stringify(players)));
+  const a=+document.getElementById("a").value;
+  const b=+document.getElementById("b").value;
+  const m=matches[round];
+  m[0].forEach(i=>{players[i].mj++; players[i].plus+=a; players[i].minus+=b;});
+  m[1].forEach(i=>{players[i].mj++; players[i].plus+=b; players[i].minus+=a;});
+  if(a>b) m[0].forEach(i=>players[i].v++);
+  if(b>a) m[1].forEach(i=>players[i].v++);
+  round++;
+  render();
+  renderRanking();
+}
+
+function undoLast(){
+  if(!history.length) return;
+  players=history.pop();
+  renderRanking();
+}
+
+function renderRanking(){
+  ranking.innerHTML="";
+  [...players].sort((a,b)=>b.v-(a.v)||(b.plus-b.minus)-(a.plus-a.minus))
+  .forEach(p=>{
+    ranking.innerHTML+=`<tr>
+      <td>${p.name}</td><td>${p.mj}</td><td>${p.v}</td>
+      <td>${p.plus}</td><td>${p.minus}</td><td>${p.plus-p.minus}</td>
+    </tr>`;
+  });
+}
+
+function finishGame(){
+  game.classList.add("hidden");
+  finish.classList.remove("hidden");
+  finalRanking.innerHTML=ranking.innerHTML;
+}
+
+function nextRound(){}
+
+function resetAll(){
+  location.reload();
+}
+</script>
+</body>
+</html>
