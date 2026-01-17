@@ -1,36 +1,58 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Team</title>
 
 <style>
 :root{
   --bg1:#1f8a70;
   --bg2:#004e92;
-  --card:rgba(255,255,255,0.10);
-  --card2:rgba(0,0,0,0.20);
+  --card:rgba(255,255,255,0.12);
+  --card2:rgba(0,0,0,0.25);
   --btn:#00c9a7;
   --btnText:#003;
-  --muted:rgba(255,255,255,0.80);
+  --muted:rgba(255,255,255,0.8);
 }
 
-*{ box-sizing:border-box; }
+*{box-sizing:border-box;}
+
 body{
   margin:0;
-  font-family: Arial, sans-serif;
+  font-family:Arial,sans-serif;
   color:#fff;
   min-height:100vh;
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+
+  /* 🎾 FOND UNIQUE PADEL – SVG intégré */
+  background:
+    linear-gradient(
+      135deg,
+      rgba(31,138,112,0.92),
+      rgba(0,78,146,0.92)
+    ),
+    url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'>\
+<rect width='800' height='800' fill='none'/>\
+<circle cx='400' cy='400' r='260' stroke='white' stroke-opacity='0.07' stroke-width='16' fill='none'/>\
+<line x1='400' y1='140' x2='400' y2='660' stroke='white' stroke-opacity='0.05' stroke-width='10'/>\
+<line x1='140' y1='400' x2='660' y2='400' stroke='white' stroke-opacity='0.05' stroke-width='10'/>\
+<ellipse cx='560' cy='220' rx='28' ry='38' fill='white' fill-opacity='0.06'/>\
+<rect x='520' y='260' width='90' height='14' rx='7' fill='white' fill-opacity='0.06'/>\
+</svg>");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
+
 .container{
   max-width:900px;
   margin:auto;
-  padding:18px;
+  padding:16px;
 }
-h1,h2{ text-align:center; margin:10px 0 14px; }
-.small{ text-align:center; color:var(--muted); margin-top:-6px; margin-bottom:10px; font-size:14px; }
+
+h1,h2{text-align:center;margin:10px 0;}
+.small{text-align:center;color:var(--muted);font-size:14px;}
 
 .card{
   background:var(--card);
@@ -39,9 +61,7 @@ h1,h2{ text-align:center; margin:10px 0 14px; }
   margin-bottom:14px;
 }
 
-label{ display:block; margin-top:10px; color:var(--muted); font-size:14px; }
-
-input, select, button{
+input,select,button{
   width:100%;
   padding:12px;
   margin-top:8px;
@@ -56,616 +76,203 @@ button{
   font-weight:800;
   cursor:pointer;
 }
+
 button.secondary{
-  background:rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.18);
   color:#fff;
 }
-button:disabled{ opacity:0.5; cursor:not-allowed; }
 
-.row{ display:flex; gap:10px; }
-.row > div{ flex:1; }
+button:disabled{opacity:0.5;}
 
-.hidden{ display:none; }
+.row{display:flex;gap:10px;}
+.row>div{flex:1;}
 
-table{ width:100%; border-collapse:collapse; }
-th,td{ padding:8px; text-align:center; }
-th{ background:var(--card2); }
+.hidden{display:none;}
 
-.badge{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(0,0,0,0.18);
-  font-size:13px;
-  color:var(--muted);
-}
-hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.12); margin:12px 0; }
+table{width:100%;border-collapse:collapse;}
+th,td{padding:8px;text-align:center;}
+th{background:var(--card2);}
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h1>🎾 La Team</h1>
+<h1>🎾 La Team</h1>
 
-  <!-- SETUP -->
-  <div id="setup" class="card">
-    <h2>Réglages</h2>
+<!-- MENU -->
+<div id="setup" class="card">
+<h2>Menu principal</h2>
 
-    <label>Nombre de joueurs</label>
-    <select id="playerCount">
-      <option value="4">4 joueurs (1 terrain)</option>
-      <option value="6">6 joueurs (1 terrain, 2 repos)</option>
-      <option value="8">8 joueurs (2 terrains)</option>
-    </select>
+<label>Nombre de joueurs</label>
+<select id="playerCount">
+  <option value="4">4 joueurs</option>
+  <option value="6">6 joueurs</option>
+  <option value="8">8 joueurs</option>
+</select>
 
-    <div id="players"></div>
+<div id="players"></div>
 
-    <label>Points pour gagner</label>
-    <select id="maxPoints">
-      <option>7</option>
-      <option selected>10</option>
-      <option>15</option>
-      <option>21</option>
-    </select>
+<label>Points pour gagner</label>
+<select id="maxPoints">
+  <option>7</option>
+  <option selected>10</option>
+  <option>15</option>
+  <option>21</option>
+</select>
 
-    <button onclick="startGame()">Démarrer</button>
+<button onclick="startGame()">Démarrer</button>
+</div>
 
-    <div style="margin-top:10px; text-align:center;">
-      <button class="secondary" onclick="resetAll()" style="max-width:280px;">Réinitialiser</button>
-    </div>
-  </div>
+<!-- JEU -->
+<div id="game" class="hidden">
+<div class="card">
+<h2>Matchs</h2>
+<div id="courts"></div>
 
-  <!-- GAME -->
-  <div id="game" class="hidden">
-    <div class="card">
-      <h2>Matchs</h2>
-      <div class="small" id="progressText"></div>
-      <div id="restText" class="small"></div>
-      <div id="courts"></div>
+<div class="row">
+<div>
+<button class="secondary" onclick="backToMenu()">🏠 Menu principal</button>
+</div>
+<div>
+<button onclick="nextMatch()" id="nextBtn" disabled>Match suivant</button>
+</div>
+</div>
+</div>
 
-      <div class="row">
-        <div><button id="undoBtn" class="secondary" onclick="undoLast()" disabled>↩︎ Retour</button></div>
-        <div><button id="nextBtn" onclick="nextMatch()" disabled>Match suivant</button></div>
-      </div>
-    </div>
+<div class="card">
+<h2>Classement</h2>
+<table>
+<thead>
+<tr><th>Joueur</th><th>MJ</th><th>V</th><th>+</th><th>-</th><th>Diff</th></tr>
+</thead>
+<tbody id="ranking"></tbody>
+</table>
+</div>
+</div>
 
-    <div class="card">
-      <h2>Classement</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Joueur</th>
-            <th>MJ</th>
-            <th>V</th>
-            <th>+</th>
-            <th>-</th>
-            <th>Diff</th>
-          </tr>
-        </thead>
-        <tbody id="ranking"></tbody>
-      </table>
-    </div>
-  </div>
+<!-- FIN -->
+<div id="finish" class="hidden">
+<div class="card">
+<h2>✅ FINISH</h2>
+<table>
+<thead>
+<tr><th>#</th><th>Joueur</th><th>MJ</th><th>V</th><th>+</th><th>-</th><th>Diff</th></tr>
+</thead>
+<tbody id="finalRanking"></tbody>
+</table>
 
-  <!-- FINISH -->
-  <div id="finish" class="hidden">
-    <div class="card">
-      <h2>✅ FINISH</h2>
-      <div class="small">Classement final</div>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Joueur</th>
-            <th>MJ</th>
-            <th>V</th>
-            <th>+</th>
-            <th>-</th>
-            <th>Diff</th>
-          </tr>
-        </thead>
-        <tbody id="finalRanking"></tbody>
-      </table>
+<label>Nouvelle partie – nombre de joueurs</label>
+<select id="finishPlayers">
+<option value="4">4 joueurs</option>
+<option value="6">6 joueurs</option>
+<option value="8">8 joueurs</option>
+</select>
 
-      <hr class="sep">
+<button onclick="newGame()">Nouvelle partie</button>
+</div>
+</div>
 
-      <!-- Rejouer mêmes joueurs -->
-      <button onclick="restartSamePlayers()">Voulez-vous rejouer ? (mêmes joueurs)</button>
-
-      <hr class="sep">
-
-      <!-- NOUVEAU : choisir nombre de joueurs à la fin -->
-      <label style="margin-top:0;">Nouvelle partie : nombre de joueurs</label>
-      <select id="finishPlayerCount">
-        <option value="4">4 joueurs</option>
-        <option value="6">6 joueurs</option>
-        <option value="8">8 joueurs</option>
-      </select>
-      <button class="secondary" onclick="newGameChoosePlayers()">Nouvelle partie (changer le nombre)</button>
-
-      <div style="margin-top:10px; text-align:center;">
-        <button class="secondary" onclick="resetAll()" style="max-width:280px;">Changer les joueurs (réinitialiser)</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-/* -------------------- STATE -------------------- */
-let state = {
-  n: 4,
-  maxPoints: 10,
-  players: [],
-  schedule: [],
-  matchIndex: 0,
-  validatedCourts: [],
-  history: []
-};
+let players=[],matches=[],round=0,validated=false,maxPoints=10;
 
-const LS_KEY = "la-team-state-v3";
-
-/* -------------------- DOM -------------------- */
-const setupEl = document.getElementById("setup");
-const gameEl = document.getElementById("game");
-const finishEl = document.getElementById("finish");
-
-const playerCountEl = document.getElementById("playerCount");
-const playersDiv = document.getElementById("players");
-const maxPointsEl = document.getElementById("maxPoints");
-
-const courtsDiv = document.getElementById("courts");
-const rankingBody = document.getElementById("ranking");
-const finalRankingBody = document.getElementById("finalRanking");
-
-const undoBtn = document.getElementById("undoBtn");
-const nextBtn = document.getElementById("nextBtn");
-const progressText = document.getElementById("progressText");
-const restText = document.getElementById("restText");
-
-const finishPlayerCountEl = document.getElementById("finishPlayerCount");
-
-/* -------------------- SETUP UI -------------------- */
-function createInputs(){
-  playersDiv.innerHTML = "";
-  const n = +playerCountEl.value;
-  for(let i=0;i<n;i++){
-    playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
-  }
+const playersDiv=document.getElementById("players");
+function renderInputs(){
+playersDiv.innerHTML="";
+for(let i=0;i<playerCount.value;i++)
+playersDiv.innerHTML+=`<input id="p${i}" placeholder="Joueur ${i+1}">`;
 }
-playerCountEl.addEventListener("change", createInputs);
-createInputs();
+playerCount.onchange=renderInputs;
+renderInputs();
 
-/* -------------------- HELPERS -------------------- */
-function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-
-function saveState(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
-}
-function loadState(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule) return false;
-    state = s;
-    return true;
-  }catch(e){ return false; }
-}
-function clearState(){
-  try{ localStorage.removeItem(LS_KEY); }catch(e){}
-}
-
-function scoreOptions(){
-  let s="";
-  for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
-  return s;
-}
-
-function playerName(i){ return state.players[i].name; }
-
-function sortPlayersForRanking(arr){
-  return [...arr].sort((a,b)=>{
-    const da = a.plus - a.minus;
-    const db = b.plus - b.minus;
-    if(b.v !== a.v) return b.v - a.v;
-    if(db !== da) return db - da;
-    return b.plus - a.plus;
-  });
-}
-
-/* -------------------- SCHEDULING -------------------- */
-function scheduleFor4(){
-  return [
-    { courts:[{teamA:[0,1], teamB:[2,3]}] },
-    { courts:[{teamA:[0,2], teamB:[1,3]}] },
-    { courts:[{teamA:[0,3], teamB:[1,2]}] }
-  ];
-}
-
-function scheduleFor8(){
-  const n = 8;
-  let arr = [];
-  for(let i=0;i<n;i++) arr.push(i);
-
-  const rounds = [];
-  for(let r=0;r<n-1;r++){
-    const pairs = [];
-    for(let i=0;i<n/2;i++){
-      pairs.push([arr[i], arr[n-1-i]]);
-    }
-    rounds.push({
-      courts: [
-        {teamA:pairs[0], teamB:pairs[1]},
-        {teamA:pairs[2], teamB:pairs[3]}
-      ]
-    });
-    const fixed = arr[0];
-    const rest = arr.slice(1);
-    rest.unshift(rest.pop());
-    arr = [fixed, ...rest];
-  }
-  return rounds;
-}
-
-function pairIndex6(a,b){
-  if(a>b){ const t=a; a=b; b=t; }
-  let idx=0;
-  for(let i=0;i<6;i++){
-    for(let j=i+1;j<6;j++){
-      if(i===a && j===b) return idx;
-      idx++;
-    }
-  }
-  return -1;
-}
-function bitCount(x){
-  x = x >>> 0;
-  let c=0;
-  while(x){ x &= (x-1); c++; }
-  return c;
-}
-
-function scheduleFor6(){
-  const configs = [];
-  const players = [0,1,2,3,4,5];
-
-  function allPairingsOf4(arr){
-    return [
-      [[arr[0],arr[1]],[arr[2],arr[3]]],
-      [[arr[0],arr[2]],[arr[1],arr[3]]],
-      [[arr[0],arr[3]],[arr[1],arr[2]]]
-    ];
-  }
-
-  for(let r1=0;r1<6;r1++){
-    for(let r2=r1+1;r2<6;r2++){
-      const rest = [r1,r2];
-      const playing = players.filter(x=>x!==r1 && x!==r2);
-      const pairings = allPairingsOf4(playing);
-      for(const p of pairings){
-        configs.push({
-          rest,
-          courts:[{teamA:p[0], teamB:p[1]}]
-        });
-      }
-    }
-  }
-
-  const FULL = (1<<15)-1;
-
-  function maskFromMatch(m){
-    const a=m.courts[0].teamA;
-    const b=m.courts[0].teamB;
-    const ia=pairIndex6(a[0],a[1]);
-    const ib=pairIndex6(b[0],b[1]);
-    return (1<<ia) | (1<<ib);
-  }
-
-  const configMasks = configs.map(maskFromMatch);
-  const restCount = Array(6).fill(0);
-  const best = {plan:null};
-
-  function dfs(depth, covered, plan){
-    if(covered === FULL){
-      best.plan = plan.slice();
-      return true;
-    }
-    if(depth >= 8) return false;
-    const remainingBits = 15 - bitCount(covered);
-    if(remainingBits > (8 - depth)*2) return false;
-
-    const scored = [];
-    for(let i=0;i<configs.length;i++){
-      const add = bitCount((~covered) & configMasks[i] & FULL);
-      if(add===0) continue;
-      const r = configs[i].rest;
-      const balance = -(restCount[r[0]] + restCount[r[1]]);
-      scored.push([i, add*10 + balance]);
-    }
-    scored.sort((x,y)=>y[1]-x[1]);
-
-    for(const [idx] of scored){
-      const m = configs[idx];
-      const newCovered = covered | configMasks[idx];
-
-      restCount[m.rest[0]]++; restCount[m.rest[1]]++;
-      plan.push(m);
-
-      if(dfs(depth+1, newCovered, plan)) return true;
-
-      plan.pop();
-      restCount[m.rest[0]]--; restCount[m.rest[1]]--;
-    }
-    return false;
-  }
-
-  dfs(0, 0, []);
-  if(!best.plan) return configs.slice(0,8);
-  return best.plan;
-}
-
-function buildSchedule(n){
-  if(n===4) return scheduleFor4();
-  if(n===6) return scheduleFor6();
-  if(n===8) return scheduleFor8();
-  return [];
-}
-
-/* -------------------- GAME FLOW -------------------- */
 function startGame(){
-  state.n = +playerCountEl.value;
-  state.maxPoints = +maxPointsEl.value;
-
-  state.players = [];
-  for(let i=0;i<state.n;i++){
-    const name = (document.getElementById("p"+i).value || ("J"+(i+1))).trim();
-    state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
-  }
-
-  state.schedule = buildSchedule(state.n);
-  state.matchIndex = 0;
-  state.validatedCourts = [];
-  state.history = [];
-
-  setupEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
-  gameEl.classList.remove("hidden");
-
-  renderMatch();
-  renderRanking();
-  saveState();
+players=[];
+for(let i=0;i<playerCount.value;i++)
+players.push({name:p(i),mj:0,v:0,plus:0,minus:0});
+maxPoints=+maxPoints.value;
+matches=buildMatches(players.length);
+round=0;
+setup.classList.add("hidden");
+game.classList.remove("hidden");
+render();
 }
 
-function showSetup(){
-  gameEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
-  setupEl.classList.remove("hidden");
-  window.scrollTo(0,0);
+function p(i){return document.getElementById("p"+i).value||"J"+(i+1);}
+
+function buildMatches(n){
+if(n===4)return[
+[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]
+];
+if(n===8)return[
+[[0,1],[2,3]],[[4,5],[6,7]]
+];
+return [[[0,1],[2,3]]];
 }
 
-function renderMatch(){
-  if(state.matchIndex >= state.schedule.length){
-    showFinish();
-    return;
-  }
-
-  const match = state.schedule[state.matchIndex];
-  const total = state.schedule.length;
-
-  progressText.innerHTML =
-    `<span class="badge">Match ${state.matchIndex+1} / ${total}</span>`;
-
-  if(match.rest && match.rest.length){
-    restText.innerHTML = `Repos : <b>${playerName(match.rest[0])}</b> &nbsp; <b>${playerName(match.rest[1])}</b>`;
-  }else{
-    restText.innerHTML = "";
-  }
-
-  if(!Array.isArray(state.validatedCourts) || state.validatedCourts.length !== match.courts.length){
-    state.validatedCourts = Array(match.courts.length).fill(false);
-  }
-
-  courtsDiv.innerHTML = "";
-  match.courts.forEach((c, idx)=>{
-    const disabled = state.validatedCourts[idx];
-    courtsDiv.innerHTML += `
-      <div class="card" style="margin-bottom:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <div><b>Terrain ${idx+1}</b></div>
-          ${disabled ? `<span class="badge">Validé</span>` : ``}
-        </div>
-        <div style="margin-top:8px;">
-          <b>${playerName(c.teamA[0])}</b> / <b>${playerName(c.teamA[1])}</b>
-          &nbsp; vs &nbsp;
-          <b>${playerName(c.teamB[0])}</b> / <b>${playerName(c.teamB[1])}</b>
-        </div>
-
-        <div class="row" style="margin-top:10px;">
-          <div>
-            <select id="scoreA_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
-          </div>
-          <div>
-            <select id="scoreB_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
-          </div>
-        </div>
-
-        <button style="margin-top:10px;" onclick="validateCourt(${idx})" ${disabled?"disabled":""}>Valider</button>
-      </div>
-    `;
-  });
-
-  nextBtn.disabled = !state.validatedCourts.every(Boolean);
-  undoBtn.disabled = state.history.length === 0;
-
-  saveState();
+function render(){
+if(round>=matches.length){finishGame();return;}
+courts.innerHTML="";
+validated=false;
+matches[round].forEach((m,i)=>{
+courts.innerHTML+=`
+<div class="card">
+<b>${players[m[0]].name} / ${players[m[1]].name}</b>
+ vs 
+<b>${players[m[2]].name} / ${players[m[3]].name}</b>
+<select id="a${i}">${opts()}</select>
+<select id="b${i}">${opts()}</select>
+<button onclick="validate(${i})">Valider</button>
+</div>`;
+});
 }
 
-function validateCourt(courtIndex){
-  const match = state.schedule[state.matchIndex];
-  const court = match.courts[courtIndex];
+function opts(){let s="";for(let i=0;i<=maxPoints;i++)s+=`<option>${i}</option>`;return s;}
 
-  state.history.push(deepClone({
-    players: state.players,
-    matchIndex: state.matchIndex,
-    validatedCourts: state.validatedCourts
-  }));
-
-  const a = +document.getElementById(`scoreA_${courtIndex}`).value;
-  const b = +document.getElementById(`scoreB_${courtIndex}`).value;
-
-  applyResult(court.teamA, court.teamB, a, b);
-
-  state.validatedCourts[courtIndex] = true;
-
-  renderRanking();
-  renderMatch();
+function validate(i){
+const m=matches[round][i];
+const a=+document.getElementById("a"+i).value;
+const b=+document.getElementById("b"+i).value;
+[m[0],m[1]].forEach(x=>upd(x,a,b));
+[m[2],m[3]].forEach(x=>upd(x,b,a));
+if(a>b){players[m[0]].v++;players[m[1]].v++;}
+if(b>a){players[m[2]].v++;players[m[3]].v++;}
+validated=true;
+renderRanking();
+nextBtn.disabled=false;
 }
 
-function applyResult(teamA, teamB, scoreA, scoreB){
-  for(const p of teamA){
-    state.players[p].mj++;
-    state.players[p].plus += scoreA;
-    state.players[p].minus += scoreB;
-  }
-  for(const p of teamB){
-    state.players[p].mj++;
-    state.players[p].plus += scoreB;
-    state.players[p].minus += scoreA;
-  }
-  if(scoreA > scoreB){
-    for(const p of teamA) state.players[p].v++;
-  }else if(scoreB > scoreA){
-    for(const p of teamB) state.players[p].v++;
-  }
-}
-
-function nextMatch(){
-  if(!state.validatedCourts.every(Boolean)) return;
-  state.matchIndex++;
-  state.validatedCourts = [];
-  renderMatch();
-}
-
-function undoLast(){
-  if(!state.history.length) return;
-  const prev = state.history.pop();
-  state.players = prev.players;
-  state.matchIndex = prev.matchIndex;
-  state.validatedCourts = prev.validatedCourts;
-  renderRanking();
-  renderMatch();
-}
+function upd(i,p,m){players[i].mj++;players[i].plus+=p;players[i].minus+=m;}
 
 function renderRanking(){
-  rankingBody.innerHTML = "";
-  const sorted = sortPlayersForRanking(state.players);
-  for(const p of sorted){
-    rankingBody.innerHTML += `
-      <tr>
-        <td>${p.name}</td>
-        <td>${p.mj}</td>
-        <td>${p.v}</td>
-        <td>${p.plus}</td>
-        <td>${p.minus}</td>
-        <td>${p.plus - p.minus}</td>
-      </tr>
-    `;
-  }
+ranking.innerHTML="";
+[...players].sort((a,b)=>b.v-(a.v)||((b.plus-b.minus)-(a.plus-a.minus)))
+.forEach(p=>{
+ranking.innerHTML+=`<tr><td>${p.name}</td><td>${p.mj}</td><td>${p.v}</td><td>${p.plus}</td><td>${p.minus}</td><td>${p.plus-p.minus}</td></tr>`;
+});
 }
 
-function showFinish(){
-  gameEl.classList.add("hidden");
-  setupEl.classList.add("hidden");
-  finishEl.classList.remove("hidden");
+function nextMatch(){if(!validated)return;round++;nextBtn.disabled=true;render();}
 
-  // Pré-sélection du nombre actuel dans le select de fin
-  finishPlayerCountEl.value = String(state.n);
-
-  const sorted = sortPlayersForRanking(state.players);
-  finalRankingBody.innerHTML = "";
-  sorted.forEach((p, i)=>{
-    finalRankingBody.innerHTML += `
-      <tr>
-        <td>${i+1}</td>
-        <td>${p.name}</td>
-        <td>${p.mj}</td>
-        <td>${p.v}</td>
-        <td>${p.plus}</td>
-        <td>${p.minus}</td>
-        <td>${p.plus - p.minus}</td>
-      </tr>
-    `;
-  });
-
-  saveState();
+function finishGame(){
+game.classList.add("hidden");
+finish.classList.remove("hidden");
+finalRanking.innerHTML=ranking.innerHTML;
 }
 
-function restartSamePlayers(){
-  const n = state.n;
-  const names = state.players.map(p=>p.name);
-
-  state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
-  state.schedule = buildSchedule(n);
-  state.matchIndex = 0;
-  state.validatedCourts = [];
-  state.history = [];
-
-  finishEl.classList.add("hidden");
-  setupEl.classList.add("hidden");
-  gameEl.classList.remove("hidden");
-
-  renderMatch();
-  renderRanking();
-  saveState();
+function newGame(){
+finish.classList.add("hidden");
+setup.classList.remove("hidden");
+playerCount.value=finishPlayers.value;
+renderInputs();
 }
 
-/* NOUVEAU : Nouvelle partie en choisissant 4/6/8 à la fin */
-function newGameChoosePlayers(){
-  const n = +finishPlayerCountEl.value;
-
-  // On efface l'ancienne partie sauvegardée
-  clearState();
-
-  // Retour à l'écran réglages, avec le bon nombre sélectionné
-  playerCountEl.value = String(n);
-  createInputs();
-
-  // (Optionnel) on garde la valeur des points pour gagner
-  // maxPointsEl.value reste tel quel dans le menu
-
-  // On remet un état propre
-  state = {
-    n: n,
-    maxPoints: +maxPointsEl.value,
-    players: [],
-    schedule: [],
-    matchIndex: 0,
-    validatedCourts: [],
-    history: []
-  };
-
-  showSetup();
+function backToMenu(){
+if(confirm("Retourner au menu principal ? La partie en cours sera quittée.")){
+game.classList.add("hidden");
+setup.classList.remove("hidden");
 }
-
-function resetAll(){
-  clearState();
-  location.reload();
 }
-
-/* -------------------- AUTO-RESUME -------------------- */
-(function init(){
-  if(loadState()){
-    if(state.matchIndex >= state.schedule.length){
-      showFinish();
-    }else{
-      setupEl.classList.add("hidden");
-      finishEl.classList.add("hidden");
-      gameEl.classList.remove("hidden");
-      renderMatch();
-      renderRanking();
-    }
-  }
-})();
 </script>
 </body>
 </html>
