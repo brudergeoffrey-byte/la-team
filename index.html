@@ -166,10 +166,25 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.12); margin:12px 
         </thead>
         <tbody id="finalRanking"></tbody>
       </table>
+
       <hr class="sep">
-      <button onclick="restartSamePlayers()">Voulez-vous rejouer ?</button>
+
+      <!-- Rejouer mêmes joueurs -->
+      <button onclick="restartSamePlayers()">Voulez-vous rejouer ? (mêmes joueurs)</button>
+
+      <hr class="sep">
+
+      <!-- NOUVEAU : choisir nombre de joueurs à la fin -->
+      <label style="margin-top:0;">Nouvelle partie : nombre de joueurs</label>
+      <select id="finishPlayerCount">
+        <option value="4">4 joueurs</option>
+        <option value="6">6 joueurs</option>
+        <option value="8">8 joueurs</option>
+      </select>
+      <button class="secondary" onclick="newGameChoosePlayers()">Nouvelle partie (changer le nombre)</button>
+
       <div style="margin-top:10px; text-align:center;">
-        <button class="secondary" onclick="resetAll()" style="max-width:280px;">Changer les joueurs</button>
+        <button class="secondary" onclick="resetAll()" style="max-width:280px;">Changer les joueurs (réinitialiser)</button>
       </div>
     </div>
   </div>
@@ -181,13 +196,13 @@ let state = {
   n: 4,
   maxPoints: 10,
   players: [],
-  schedule: [],     // array of match objects
+  schedule: [],
   matchIndex: 0,
-  validatedCourts: [], // per current match
-  history: []       // snapshots for Undo
+  validatedCourts: [],
+  history: []
 };
 
-const LS_KEY = "la-team-state-v2";
+const LS_KEY = "la-team-state-v3";
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -206,6 +221,8 @@ const undoBtn = document.getElementById("undoBtn");
 const nextBtn = document.getElementById("nextBtn");
 const progressText = document.getElementById("progressText");
 const restText = document.getElementById("restText");
+
+const finishPlayerCountEl = document.getElementById("finishPlayerCount");
 
 /* -------------------- SETUP UI -------------------- */
 function createInputs(){
@@ -247,7 +264,6 @@ function scoreOptions(){
 function playerName(i){ return state.players[i].name; }
 
 function sortPlayersForRanking(arr){
-  // Tri: Victoires desc, Diff desc, Points marqués desc
   return [...arr].sort((a,b)=>{
     const da = a.plus - a.minus;
     const db = b.plus - b.minus;
@@ -258,19 +274,7 @@ function sortPlayersForRanking(arr){
 }
 
 /* -------------------- SCHEDULING -------------------- */
-/*
-Match object format:
-{
-  courts: [
-    { teamA:[i,j], teamB:[k,l] },
-    ... (1 court or 2 courts)
-  ],
-  rest: [optional rest players indices]
-}
-*/
-
 function scheduleFor4(){
-  // 3 matchs : chaque partenaire unique
   return [
     { courts:[{teamA:[0,1], teamB:[2,3]}] },
     { courts:[{teamA:[0,2], teamB:[1,3]}] },
@@ -279,8 +283,6 @@ function scheduleFor4(){
 }
 
 function scheduleFor8(){
-  // 7 rounds via circle method -> perfect matching each round (4 paires),
-  // puis on met 2 courts: paire0 vs paire1, paire2 vs paire3
   const n = 8;
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
@@ -297,7 +299,6 @@ function scheduleFor8(){
         {teamA:pairs[2], teamB:pairs[3]}
       ]
     });
-    // rotate keeping first fixed
     const fixed = arr[0];
     const rest = arr.slice(1);
     rest.unshift(rest.pop());
@@ -306,11 +307,8 @@ function scheduleFor8(){
   return rounds;
 }
 
-/* ---- 6 joueurs : objectif = couvrir toutes les paires de partenaires au moins 1 fois ---- */
 function pairIndex6(a,b){
-  // map (0..5) pairs to 0..14
   if(a>b){ const t=a; a=b; b=t; }
-  // list all pairs in lex order
   let idx=0;
   for(let i=0;i<6;i++){
     for(let j=i+1;j<6;j++){
@@ -320,14 +318,18 @@ function pairIndex6(a,b){
   }
   return -1;
 }
+function bitCount(x){
+  x = x >>> 0;
+  let c=0;
+  while(x){ x &= (x-1); c++; }
+  return c;
+}
 
 function scheduleFor6(){
-  // Build all possible match configs: choose 2 rests, remaining 4 split into 2 teams (3 ways)
   const configs = [];
   const players = [0,1,2,3,4,5];
 
   function allPairingsOf4(arr){
-    // arr length 4, return 3 pairings: (ab)(cd), (ac)(bd), (ad)(bc)
     return [
       [[arr[0],arr[1]],[arr[2],arr[3]]],
       [[arr[0],arr[2]],[arr[1],arr[3]]],
@@ -349,8 +351,6 @@ function scheduleFor6(){
     }
   }
 
-  // DFS search for 8 matches covering all 15 partner pairs at least once.
-  // Each match contributes 2 partner pairs (teamA, teamB).
   const FULL = (1<<15)-1;
 
   function maskFromMatch(m){
@@ -362,10 +362,7 @@ function scheduleFor6(){
   }
 
   const configMasks = configs.map(maskFromMatch);
-
-  // small heuristic: prefer configs that add new pairs and balance rests
   const restCount = Array(6).fill(0);
-
   const best = {plan:null};
 
   function dfs(depth, covered, plan){
@@ -373,18 +370,16 @@ function scheduleFor6(){
       best.plan = plan.slice();
       return true;
     }
-    if(depth >= 8) return false; // 8 matches
-    // optimistic pruning: max new pairs per match = 2
+    if(depth >= 8) return false;
     const remainingBits = 15 - bitCount(covered);
     if(remainingBits > (8 - depth)*2) return false;
 
-    // sort candidates by how many new pairs they add + rest balancing
     const scored = [];
     for(let i=0;i<configs.length;i++){
       const add = bitCount((~covered) & configMasks[i] & FULL);
       if(add===0) continue;
       const r = configs[i].rest;
-      const balance = -(restCount[r[0]] + restCount[r[1]]); // prefer those who rested less
+      const balance = -(restCount[r[0]] + restCount[r[1]]);
       scored.push([i, add*10 + balance]);
     }
     scored.sort((x,y)=>y[1]-x[1]);
@@ -393,7 +388,6 @@ function scheduleFor6(){
       const m = configs[idx];
       const newCovered = covered | configMasks[idx];
 
-      // update rest counts
       restCount[m.rest[0]]++; restCount[m.rest[1]]++;
       plan.push(m);
 
@@ -406,18 +400,8 @@ function scheduleFor6(){
   }
 
   dfs(0, 0, []);
-
-  // fallback: if for some reason not found (shouldn't), return 8 random configs
   if(!best.plan) return configs.slice(0,8);
-
   return best.plan;
-}
-
-function bitCount(x){
-  x = x >>> 0;
-  let c=0;
-  while(x){ x &= (x-1); c++; }
-  return c;
 }
 
 function buildSchedule(n){
@@ -456,10 +440,10 @@ function showSetup(){
   gameEl.classList.add("hidden");
   finishEl.classList.add("hidden");
   setupEl.classList.remove("hidden");
+  window.scrollTo(0,0);
 }
 
 function renderMatch(){
-  // finish?
   if(state.matchIndex >= state.schedule.length){
     showFinish();
     return;
@@ -471,14 +455,12 @@ function renderMatch(){
   progressText.innerHTML =
     `<span class="badge">Match ${state.matchIndex+1} / ${total}</span>`;
 
-  // rest info (6 players)
   if(match.rest && match.rest.length){
     restText.innerHTML = `Repos : <b>${playerName(match.rest[0])}</b> &nbsp; <b>${playerName(match.rest[1])}</b>`;
   }else{
     restText.innerHTML = "";
   }
 
-  // reset validation for current match
   if(!Array.isArray(state.validatedCourts) || state.validatedCourts.length !== match.courts.length){
     state.validatedCourts = Array(match.courts.length).fill(false);
   }
@@ -512,7 +494,6 @@ function renderMatch(){
     `;
   });
 
-  // buttons
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
 
@@ -523,7 +504,6 @@ function validateCourt(courtIndex){
   const match = state.schedule[state.matchIndex];
   const court = match.courts[courtIndex];
 
-  // save snapshot for undo (only once per validation click)
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
@@ -542,7 +522,6 @@ function validateCourt(courtIndex){
 }
 
 function applyResult(teamA, teamB, scoreA, scoreB){
-  // MJ + points
   for(const p of teamA){
     state.players[p].mj++;
     state.players[p].plus += scoreA;
@@ -553,7 +532,6 @@ function applyResult(teamA, teamB, scoreA, scoreB){
     state.players[p].plus += scoreB;
     state.players[p].minus += scoreA;
   }
-  // wins
   if(scoreA > scoreB){
     for(const p of teamA) state.players[p].v++;
   }else if(scoreB > scoreA){
@@ -564,7 +542,7 @@ function applyResult(teamA, teamB, scoreA, scoreB){
 function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
   state.matchIndex++;
-  state.validatedCourts = []; // will be reinitialized on renderMatch
+  state.validatedCourts = [];
   renderMatch();
 }
 
@@ -600,6 +578,9 @@ function showFinish(){
   setupEl.classList.add("hidden");
   finishEl.classList.remove("hidden");
 
+  // Pré-sélection du nombre actuel dans le select de fin
+  finishPlayerCountEl.value = String(state.n);
+
   const sorted = sortPlayersForRanking(state.players);
   finalRankingBody.innerHTML = "";
   sorted.forEach((p, i)=>{
@@ -620,12 +601,9 @@ function showFinish(){
 }
 
 function restartSamePlayers(){
-  // Rejouer avec les mêmes joueurs (mêmes noms, mêmes réglages)
   const n = state.n;
   const names = state.players.map(p=>p.name);
-  const mp = state.maxPoints;
 
-  // rebuild fresh
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
   state.schedule = buildSchedule(n);
   state.matchIndex = 0;
@@ -641,6 +619,34 @@ function restartSamePlayers(){
   saveState();
 }
 
+/* NOUVEAU : Nouvelle partie en choisissant 4/6/8 à la fin */
+function newGameChoosePlayers(){
+  const n = +finishPlayerCountEl.value;
+
+  // On efface l'ancienne partie sauvegardée
+  clearState();
+
+  // Retour à l'écran réglages, avec le bon nombre sélectionné
+  playerCountEl.value = String(n);
+  createInputs();
+
+  // (Optionnel) on garde la valeur des points pour gagner
+  // maxPointsEl.value reste tel quel dans le menu
+
+  // On remet un état propre
+  state = {
+    n: n,
+    maxPoints: +maxPointsEl.value,
+    players: [],
+    schedule: [],
+    matchIndex: 0,
+    validatedCourts: [],
+    history: []
+  };
+
+  showSetup();
+}
+
 function resetAll(){
   clearState();
   location.reload();
@@ -649,7 +655,6 @@ function resetAll(){
 /* -------------------- AUTO-RESUME -------------------- */
 (function init(){
   if(loadState()){
-    // If there is an existing game, resume directly to the correct screen
     if(state.matchIndex >= state.schedule.length){
       showFinish();
     }else{
