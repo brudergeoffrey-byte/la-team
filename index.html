@@ -17,17 +17,19 @@
   --muted:rgba(255,255,255,0.86);
   --danger:#ff6b6b;
 }
+
 *{ box-sizing:border-box; }
+
 body{
   margin:0;
   font-family: Arial, sans-serif;
   color:#fff;
   min-height:100vh;
 
-  /* ✅ Image bg.jpg + overlay (réduis 0.28 -> 0.18 pour voir plus l'image) */
+  /* Overlay: baisse/monte l'opacité pour voir + ou - l'image (0.25 = très visible, 0.60 = très filtré) */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.22), rgba(11,59,111,0.22)),
-    url("./bg.jpg?v=1"),
+    linear-gradient(135deg, rgba(31,122,90,0.35), rgba(11,59,111,0.35)),
+    url("./bg.jpg?v=7"),
     url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
 <defs>\
@@ -36,10 +38,21 @@ body{
     <stop offset='100%25' stop-color='white' stop-opacity='0'/>\
   </radialGradient>\
 </defs>\
+<rect width='1200' height='1200' fill='none'/>\
 <circle cx='560' cy='520' r='520' fill='url(%23g)'/>\
 <rect x='160' y='220' width='880' height='760' rx='26' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='18'/>\
 <line x1='600' y1='220' x2='600' y2='980' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
 <line x1='160' y1='600' x2='1040' y2='600' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
+<ellipse cx='860' cy='380' rx='130' ry='170' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='18'/>\
+<circle cx='820' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='860' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='900' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='820' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='860' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='900' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='840' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
+<rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
 </svg>");
   background-size: cover;
   background-position: center;
@@ -104,7 +117,7 @@ th{ background: var(--card2); }
 }
 hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 0; }
 
-/* Barre d’action */
+/* Barre d’action globale */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -130,12 +143,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 }
 .topbar button{ width:auto; padding:10px 12px; border-radius:12px; }
 
-.savesBox{
-  background: rgba(0,0,0,0.10);
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 12px;
-}
+/* Sur mobile: boutons topbar plus compacts */
 @media (max-width:520px){
   .topbar{ align-items:flex-start; }
   .topbar .actions button{ padding:9px 10px; font-size:14px; }
@@ -149,9 +157,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <div class="topbar">
     <div class="brand"><span class="dot"></span> La Team</div>
     <div class="actions">
-      <button class="secondary" onclick="saveAs()">💾 Sauver…</button>
-      <button class="secondary" onclick="openLoad()">📂 Charger</button>
-      <button class="secondary" onclick="goSetup()">⚙️ Menu</button>
+      <button class="secondary" onclick="manualSave()">💾 Sauvegarder</button>
+      <button class="secondary" onclick="resumeTournament()">📂 Charger</button>
+      <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
       <button class="danger" onclick="resetAll()">🧹 Effacer</button>
     </div>
   </div>
@@ -159,7 +167,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <!-- SETUP -->
   <div id="setup" class="card">
     <h2>Réglages</h2>
-    <div class="small">Choisis le format puis démarre.</div>
+    <div class="small">Choisis le format puis démarre. (Tu peux revenir ici à tout moment.)</div>
 
     <label>Nombre de joueurs</label>
     <select id="playerCount">
@@ -174,7 +182,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <label>Nombre de terrains</label>
       <select id="courtCount"></select>
       <div class="small" style="text-align:left; margin-top:6px;">
-        Moins de terrains = des joueurs au repos.
+        Si tu choisis moins de terrains que le maximum, certains joueurs seront automatiquement au repos.
       </div>
     </div>
 
@@ -188,27 +196,16 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     </select>
 
     <div class="row">
-      <div><button onclick="start()">Démarrer</button></div>
-      <div><button class="secondary" onclick="openLoad()">📂 Charger</button></div>
+      <div><button onclick="startNewTournament()">Démarrer</button></div>
+      <div><button id="resumeBtn" class="secondary" onclick="resumeTournament()" disabled>Reprendre</button></div>
     </div>
 
-    <div class="savesBox">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <div><b>Sauvegardes</b> <span class="badge" id="saveCount">0</span></div>
-        <button class="secondary" style="width:auto; padding:8px 10px;" onclick="refreshSaves()">↻</button>
-      </div>
-
-      <label style="margin-top:10px;">Choisir une sauvegarde</label>
-      <select id="saveSelect"></select>
-
-      <div class="row" style="margin-top:8px;">
-        <div><button class="secondary" onclick="loadSelected()">Charger</button></div>
-        <div><button class="danger" onclick="deleteSelected()">Supprimer</button></div>
-      </div>
-
-      <div class="small" id="saveHint" style="margin-top:10px;"></div>
-      <div class="small" style="margin-top:6px;">✅ Offline OK (via sw.js)</div>
+    <div class="row" style="margin-top:10px;">
+      <div><button class="secondary" onclick="manualSave()">💾 Sauvegarder</button></div>
+      <div><button class="danger" onclick="deleteSave()" id="deleteBtn" disabled>🗑️ Supprimer sauvegarde</button></div>
     </div>
+
+    <div class="small" id="resumeHint" style="margin-top:10px;"></div>
   </div>
 
   <!-- GAME -->
@@ -221,15 +218,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <div id="courts"></div>
 
       <div class="row">
-        <div><button id="undoBtn" class="secondary" onclick="undo()" disabled>↩︎ Retour</button></div>
-        <div><button id="nextBtn" onclick="nextRound()" disabled>Round suivant</button></div>
+        <div><button id="undoBtn" class="secondary" onclick="undoLast()" disabled>↩︎ Retour</button></div>
+        <div><button id="nextBtn" onclick="nextMatch()" disabled>Round suivant</button></div>
       </div>
-
-      <div class="row" style="margin-top:10px;">
-        <div><button class="secondary" onclick="saveAs()">💾 Sauver…</button></div>
-        <div><button class="secondary" onclick="openLoad()">📂 Charger</button></div>
-      </div>
-      <div class="small" id="saveStatus" style="margin-top:10px;"></div>
     </div>
 
     <div class="card">
@@ -272,40 +263,33 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       </table>
 
       <hr class="sep">
-      <button onclick="restartSame()">🔁 Rejouer (mêmes joueurs)</button>
+
+      <button onclick="restartSamePlayers()">🔁 Rejouer (mêmes joueurs)</button>
 
       <hr class="sep">
-      <div class="row">
-        <div><button class="secondary" onclick="saveAs()">💾 Sauver…</button></div>
-        <div><button class="secondary" onclick="openLoad()">📂 Charger</button></div>
+
+      <label>Nouvelle partie : nombre de joueurs</label>
+      <select id="finishPlayerCount">
+        <option value="4">4 joueurs</option>
+        <option value="6">6 joueurs</option>
+        <option value="8">8 joueurs</option>
+        <option value="12">12 joueurs</option>
+        <option value="16">16 joueurs</option>
+      </select>
+
+      <div id="finishCourtWrap" style="display:none;">
+        <label>Nombre de terrains</label>
+        <select id="finishCourtCount"></select>
       </div>
 
-      <hr class="sep">
-      <button class="secondary" onclick="goSetup()">Retour menu</button>
+      <button class="secondary" onclick="newGameChoosePlayers()">Nouvelle partie (changer le format)</button>
     </div>
   </div>
 
 </div>
 
 <script>
-/* ========= Multi-sauvegardes ========= */
-const SAVES_INDEX_KEY = "la-team-saves-index-v1";
-const SAVE_PREFIX = "la-team-save-v1:";
-
-function getIndex(){
-  try{
-    const raw = localStorage.getItem(SAVES_INDEX_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  }catch(e){ return []; }
-}
-function setIndex(arr){
-  try{ localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(arr)); }catch(e){}
-}
-function fmtDate(ts){ try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; } }
-function makeId(){ return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10); }
-
-/* ========= State ========= */
+/* -------------------- STATE -------------------- */
 let state = {
   n: 4,
   courts: 1,
@@ -314,58 +298,42 @@ let state = {
   schedule: [],
   matchIndex: 0,
   validatedCourts: [],
-  history: []
+  history: [],
+  savedAt: null
 };
 
-const setupEl  = document.getElementById("setup");
-const gameEl   = document.getElementById("game");
+const LS_KEY = "la-team-state-v12";
+
+/* -------------------- DOM -------------------- */
+const setupEl = document.getElementById("setup");
+const gameEl = document.getElementById("game");
 const finishEl = document.getElementById("finish");
 
 const playerCountEl = document.getElementById("playerCount");
-const playersDiv    = document.getElementById("players");
-const maxPointsEl   = document.getElementById("maxPoints");
-const courtWrap     = document.getElementById("courtWrap");
-const courtCountEl  = document.getElementById("courtCount");
+const playersDiv = document.getElementById("players");
+const maxPointsEl = document.getElementById("maxPoints");
 
-const courtsDiv     = document.getElementById("courts");
-const rankingBody   = document.getElementById("ranking");
-const finalBody     = document.getElementById("finalRanking");
+const courtWrap = document.getElementById("courtWrap");
+const courtCountEl = document.getElementById("courtCount");
 
-const undoBtn       = document.getElementById("undoBtn");
-const nextBtn       = document.getElementById("nextBtn");
-const progressText  = document.getElementById("progressText");
-const restText      = document.getElementById("restText");
-const saveStatus    = document.getElementById("saveStatus");
+const courtsDiv = document.getElementById("courts");
+const rankingBody = document.getElementById("ranking");
+const finalRankingBody = document.getElementById("finalRanking");
 
-const saveSelect    = document.getElementById("saveSelect");
-const saveHint      = document.getElementById("saveHint");
-const saveCount     = document.getElementById("saveCount");
+const undoBtn = document.getElementById("undoBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progressText = document.getElementById("progressText");
+const restText = document.getElementById("restText");
 
-function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
-function showSetup(){ gameEl.classList.add("hidden"); finishEl.classList.add("hidden"); setupEl.classList.remove("hidden"); window.scrollTo(0,0); }
-function showGame(){ setupEl.classList.add("hidden"); finishEl.classList.add("hidden"); gameEl.classList.remove("hidden"); window.scrollTo(0,0); }
-function showFinish(){ setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.remove("hidden"); window.scrollTo(0,0); }
+const finishPlayerCountEl = document.getElementById("finishPlayerCount");
+const finishCourtWrap = document.getElementById("finishCourtWrap");
+const finishCourtCountEl = document.getElementById("finishCourtCount");
 
-function maxCourtsForN(n){
-  if(n===4) return 1;
-  if(n===6) return 1;
-  if(n===8) return 2;
-  if(n===12) return 3;
-  if(n===16) return 4;
-  return 1;
-}
-function fillCourts(n, selected){
-  const max = maxCourtsForN(n);
-  courtCountEl.innerHTML = "";
-  for(let c=max; c>=1; c--){
-    const o = document.createElement("option");
-    o.value = String(c);
-    o.textContent = `${c} terrain${c>1?"s":""}`;
-    courtCountEl.appendChild(o);
-  }
-  courtCountEl.value = String(selected || max);
-}
+const resumeBtn = document.getElementById("resumeBtn");
+const resumeHint = document.getElementById("resumeHint");
+const deleteBtn = document.getElementById("deleteBtn");
 
+/* -------------------- UI SETUP -------------------- */
 function createInputs(){
   playersDiv.innerHTML = "";
   const n = +playerCountEl.value;
@@ -373,22 +341,110 @@ function createInputs(){
     playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
   }
 }
-function updateCourtUI(){
-  const n = +playerCountEl.value;
-  const max = maxCourtsForN(n);
-  courtWrap.style.display = (max>1) ? "block" : "none";
-  if(max>1) fillCourts(n, +courtCountEl.value || max);
+
+function maxCourtsForN(n){
+  if(n === 4) return 1;
+  if(n === 6) return 1;   // 1 terrain (4 jouent) + 2 repos
+  if(n === 8) return 2;
+  if(n === 12) return 3;
+  if(n === 16) return 4;
+  return 1;
 }
 
-playerCountEl.addEventListener("change", ()=>{ createInputs(); updateCourtUI(); });
+function fillCourtOptions(selectEl, n, selected){
+  const max = maxCourtsForN(n);
+  selectEl.innerHTML = "";
+  for(let c=max; c>=1; c--){
+    const opt = document.createElement("option");
+    opt.value = String(c);
+    opt.textContent = `${c} terrain${c>1?"s":""}`;
+    selectEl.appendChild(opt);
+  }
+  selectEl.value = String(selected || max);
+}
+
+function updateCourtChoiceUI(){
+  const n = +playerCountEl.value;
+  const max = maxCourtsForN(n);
+  const show = (max > 1);
+  courtWrap.style.display = show ? "block" : "none";
+  if(show) fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
+}
+
+function updateFinishCourtUI(){
+  const n = +finishPlayerCountEl.value;
+  const max = maxCourtsForN(n);
+  const show = (max > 1);
+  finishCourtWrap.style.display = show ? "block" : "none";
+  if(show) fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
+}
+
+playerCountEl.addEventListener("change", ()=>{
+  createInputs();
+  updateCourtChoiceUI();
+});
+finishPlayerCountEl.addEventListener("change", updateFinishCourtUI);
+
+createInputs();
+updateCourtChoiceUI();
+updateFinishCourtUI();
+
+/* -------------------- HELPERS -------------------- */
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+function saveState(){
+  try{
+    state.savedAt = Date.now();
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s || !s.players || !s.schedule) return false;
+    state = s;
+    return true;
+  }catch(e){ return false; }
+}
+
+function clearState(){
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+}
+
+function manualSave(){
+  // On n'enregistre pas si aucun tournoi n'a démarré
+  if(!state || !Array.isArray(state.players) || state.players.length === 0 || !Array.isArray(state.schedule) || state.schedule.length === 0){
+    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
+    return;
+  }
+  saveState();
+  alert("✅ Tournoi sauvegardé !");
+  updateResumeUI();
+}
+
+function deleteSave(){
+  if(!localStorage.getItem(LS_KEY)){
+    updateResumeUI();
+    return;
+  }
+  if(!confirm("Supprimer la sauvegarde ?")) return;
+  clearState();
+  alert("🗑️ Sauvegarde supprimée.");
+  updateResumeUI();
+}
 
 function scoreOptions(){
   let s="";
   for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
   return s;
 }
+
 function playerName(i){ return state.players[i].name; }
-function sortPlayers(arr){
+
+function sortPlayersForRanking(arr){
   return [...arr].sort((a,b)=>{
     const da = a.plus - a.minus;
     const db = b.plus - b.minus;
@@ -398,159 +454,107 @@ function sortPlayers(arr){
   });
 }
 
-/* ========= Planning (Americano simple) ========= */
+/* -------------------- SCHEDULING (Americano) --------------------
+   Circle method : on crée n/2 paires par round.
+   2 paires = 1 terrain (double vs double).
+   Si moins de terrains que le max, les paires restantes sont au repos.
+*/
 function scheduleAmericano(n, courtsChosen){
-  let arr = Array.from({length:n}, (_,i)=>i);
-  const max = Math.floor(n/4) || 1;
-  const courtsUsed = Math.max(1, Math.min(courtsChosen || max, max));
+  let arr = [];
+  for(let i=0;i<n;i++) arr.push(i);
+
+  const maxCourts = Math.floor(n / 4) || 1; // 4->1, 6->1, 8->2, 12->3, 16->4
+  const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
+
   const rounds = [];
-
   for(let r=0;r<n-1;r++){
-    const pairs=[];
-    for(let i=0;i<n/2;i++) pairs.push([arr[i], arr[n-1-i]]);
-
-    const courts=[];
-    for(let k=0;k<courtsUsed;k++){
-      const p1=pairs[2*k], p2=pairs[2*k+1];
-      if(!p1 || !p2) break;
-      courts.push({teamA:p1, teamB:p2});
+    const pairs = [];
+    for(let i=0;i<n/2;i++){
+      pairs.push([arr[i], arr[n-1-i]]);
     }
-    const rest = pairs.slice(courts.length*2).flat();
-    rounds.push({courts, rest});
 
+    const courts = [];
+    for(let k=0;k<courtsUsed;k++){
+      const p1 = pairs[2*k];
+      const p2 = pairs[2*k + 1];
+      if(!p1 || !p2) break;
+      courts.push({ teamA: p1, teamB: p2 });
+    }
+
+    const usedPairsCount = courts.length * 2;
+    const rest = pairs.slice(usedPairsCount).flat();
+
+    rounds.push({ rest, courts });
+
+    // Rotation "circle method"
     const fixed = arr[0];
-    const rot = arr.slice(1);
-    rot.unshift(rot.pop());
-    arr = [fixed, ...rot];
+    const restArr = arr.slice(1);
+    restArr.unshift(restArr.pop());
+    arr = [fixed, ...restArr];
   }
+
   return rounds;
 }
+
 function buildSchedule(n, courts){
+  if(![4,6,8,12,16].includes(n)) return [];
   return scheduleAmericano(n, courts);
 }
 
-/* ========= Saves UI ========= */
-function refreshSaves(){
-  const idx = getIndex();
-  saveCount.textContent = String(idx.length);
-
-  saveSelect.innerHTML = "";
-  if(idx.length === 0){
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "Aucune sauvegarde";
-    saveSelect.appendChild(opt);
-    saveSelect.disabled = true;
-    saveHint.textContent = "Sauvegarde un tournoi avec « 💾 Sauver… ».";
-    return;
-  }
-  saveSelect.disabled = false;
-  for(const s of idx){
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    opt.textContent = `${s.name} — ${s.n}J • ${s.courts}T • round ${s.round}/${s.total} • ${fmtDate(s.savedAt)}`;
-    saveSelect.appendChild(opt);
-  }
-  saveHint.textContent = "Choisis une sauvegarde puis Charger/Supprimer.";
+/* -------------------- NAV / SCREENS -------------------- */
+function showSetup(){
+  gameEl.classList.add("hidden");
+  finishEl.classList.add("hidden");
+  setupEl.classList.remove("hidden");
+  window.scrollTo(0,0);
 }
 
-function canSave(){
-  return state.players && state.players.length>0 && state.schedule && state.schedule.length>0;
-}
-function saveToSlot(id, name){
-  const payload = deepClone(state);
-  const savedAt = Date.now();
-  try{
-    localStorage.setItem(SAVE_PREFIX+id, JSON.stringify(payload));
-    const total = payload.schedule.length;
-    const round = Math.min(payload.matchIndex+1, total);
-    const meta = { id, name, savedAt, n: payload.n, courts: payload.courts, round, total };
-    const idx = getIndex();
-    const i = idx.findIndex(x=>x.id===id);
-    if(i>=0) idx[i]=meta; else idx.unshift(meta);
-    idx.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
-    setIndex(idx);
-    return true;
-  }catch(e){
-    alert("❌ Impossible de sauvegarder (stockage plein ?).");
-    return false;
-  }
+function showGame(){
+  setupEl.classList.add("hidden");
+  finishEl.classList.add("hidden");
+  gameEl.classList.remove("hidden");
+  window.scrollTo(0,0);
 }
 
-function saveAs(){
-  if(!canSave()){
-    alert("ℹ️ Démarre un tournoi avant de sauvegarder.");
-    return;
-  }
-  const defaultName = `Tournoi ${fmtDate(Date.now())}`;
-  const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
-  if(!name) return;
-
-  const idx = getIndex();
-  const existing = idx.find(x => (x.name||"").toLowerCase() === name.toLowerCase());
-  const id = existing ? existing.id : makeId();
-
-  if(existing){
-    if(!confirm(`"${existing.name}" existe déjà.\nÉcraser ?`)) return;
-  }
-  if(saveToSlot(id, name)){
-    refreshSaves();
-    saveStatus.textContent = `✅ Sauvegardé : ${name}`;
-  }
+function showFinish(){
+  gameEl.classList.add("hidden");
+  setupEl.classList.add("hidden");
+  finishEl.classList.remove("hidden");
+  window.scrollTo(0,0);
 }
 
-function loadFromSlot(id){
-  try{
-    const raw = localStorage.getItem(SAVE_PREFIX+id);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule) return false;
-    state = s;
-    return true;
-  }catch(e){ return false; }
-}
+/* Bouton global : Menu */
+function goToSetup(keepProgress){
+  if(keepProgress) saveState();
 
-function openLoad(){
-  refreshSaves();
+  playerCountEl.value = String(state.n || +playerCountEl.value);
+  createInputs();
+
+  updateCourtChoiceUI();
+  if(courtWrap.style.display !== "none"){
+    fillCourtOptions(courtCountEl, +playerCountEl.value, state.courts || maxCourtsForN(+playerCountEl.value));
+  }
+
+  if(state.players && state.players.length){
+    for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
+      const inp = document.getElementById("p"+i);
+      if(inp) inp.value = state.players[i].name || "";
+    }
+    maxPointsEl.value = String(state.maxPoints || +maxPointsEl.value);
+  }
+
+  updateResumeUI();
   showSetup();
-  setTimeout(()=>saveSelect.scrollIntoView({behavior:"smooth", block:"center"}), 50);
 }
 
-function loadSelected(){
-  const id = saveSelect.value;
-  if(!id){ alert("Aucune sauvegarde."); return; }
-  if(!loadFromSlot(id)){
-    alert("❌ Sauvegarde introuvable/corrompue.");
-    refreshSaves();
-    return;
-  }
-  if(state.matchIndex >= state.schedule.length){
-    renderFinish();
-    showFinish();
-  }else{
-    showGame();
-    renderMatch();
-    renderRanking();
-  }
-  refreshSaves();
-}
-
-function deleteSelected(){
-  const id = saveSelect.value;
-  if(!id){ alert("Aucune sauvegarde."); return; }
-  if(!confirm("Supprimer cette sauvegarde ?")) return;
-  try{ localStorage.removeItem(SAVE_PREFIX+id); }catch(e){}
-  setIndex(getIndex().filter(x=>x.id!==id));
-  refreshSaves();
-}
-
-/* ========= Game ========= */
-function start(){
+/* -------------------- GAME FLOW -------------------- */
+function startNewTournament(){
   state.n = +playerCountEl.value;
-  state.maxPoints = +maxPointsEl.value;
 
   const max = maxCourtsForN(state.n);
-  state.courts = (max>1) ? (+courtCountEl.value || max) : 1;
+  state.courts = (max > 1) ? (+courtCountEl.value || max) : 1;
+
+  state.maxPoints = +maxPointsEl.value;
 
   state.players = [];
   for(let i=0;i<state.n;i++){
@@ -562,16 +566,35 @@ function start(){
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
+  state.savedAt = null;
 
-  saveStatus.textContent = "";
   showGame();
   renderMatch();
   renderRanking();
+  saveState();
+  updateResumeUI();
+}
+
+function resumeTournament(){
+  if(!loadState()){
+    alert("Aucune sauvegarde trouvée.");
+    updateResumeUI();
+    return;
+  }
+  if(state.matchIndex >= state.schedule.length){
+    renderFinishTable();
+    showFinish();
+  }else{
+    showGame();
+    renderMatch();
+    renderRanking();
+  }
+  updateResumeUI();
 }
 
 function renderMatch(){
   if(state.matchIndex >= state.schedule.length){
-    renderFinish();
+    renderFinishTable();
     showFinish();
     return;
   }
@@ -583,9 +606,12 @@ function renderMatch(){
     `<span class="badge">Round ${state.matchIndex+1} / ${total}</span>
      <span class="badge">${state.n} joueurs • ${state.courts} terrain(s)</span>`;
 
-  restText.innerHTML = (match.rest && match.rest.length)
-    ? `Repos : <b>${match.rest.map(i=>playerName(i)).join("</b> &nbsp; <b>")}</b>`
-    : "";
+  if(match.rest && match.rest.length){
+    const names = match.rest.map(i=>playerName(i)).join("</b> &nbsp; <b>");
+    restText.innerHTML = `Repos : <b>${names}</b>`;
+  }else{
+    restText.innerHTML = "";
+  }
 
   if(!Array.isArray(state.validatedCourts) || state.validatedCourts.length !== match.courts.length){
     state.validatedCourts = Array(match.courts.length).fill(false);
@@ -608,62 +634,76 @@ function renderMatch(){
         </div>
 
         <div class="row" style="margin-top:10px;">
-          <div><select id="scoreA_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select></div>
-          <div><select id="scoreB_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select></div>
+          <div>
+            <select id="scoreA_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
+          </div>
+          <div>
+            <select id="scoreB_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
+          </div>
         </div>
 
-        <button style="margin-top:10px;" onclick="validate(${idx})" ${disabled?"disabled":""}>Valider</button>
+        <button style="margin-top:10px;" onclick="validateCourt(${idx})" ${disabled?"disabled":""}>Valider</button>
       </div>
     `;
   });
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
+
+  // autosave
+  saveState();
 }
 
-function applyResult(teamA, teamB, a, b){
-  for(const p of teamA){
-    state.players[p].mj++;
-    state.players[p].plus += a;
-    state.players[p].minus += b;
-  }
-  for(const p of teamB){
-    state.players[p].mj++;
-    state.players[p].plus += b;
-    state.players[p].minus += a;
-  }
-  if(a>b) for(const p of teamA) state.players[p].v++;
-  if(b>a) for(const p of teamB) state.players[p].v++;
-}
-
-function validate(idx){
+function validateCourt(courtIndex){
   const match = state.schedule[state.matchIndex];
-  const court = match.courts[idx];
+  const court = match.courts[courtIndex];
 
+  // sauvegarde pour annulation
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
     validatedCourts: state.validatedCourts
   }));
 
-  const a = +document.getElementById(`scoreA_${idx}`).value;
-  const b = +document.getElementById(`scoreB_${idx}`).value;
+  const a = +document.getElementById(`scoreA_${courtIndex}`).value;
+  const b = +document.getElementById(`scoreB_${courtIndex}`).value;
 
   applyResult(court.teamA, court.teamB, a, b);
 
-  state.validatedCourts[idx] = true;
+  state.validatedCourts[courtIndex] = true;
+
   renderRanking();
   renderMatch();
+  updateResumeUI();
 }
 
-function nextRound(){
+function applyResult(teamA, teamB, scoreA, scoreB){
+  for(const p of teamA){
+    state.players[p].mj++;
+    state.players[p].plus += scoreA;
+    state.players[p].minus += scoreB;
+  }
+  for(const p of teamB){
+    state.players[p].mj++;
+    state.players[p].plus += scoreB;
+    state.players[p].minus += scoreA;
+  }
+  if(scoreA > scoreB){
+    for(const p of teamA) state.players[p].v++;
+  }else if(scoreB > scoreA){
+    for(const p of teamB) state.players[p].v++;
+  }
+}
+
+function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
   state.matchIndex++;
   state.validatedCourts = [];
   renderMatch();
+  updateResumeUI();
 }
 
-function undo(){
+function undoLast(){
   if(!state.history.length) return;
   const prev = state.history.pop();
   state.players = prev.players;
@@ -671,11 +711,12 @@ function undo(){
   state.validatedCourts = prev.validatedCourts;
   renderRanking();
   renderMatch();
+  updateResumeUI();
 }
 
 function renderRanking(){
   rankingBody.innerHTML = "";
-  const sorted = sortPlayers(state.players);
+  const sorted = sortPlayersForRanking(state.players);
   for(const p of sorted){
     rankingBody.innerHTML += `
       <tr>
@@ -690,11 +731,17 @@ function renderRanking(){
   }
 }
 
-function renderFinish(){
-  finalBody.innerHTML = "";
-  const sorted = sortPlayers(state.players);
-  sorted.forEach((p,i)=>{
-    finalBody.innerHTML += `
+function renderFinishTable(){
+  finishPlayerCountEl.value = String(state.n || 4);
+  updateFinishCourtUI();
+  if(finishCourtWrap.style.display !== "none"){
+    fillCourtOptions(finishCourtCountEl, state.n, state.courts || maxCourtsForN(state.n));
+  }
+
+  const sorted = sortPlayersForRanking(state.players);
+  finalRankingBody.innerHTML = "";
+  sorted.forEach((p, i)=>{
+    finalRankingBody.innerHTML += `
       <tr>
         <td>${i+1}</td>
         <td>${p.name}</td>
@@ -706,66 +753,110 @@ function renderFinish(){
       </tr>
     `;
   });
+
+  saveState();
+  updateResumeUI();
 }
 
-function restartSame(){
-  const names = state.players.map(p=>p.name);
+function restartSamePlayers(){
   const n = state.n;
   const courts = state.courts;
+  const names = state.players.map(p=>p.name);
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
   state.schedule = buildSchedule(n, courts);
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
+  state.savedAt = null;
+
   showGame();
   renderMatch();
   renderRanking();
+  saveState();
+  updateResumeUI();
 }
 
-function goSetup(){
-  playerCountEl.value = String(state.n || 4);
+function newGameChoosePlayers(){
+  const n = +finishPlayerCountEl.value;
+  const max = maxCourtsForN(n);
+  const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
+
+  // ici on ne supprime pas automatiquement la sauvegarde, on repart "propre"
+  playerCountEl.value = String(n);
   createInputs();
-  updateCourtUI();
-  if(state.players && state.players.length){
-    for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
-      const inp = document.getElementById("p"+i);
-      if(inp) inp.value = state.players[i].name || "";
-    }
-    maxPointsEl.value = String(state.maxPoints || 21);
+  updateCourtChoiceUI();
+
+  if(courtWrap.style.display !== "none"){
+    fillCourtOptions(courtCountEl, n, courts);
   }
-  refreshSaves();
+
+  state = {
+    n: n,
+    courts: courts,
+    maxPoints: +maxPointsEl.value,
+    players: [],
+    schedule: [],
+    matchIndex: 0,
+    validatedCourts: [],
+    history: [],
+    savedAt: null
+  };
+
+  updateResumeUI();
   showSetup();
 }
 
 function resetAll(){
-  if(!confirm("Tout effacer (application + sauvegardes) ?")) return;
-
-  const idx = getIndex();
-  for(const s of idx){
-    try{ localStorage.removeItem(SAVE_PREFIX+s.id); }catch(e){}
-  }
-  try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
+  if(!confirm("Tout effacer (scores + sauvegarde) ?")) return;
+  clearState();
   location.reload();
 }
 
-/* ========= INIT ========= */
+/* UI reprise */
+function updateResumeUI(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw){
+      resumeBtn.disabled = true;
+      deleteBtn.disabled = true;
+      resumeHint.textContent = "Aucune sauvegarde.";
+      return;
+    }
+    const s = JSON.parse(raw);
+    if(!s || !s.players || !s.schedule){
+      resumeBtn.disabled = true;
+      deleteBtn.disabled = true;
+      resumeHint.textContent = "Aucune sauvegarde.";
+      return;
+    }
+
+    resumeBtn.disabled = false;
+    deleteBtn.disabled = false;
+
+    const total = (s.schedule||[]).length;
+    const idx = (s.matchIndex||0) + 1;
+
+    const when = s.savedAt ? new Date(s.savedAt).toLocaleString() : null;
+    const meta = when ? ` • sauvegardé le ${when}` : "";
+
+    if((s.matchIndex||0) >= total){
+      resumeHint.textContent = `Une partie terminée est sauvegardée (FINI)${meta}.`;
+    }else{
+      resumeHint.textContent = `Une partie est sauvegardée (round ${idx}/${total})${meta}.`;
+    }
+  }catch(e){
+    resumeBtn.disabled = true;
+    deleteBtn.disabled = true;
+    resumeHint.textContent = "Aucune sauvegarde.";
+  }
+}
+
+/* -------------------- INIT -------------------- */
 (function init(){
-  createInputs();
-  updateCourtUI();
-  refreshSaves();
+  updateResumeUI();
   showSetup();
 })();
 </script>
-
-<!-- ✅ OFFLINE : enregistre le service worker -->
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  });
-}
-</script>
-
 </body>
 </html>
