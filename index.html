@@ -7,6 +7,7 @@
 
 <style>
 :root{
+  /* Thème */
   --bg1:#1f7a5a;
   --bg2:#0b3b6f;
   --accent:#ffb35c;
@@ -14,7 +15,7 @@
   --btnText:#073;
   --card:rgba(255,255,255,0.12);
   --card2:rgba(0,0,0,0.24);
-  --muted:rgba(255,255,255,0.85);
+  --muted:rgba(255,255,255,0.86);
   --danger:#ff6b6b;
 }
 
@@ -26,12 +27,11 @@ body{
   color:#fff;
   min-height:100vh;
 
-  /* ✅ 1) photo bg.jpg (dans le repo) + overlay pour garder le thème
-     ✅ 2) fallback SVG si bg.jpg absent */
+  /* ✅ IMPORTANT : mots CSS en anglais (sinon fond blanc)
+     Overlay moins opaque pour voir + l'image */
   background:
-    gradient linéaire(135deg, rgba(31,122,90,0.65), rgba(11,59,111,0.65)),
-
-    url("bg.jpg?v=1"),
+    linear-gradient(135deg, rgba(31,122,90,0.45), rgba(11,59,111,0.45)),
+    url("./bg.jpg?v=3"),
     url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
 <defs>\
@@ -120,6 +120,7 @@ th{ background: var(--card2); }
 }
 hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 0; }
 
+/* Barre d’action globale */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -289,7 +290,7 @@ let state = {
   history: []
 };
 
-const LS_KEY = "la-team-state-v10";
+const LS_KEY = "la-team-state-v11";
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -331,7 +332,7 @@ function createInputs(){
 function maxCourtsForN(n){
   if(n === 4) return 1;
   if(n === 6) return 1;   // 1 terrain + 2 repos
-  if(n === 8) return 2;   // ✅ 8 joueurs = max 2 terrains
+  if(n === 8) return 2;
   if(n === 12) return 3;
   if(n === 16) return 4;
   return 1;
@@ -412,15 +413,12 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- SCHEDULING (Americano) --------------------
-   Circle method -> paires (n/2) -> 2 paires = 1 terrain.
-   Si moins de terrains que le max, les paires restantes reposent.
-*/
+/* -------------------- SCHEDULING (Americano) -------------------- */
 function scheduleAmericano(n, courtsChosen){
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
 
-  const maxCourts = Math.floor(n / 4) || 1; // 4->1, 6->1, 8->2, 12->3, 16->4
+  const maxCourts = Math.floor(n / 4) || 1;
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
 
   const rounds = [];
@@ -443,7 +441,6 @@ function scheduleAmericano(n, courtsChosen){
 
     rounds.push({ rest, courts });
 
-    // rotation
     const fixed = arr[0];
     const restArr = arr.slice(1);
     restArr.unshift(restArr.pop());
@@ -478,7 +475,6 @@ function showFinish(){
   window.scrollTo(0,0);
 }
 
-/* Bouton global : Menu/Réglages partout */
 function goToSetup(keepProgress){
   if(keepProgress) saveState();
 
@@ -759,7 +755,6 @@ function resetAll(){
   location.reload();
 }
 
-/* UI reprise */
 function updateResumeUI(){
   try{
     const raw = localStorage.getItem(LS_KEY);
