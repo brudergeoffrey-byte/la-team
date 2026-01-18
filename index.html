@@ -26,10 +26,10 @@ body{
   color:#fff;
   min-height:100vh;
 
-  /* Overlay: baisse/monte l'opacité pour voir + ou - l'image (0.25 = très visible, 0.60 = très filtré) */
+  /* Overlay: 0.25 = image très visible ; 0.60 = plus filtré */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.35), rgba(11,59,111,0.35)),
-    url("./bg.jpg?v=7"),
+    linear-gradient(135deg, rgba(31,122,90,0.30), rgba(11,59,111,0.30)),
+    url("./bg.jpg?v=9"),
     url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
 <defs>\
@@ -117,7 +117,6 @@ th{ background: var(--card2); }
 }
 hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 0; }
 
-/* Barre d’action globale */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -143,10 +142,17 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 }
 .topbar button{ width:auto; padding:10px 12px; border-radius:12px; }
 
-/* Sur mobile: boutons topbar plus compacts */
 @media (max-width:520px){
   .topbar{ align-items:flex-start; }
   .topbar .actions button{ padding:9px 10px; font-size:14px; }
+}
+
+/* Petit bloc sauvegardes */
+.savesBox{
+  background: rgba(0,0,0,0.10);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 12px;
 }
 </style>
 </head>
@@ -157,8 +163,8 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <div class="topbar">
     <div class="brand"><span class="dot"></span> La Team</div>
     <div class="actions">
-      <button class="secondary" onclick="manualSave()">💾 Sauvegarder</button>
-      <button class="secondary" onclick="resumeTournament()">📂 Charger</button>
+      <button class="secondary" onclick="manualSaveAs()">💾 Sauver…</button>
+      <button class="secondary" onclick="openLoadDialog()">📂 Charger</button>
       <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
       <button class="danger" onclick="resetAll()">🧹 Effacer</button>
     </div>
@@ -197,15 +203,25 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 
     <div class="row">
       <div><button onclick="startNewTournament()">Démarrer</button></div>
-      <div><button id="resumeBtn" class="secondary" onclick="resumeTournament()" disabled>Reprendre</button></div>
+      <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
     </div>
 
-    <div class="row" style="margin-top:10px;">
-      <div><button class="secondary" onclick="manualSave()">💾 Sauvegarder</button></div>
-      <div><button class="danger" onclick="deleteSave()" id="deleteBtn" disabled>🗑️ Supprimer sauvegarde</button></div>
-    </div>
+    <div class="savesBox">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div><b>Sauvegardes</b> <span class="badge" id="saveCountBadge">0</span></div>
+        <button class="secondary" style="width:auto; padding:8px 10px;" onclick="refreshSavesUI()">↻</button>
+      </div>
 
-    <div class="small" id="resumeHint" style="margin-top:10px;"></div>
+      <label style="margin-top:10px;">Choisir une sauvegarde</label>
+      <select id="saveSelect"></select>
+
+      <div class="row" style="margin-top:8px;">
+        <div><button class="secondary" onclick="loadSelectedSave()">Charger</button></div>
+        <div><button class="danger" onclick="deleteSelectedSave()">Supprimer</button></div>
+      </div>
+
+      <div class="small" id="saveHint" style="margin-top:10px;"></div>
+    </div>
   </div>
 
   <!-- GAME -->
@@ -221,6 +237,12 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
         <div><button id="undoBtn" class="secondary" onclick="undoLast()" disabled>↩︎ Retour</button></div>
         <div><button id="nextBtn" onclick="nextMatch()" disabled>Round suivant</button></div>
       </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div><button class="secondary" onclick="manualSaveAs()">💾 Sauver…</button></div>
+        <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
+      </div>
+      <div class="small" id="autosaveText" style="margin-top:10px;"></div>
     </div>
 
     <div class="card">
@@ -268,6 +290,13 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 
       <hr class="sep">
 
+      <div class="row">
+        <div><button class="secondary" onclick="manualSaveAs()">💾 Sauver…</button></div>
+        <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
+      </div>
+
+      <hr class="sep">
+
       <label>Nouvelle partie : nombre de joueurs</label>
       <select id="finishPlayerCount">
         <option value="4">4 joueurs</option>
@@ -302,7 +331,9 @@ let state = {
   savedAt: null
 };
 
-const LS_KEY = "la-team-state-v12";
+/* Multi-sauvegardes */
+const SAVES_INDEX_KEY = "la-team-saves-index-v1";     // liste des sauvegardes
+const SAVE_PREFIX     = "la-team-save-v1:";           // SAVE_PREFIX + id -> state
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -324,14 +355,195 @@ const undoBtn = document.getElementById("undoBtn");
 const nextBtn = document.getElementById("nextBtn");
 const progressText = document.getElementById("progressText");
 const restText = document.getElementById("restText");
+const autosaveText = document.getElementById("autosaveText");
 
 const finishPlayerCountEl = document.getElementById("finishPlayerCount");
 const finishCourtWrap = document.getElementById("finishCourtWrap");
 const finishCourtCountEl = document.getElementById("finishCourtCount");
 
-const resumeBtn = document.getElementById("resumeBtn");
-const resumeHint = document.getElementById("resumeHint");
-const deleteBtn = document.getElementById("deleteBtn");
+/* Saves UI */
+const saveSelect = document.getElementById("saveSelect");
+const saveHint = document.getElementById("saveHint");
+const saveCountBadge = document.getElementById("saveCountBadge");
+
+/* -------------------- HELPERS -------------------- */
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+function now(){ return Date.now(); }
+function fmtDate(ts){
+  try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; }
+}
+function makeId(){
+  // id court et court: timestamp + random
+  return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10);
+}
+
+/* -------------------- Saves (Index) -------------------- */
+function getSavesIndex(){
+  try{
+    const raw = localStorage.getItem(SAVES_INDEX_KEY);
+    if(!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function setSavesIndex(arr){
+  try{ localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(arr)); }catch(e){}
+}
+function upsertSaveMeta(meta){
+  const arr = getSavesIndex();
+  const i = arr.findIndex(x=>x.id === meta.id);
+  if(i >= 0) arr[i] = meta;
+  else arr.unshift(meta);
+  // tri: plus récent en premier
+  arr.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+  setSavesIndex(arr);
+}
+function deleteSaveById(id){
+  try{ localStorage.removeItem(SAVE_PREFIX + id); }catch(e){}
+  const arr = getSavesIndex().filter(x=>x.id !== id);
+  setSavesIndex(arr);
+}
+
+/* -------------------- Save/Load State -------------------- */
+function canSaveCurrent(){
+  return state && Array.isArray(state.players) && state.players.length > 0
+      && Array.isArray(state.schedule) && state.schedule.length > 0;
+}
+
+function buildMetaFromState(name, id){
+  const total = (state.schedule||[]).length;
+  const idx = Math.min((state.matchIndex||0) + 1, total);
+  return {
+    id,
+    name,
+    savedAt: now(),
+    n: state.n,
+    courts: state.courts,
+    round: idx,
+    total
+  };
+}
+
+function saveToSlot(id, name){
+  if(!canSaveCurrent()){
+    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
+    return false;
+  }
+  try{
+    state.savedAt = now();
+    const payload = deepClone(state);
+    localStorage.setItem(SAVE_PREFIX + id, JSON.stringify(payload));
+    upsertSaveMeta(buildMetaFromState(name, id));
+    return true;
+  }catch(e){
+    alert("❌ Impossible de sauvegarder (stockage plein ?).");
+    return false;
+  }
+}
+
+function loadFromSlot(id){
+  try{
+    const raw = localStorage.getItem(SAVE_PREFIX + id);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s || !s.players || !s.schedule) return false;
+    state = s;
+    return true;
+  }catch(e){ return false; }
+}
+
+/* -------------------- UI : Multi-saves -------------------- */
+function refreshSavesUI(){
+  const arr = getSavesIndex();
+  saveCountBadge.textContent = String(arr.length);
+
+  saveSelect.innerHTML = "";
+  if(arr.length === 0){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Aucune sauvegarde";
+    saveSelect.appendChild(opt);
+    saveSelect.disabled = true;
+    saveHint.textContent = "Tu peux créer une sauvegarde avec « 💾 Sauver… ».";
+    return;
+  }
+
+  saveSelect.disabled = false;
+  for(const s of arr){
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    const info = `${s.n}J • ${s.courts}T • round ${s.round}/${s.total} • ${fmtDate(s.savedAt)}`;
+    opt.textContent = `${s.name} — ${info}`;
+    saveSelect.appendChild(opt);
+  }
+  saveHint.textContent = "Choisis une sauvegarde puis Charge/Supprime.";
+}
+
+function openLoadDialog(){
+  // On affiche la zone de chargement sur le menu (setup)
+  refreshSavesUI();
+  showSetup();
+  // scroll vers le bloc sauvegardes
+  setTimeout(()=>{ saveSelect?.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
+}
+
+function loadSelectedSave(){
+  const id = saveSelect.value;
+  if(!id){ alert("Aucune sauvegarde à charger."); return; }
+  if(!loadFromSlot(id)){
+    alert("❌ Sauvegarde introuvable ou corrompue.");
+    refreshSavesUI();
+    return;
+  }
+  // afficher l'écran correct
+  if(state.matchIndex >= (state.schedule||[]).length){
+    renderFinishTable();
+    showFinish();
+  }else{
+    showGame();
+    renderMatch();
+    renderRanking();
+  }
+  refreshSavesUI();
+}
+
+function deleteSelectedSave(){
+  const id = saveSelect.value;
+  if(!id){ alert("Aucune sauvegarde à supprimer."); return; }
+  const arr = getSavesIndex();
+  const meta = arr.find(x=>x.id === id);
+  const label = meta ? `"${meta.name}"` : "cette sauvegarde";
+  if(!confirm(`Supprimer ${label} ?`)) return;
+  deleteSaveById(id);
+  refreshSavesUI();
+}
+
+function manualSaveAs(){
+  if(!canSaveCurrent()){
+    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
+    return;
+  }
+
+  const defaultName = `Tournoi ${fmtDate(now())}`;
+  const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
+  if(!name) return;
+
+  // Si le nom existe déjà, on propose d'écraser
+  const arr = getSavesIndex();
+  const existing = arr.find(x => (x.name||"").toLowerCase() === name.toLowerCase());
+  let id;
+  if(existing){
+    if(!confirm(`Une sauvegarde "${existing.name}" existe déjà.\nÉcraser ?`)) return;
+    id = existing.id;
+  }else{
+    id = makeId();
+  }
+
+  if(saveToSlot(id, name)){
+    refreshSavesUI();
+    autosaveText.textContent = `✅ Sauvegardé : ${name} (${fmtDate(now())})`;
+  }
+}
 
 /* -------------------- UI SETUP -------------------- */
 function createInputs(){
@@ -344,7 +556,7 @@ function createInputs(){
 
 function maxCourtsForN(n){
   if(n === 4) return 1;
-  if(n === 6) return 1;   // 1 terrain (4 jouent) + 2 repos
+  if(n === 6) return 1;
   if(n === 8) return 2;
   if(n === 12) return 3;
   if(n === 16) return 4;
@@ -385,65 +597,13 @@ playerCountEl.addEventListener("change", ()=>{
 });
 finishPlayerCountEl.addEventListener("change", updateFinishCourtUI);
 
-createInputs();
-updateCourtChoiceUI();
-updateFinishCourtUI();
-
-/* -------------------- HELPERS -------------------- */
-function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-
-function saveState(){
-  try{
-    state.savedAt = Date.now();
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-  }catch(e){}
-}
-
-function loadState(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule) return false;
-    state = s;
-    return true;
-  }catch(e){ return false; }
-}
-
-function clearState(){
-  try{ localStorage.removeItem(LS_KEY); }catch(e){}
-}
-
-function manualSave(){
-  // On n'enregistre pas si aucun tournoi n'a démarré
-  if(!state || !Array.isArray(state.players) || state.players.length === 0 || !Array.isArray(state.schedule) || state.schedule.length === 0){
-    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
-    return;
-  }
-  saveState();
-  alert("✅ Tournoi sauvegardé !");
-  updateResumeUI();
-}
-
-function deleteSave(){
-  if(!localStorage.getItem(LS_KEY)){
-    updateResumeUI();
-    return;
-  }
-  if(!confirm("Supprimer la sauvegarde ?")) return;
-  clearState();
-  alert("🗑️ Sauvegarde supprimée.");
-  updateResumeUI();
-}
-
+/* -------------------- Ranking helpers -------------------- */
 function scoreOptions(){
   let s="";
   for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
   return s;
 }
-
 function playerName(i){ return state.players[i].name; }
-
 function sortPlayersForRanking(arr){
   return [...arr].sort((a,b)=>{
     const da = a.plus - a.minus;
@@ -454,16 +614,12 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- SCHEDULING (Americano) --------------------
-   Circle method : on crée n/2 paires par round.
-   2 paires = 1 terrain (double vs double).
-   Si moins de terrains que le max, les paires restantes sont au repos.
-*/
+/* -------------------- Scheduling (Americano) -------------------- */
 function scheduleAmericano(n, courtsChosen){
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
 
-  const maxCourts = Math.floor(n / 4) || 1; // 4->1, 6->1, 8->2, 12->3, 16->4
+  const maxCourts = Math.floor(n / 4) || 1;
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
 
   const rounds = [];
@@ -486,7 +642,6 @@ function scheduleAmericano(n, courtsChosen){
 
     rounds.push({ rest, courts });
 
-    // Rotation "circle method"
     const fixed = arr[0];
     const restArr = arr.slice(1);
     restArr.unshift(restArr.pop());
@@ -508,14 +663,12 @@ function showSetup(){
   setupEl.classList.remove("hidden");
   window.scrollTo(0,0);
 }
-
 function showGame(){
   setupEl.classList.add("hidden");
   finishEl.classList.add("hidden");
   gameEl.classList.remove("hidden");
   window.scrollTo(0,0);
 }
-
 function showFinish(){
   gameEl.classList.add("hidden");
   setupEl.classList.add("hidden");
@@ -523,9 +676,11 @@ function showFinish(){
   window.scrollTo(0,0);
 }
 
-/* Bouton global : Menu */
 function goToSetup(keepProgress){
-  if(keepProgress) saveState();
+  if(keepProgress){
+    // pas d'autosave forcée dans un slot (on garde la logique "Sauver…")
+    state.savedAt = now();
+  }
 
   playerCountEl.value = String(state.n || +playerCountEl.value);
   createInputs();
@@ -543,7 +698,7 @@ function goToSetup(keepProgress){
     maxPointsEl.value = String(state.maxPoints || +maxPointsEl.value);
   }
 
-  updateResumeUI();
+  refreshSavesUI();
   showSetup();
 }
 
@@ -568,28 +723,10 @@ function startNewTournament(){
   state.history = [];
   state.savedAt = null;
 
+  autosaveText.textContent = "";
   showGame();
   renderMatch();
   renderRanking();
-  saveState();
-  updateResumeUI();
-}
-
-function resumeTournament(){
-  if(!loadState()){
-    alert("Aucune sauvegarde trouvée.");
-    updateResumeUI();
-    return;
-  }
-  if(state.matchIndex >= state.schedule.length){
-    renderFinishTable();
-    showFinish();
-  }else{
-    showGame();
-    renderMatch();
-    renderRanking();
-  }
-  updateResumeUI();
 }
 
 function renderMatch(){
@@ -649,9 +786,6 @@ function renderMatch(){
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
-
-  // autosave
-  saveState();
 }
 
 function validateCourt(courtIndex){
@@ -674,7 +808,6 @@ function validateCourt(courtIndex){
 
   renderRanking();
   renderMatch();
-  updateResumeUI();
 }
 
 function applyResult(teamA, teamB, scoreA, scoreB){
@@ -700,7 +833,6 @@ function nextMatch(){
   state.matchIndex++;
   state.validatedCourts = [];
   renderMatch();
-  updateResumeUI();
 }
 
 function undoLast(){
@@ -711,7 +843,6 @@ function undoLast(){
   state.validatedCourts = prev.validatedCourts;
   renderRanking();
   renderMatch();
-  updateResumeUI();
 }
 
 function renderRanking(){
@@ -753,9 +884,6 @@ function renderFinishTable(){
       </tr>
     `;
   });
-
-  saveState();
-  updateResumeUI();
 }
 
 function restartSamePlayers(){
@@ -773,8 +901,6 @@ function restartSamePlayers(){
   showGame();
   renderMatch();
   renderRanking();
-  saveState();
-  updateResumeUI();
 }
 
 function newGameChoosePlayers(){
@@ -782,7 +908,6 @@ function newGameChoosePlayers(){
   const max = maxCourtsForN(n);
   const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
 
-  // ici on ne supprime pas automatiquement la sauvegarde, on repart "propre"
   playerCountEl.value = String(n);
   createInputs();
   updateCourtChoiceUI();
@@ -803,58 +928,27 @@ function newGameChoosePlayers(){
     savedAt: null
   };
 
-  updateResumeUI();
+  refreshSavesUI();
   showSetup();
 }
 
 function resetAll(){
-  if(!confirm("Tout effacer (scores + sauvegarde) ?")) return;
-  clearState();
-  location.reload();
-}
-
-/* UI reprise */
-function updateResumeUI(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw){
-      resumeBtn.disabled = true;
-      deleteBtn.disabled = true;
-      resumeHint.textContent = "Aucune sauvegarde.";
-      return;
-    }
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule){
-      resumeBtn.disabled = true;
-      deleteBtn.disabled = true;
-      resumeHint.textContent = "Aucune sauvegarde.";
-      return;
-    }
-
-    resumeBtn.disabled = false;
-    deleteBtn.disabled = false;
-
-    const total = (s.schedule||[]).length;
-    const idx = (s.matchIndex||0) + 1;
-
-    const when = s.savedAt ? new Date(s.savedAt).toLocaleString() : null;
-    const meta = when ? ` • sauvegardé le ${when}` : "";
-
-    if((s.matchIndex||0) >= total){
-      resumeHint.textContent = `Une partie terminée est sauvegardée (FINI)${meta}.`;
-    }else{
-      resumeHint.textContent = `Une partie est sauvegardée (round ${idx}/${total})${meta}.`;
-    }
-  }catch(e){
-    resumeBtn.disabled = true;
-    deleteBtn.disabled = true;
-    resumeHint.textContent = "Aucune sauvegarde.";
+  if(!confirm("Tout effacer (application + sauvegardes) ?")) return;
+  // Supprime toutes les sauvegardes
+  const arr = getSavesIndex();
+  for(const s of arr){
+    try{ localStorage.removeItem(SAVE_PREFIX + s.id); }catch(e){}
   }
+  try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
+  location.reload();
 }
 
 /* -------------------- INIT -------------------- */
 (function init(){
-  updateResumeUI();
+  createInputs();
+  updateCourtChoiceUI();
+  updateFinishCourtUI();
+  refreshSavesUI();
   showSetup();
 })();
 </script>
