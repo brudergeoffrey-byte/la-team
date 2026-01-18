@@ -7,7 +7,6 @@
 
 <style>
 :root{
-  /* Thème */
   --bg1:#1f7a5a;
   --bg2:#0b3b6f;
   --accent:#ffb35c;
@@ -18,24 +17,17 @@
   --muted:rgba(255,255,255,0.86);
   --danger:#ff6b6b;
 }
-
 *{ box-sizing:border-box; }
-
 body{
   margin:0;
   font-family: Arial, sans-serif;
   color:#fff;
   min-height:100vh;
 
-  /*
-    ✅ FOND :
-    - 1) overlay (plus petit = image plus visible)
-    - 2) bg.jpg (dans le repo, racine)
-    - 3) fallback SVG si bg.jpg absent
-  */
+  /* ✅ Image bg.jpg + overlay (réduis 0.28 -> 0.18 pour voir plus l'image) */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.28), rgba(11,59,111,0.28)),
-    url("./bg.jpg?v=12"),
+    linear-gradient(135deg, rgba(31,122,90,0.22), rgba(11,59,111,0.22)),
+    url("./bg.jpg?v=1"),
     url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
 <defs>\
@@ -44,21 +36,10 @@ body{
     <stop offset='100%25' stop-color='white' stop-opacity='0'/>\
   </radialGradient>\
 </defs>\
-<rect width='1200' height='1200' fill='none'/>\
 <circle cx='560' cy='520' r='520' fill='url(%23g)'/>\
 <rect x='160' y='220' width='880' height='760' rx='26' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='18'/>\
 <line x1='600' y1='220' x2='600' y2='980' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
 <line x1='160' y1='600' x2='1040' y2='600' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
-<ellipse cx='860' cy='380' rx='130' ry='170' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='18'/>\
-<circle cx='820' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='860' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='900' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='820' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='860' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='900' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='840' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
-<rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
 </svg>");
   background-size: cover;
   background-position: center;
@@ -123,7 +104,7 @@ th{ background: var(--card2); }
 }
 hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 0; }
 
-/* Topbar */
+/* Barre d’action */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -149,17 +130,15 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 }
 .topbar button{ width:auto; padding:10px 12px; border-radius:12px; }
 
-@media (max-width:520px){
-  .topbar{ align-items:flex-start; }
-  .topbar .actions button{ padding:9px 10px; font-size:14px; }
-}
-
-/* Saves box */
 .savesBox{
   background: rgba(0,0,0,0.10);
   border-radius: 12px;
   padding: 12px;
   margin-top: 12px;
+}
+@media (max-width:520px){
+  .topbar{ align-items:flex-start; }
+  .topbar .actions button{ padding:9px 10px; font-size:14px; }
 }
 </style>
 </head>
@@ -170,9 +149,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <div class="topbar">
     <div class="brand"><span class="dot"></span> La Team</div>
     <div class="actions">
-      <button class="secondary" onclick="manualSaveAs()">💾 Sauver…</button>
-      <button class="secondary" onclick="openLoadDialog()">📂 Charger</button>
-      <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
+      <button class="secondary" onclick="saveAs()">💾 Sauver…</button>
+      <button class="secondary" onclick="openLoad()">📂 Charger</button>
+      <button class="secondary" onclick="goSetup()">⚙️ Menu</button>
       <button class="danger" onclick="resetAll()">🧹 Effacer</button>
     </div>
   </div>
@@ -180,7 +159,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <!-- SETUP -->
   <div id="setup" class="card">
     <h2>Réglages</h2>
-    <div class="small">Choisis le format puis démarre. (Tu peux revenir ici à tout moment.)</div>
+    <div class="small">Choisis le format puis démarre.</div>
 
     <label>Nombre de joueurs</label>
     <select id="playerCount">
@@ -195,7 +174,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <label>Nombre de terrains</label>
       <select id="courtCount"></select>
       <div class="small" style="text-align:left; margin-top:6px;">
-        Si tu choisis moins de terrains que le maximum, certains joueurs seront automatiquement au repos.
+        Moins de terrains = des joueurs au repos.
       </div>
     </div>
 
@@ -209,26 +188,26 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     </select>
 
     <div class="row">
-      <div><button onclick="startNewTournament()">Démarrer</button></div>
-      <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
+      <div><button onclick="start()">Démarrer</button></div>
+      <div><button class="secondary" onclick="openLoad()">📂 Charger</button></div>
     </div>
 
     <div class="savesBox">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <div><b>Sauvegardes</b> <span class="badge" id="saveCountBadge">0</span></div>
-        <button class="secondary" style="width:auto; padding:8px 10px;" onclick="refreshSavesUI()">↻</button>
+        <div><b>Sauvegardes</b> <span class="badge" id="saveCount">0</span></div>
+        <button class="secondary" style="width:auto; padding:8px 10px;" onclick="refreshSaves()">↻</button>
       </div>
 
       <label style="margin-top:10px;">Choisir une sauvegarde</label>
       <select id="saveSelect"></select>
 
       <div class="row" style="margin-top:8px;">
-        <div><button class="secondary" onclick="loadSelectedSave()">Charger</button></div>
-        <div><button class="danger" onclick="deleteSelectedSave()">Supprimer</button></div>
+        <div><button class="secondary" onclick="loadSelected()">Charger</button></div>
+        <div><button class="danger" onclick="deleteSelected()">Supprimer</button></div>
       </div>
 
       <div class="small" id="saveHint" style="margin-top:10px;"></div>
-      <div class="small" style="margin-top:6px; opacity:.95;">✅ Offline : ouvre l’app 1 fois avec réseau, ensuite ça marche sans.</div>
+      <div class="small" style="margin-top:6px;">✅ Offline OK (via sw.js)</div>
     </div>
   </div>
 
@@ -242,15 +221,15 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <div id="courts"></div>
 
       <div class="row">
-        <div><button id="undoBtn" class="secondary" onclick="undoLast()" disabled>↩︎ Retour</button></div>
-        <div><button id="nextBtn" onclick="nextMatch()" disabled>Round suivant</button></div>
+        <div><button id="undoBtn" class="secondary" onclick="undo()" disabled>↩︎ Retour</button></div>
+        <div><button id="nextBtn" onclick="nextRound()" disabled>Round suivant</button></div>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <div><button class="secondary" onclick="manualSaveAs()">💾 Sauver…</button></div>
-        <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
+        <div><button class="secondary" onclick="saveAs()">💾 Sauver…</button></div>
+        <div><button class="secondary" onclick="openLoad()">📂 Charger</button></div>
       </div>
-      <div class="small" id="autosaveText" style="margin-top:10px;"></div>
+      <div class="small" id="saveStatus" style="margin-top:10px;"></div>
     </div>
 
     <div class="card">
@@ -293,40 +272,40 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       </table>
 
       <hr class="sep">
-
-      <button onclick="restartSamePlayers()">🔁 Rejouer (mêmes joueurs)</button>
+      <button onclick="restartSame()">🔁 Rejouer (mêmes joueurs)</button>
 
       <hr class="sep">
-
       <div class="row">
-        <div><button class="secondary" onclick="manualSaveAs()">💾 Sauver…</button></div>
-        <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
+        <div><button class="secondary" onclick="saveAs()">💾 Sauver…</button></div>
+        <div><button class="secondary" onclick="openLoad()">📂 Charger</button></div>
       </div>
 
       <hr class="sep">
-
-      <label>Nouvelle partie : nombre de joueurs</label>
-      <select id="finishPlayerCount">
-        <option value="4">4 joueurs</option>
-        <option value="6">6 joueurs</option>
-        <option value="8">8 joueurs</option>
-        <option value="12">12 joueurs</option>
-        <option value="16">16 joueurs</option>
-      </select>
-
-      <div id="finishCourtWrap" style="display:none;">
-        <label>Nombre de terrains</label>
-        <select id="finishCourtCount"></select>
-      </div>
-
-      <button class="secondary" onclick="newGameChoosePlayers()">Nouvelle partie (changer le format)</button>
+      <button class="secondary" onclick="goSetup()">Retour menu</button>
     </div>
   </div>
 
 </div>
 
 <script>
-/* -------------------- STATE -------------------- */
+/* ========= Multi-sauvegardes ========= */
+const SAVES_INDEX_KEY = "la-team-saves-index-v1";
+const SAVE_PREFIX = "la-team-save-v1:";
+
+function getIndex(){
+  try{
+    const raw = localStorage.getItem(SAVES_INDEX_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function setIndex(arr){
+  try{ localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(arr)); }catch(e){}
+}
+function fmtDate(ts){ try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; } }
+function makeId(){ return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10); }
+
+/* ========= State ========= */
 let state = {
   n: 4,
   courts: 1,
@@ -335,211 +314,58 @@ let state = {
   schedule: [],
   matchIndex: 0,
   validatedCourts: [],
-  history: [],
-  savedAt: null
+  history: []
 };
 
-/* Multi-sauvegardes */
-const SAVES_INDEX_KEY = "la-team-saves-index-v2";
-const SAVE_PREFIX     = "la-team-save-v2:";
-
-/* -------------------- DOM -------------------- */
-const setupEl = document.getElementById("setup");
-const gameEl = document.getElementById("game");
+const setupEl  = document.getElementById("setup");
+const gameEl   = document.getElementById("game");
 const finishEl = document.getElementById("finish");
 
 const playerCountEl = document.getElementById("playerCount");
-const playersDiv = document.getElementById("players");
-const maxPointsEl = document.getElementById("maxPoints");
+const playersDiv    = document.getElementById("players");
+const maxPointsEl   = document.getElementById("maxPoints");
+const courtWrap     = document.getElementById("courtWrap");
+const courtCountEl  = document.getElementById("courtCount");
 
-const courtWrap = document.getElementById("courtWrap");
-const courtCountEl = document.getElementById("courtCount");
+const courtsDiv     = document.getElementById("courts");
+const rankingBody   = document.getElementById("ranking");
+const finalBody     = document.getElementById("finalRanking");
 
-const courtsDiv = document.getElementById("courts");
-const rankingBody = document.getElementById("ranking");
-const finalRankingBody = document.getElementById("finalRanking");
+const undoBtn       = document.getElementById("undoBtn");
+const nextBtn       = document.getElementById("nextBtn");
+const progressText  = document.getElementById("progressText");
+const restText      = document.getElementById("restText");
+const saveStatus    = document.getElementById("saveStatus");
 
-const undoBtn = document.getElementById("undoBtn");
-const nextBtn = document.getElementById("nextBtn");
-const progressText = document.getElementById("progressText");
-const restText = document.getElementById("restText");
-const autosaveText = document.getElementById("autosaveText");
+const saveSelect    = document.getElementById("saveSelect");
+const saveHint      = document.getElementById("saveHint");
+const saveCount     = document.getElementById("saveCount");
 
-const finishPlayerCountEl = document.getElementById("finishPlayerCount");
-const finishCourtWrap = document.getElementById("finishCourtWrap");
-const finishCourtCountEl = document.getElementById("finishCourtCount");
+function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+function showSetup(){ gameEl.classList.add("hidden"); finishEl.classList.add("hidden"); setupEl.classList.remove("hidden"); window.scrollTo(0,0); }
+function showGame(){ setupEl.classList.add("hidden"); finishEl.classList.add("hidden"); gameEl.classList.remove("hidden"); window.scrollTo(0,0); }
+function showFinish(){ setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.remove("hidden"); window.scrollTo(0,0); }
 
-/* Saves UI */
-const saveSelect = document.getElementById("saveSelect");
-const saveHint = document.getElementById("saveHint");
-const saveCountBadge = document.getElementById("saveCountBadge");
-
-/* -------------------- HELPERS -------------------- */
-function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-function now(){ return Date.now(); }
-function fmtDate(ts){ try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; } }
-function makeId(){ return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10); }
-
-/* -------------------- Saves Index -------------------- */
-function getSavesIndex(){
-  try{
-    const raw = localStorage.getItem(SAVES_INDEX_KEY);
-    if(!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  }catch(e){ return []; }
+function maxCourtsForN(n){
+  if(n===4) return 1;
+  if(n===6) return 1;
+  if(n===8) return 2;
+  if(n===12) return 3;
+  if(n===16) return 4;
+  return 1;
 }
-function setSavesIndex(arr){
-  try{ localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(arr)); }catch(e){}
-}
-function upsertSaveMeta(meta){
-  const arr = getSavesIndex();
-  const i = arr.findIndex(x=>x.id === meta.id);
-  if(i >= 0) arr[i] = meta;
-  else arr.unshift(meta);
-  arr.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
-  setSavesIndex(arr);
-}
-function deleteSaveById(id){
-  try{ localStorage.removeItem(SAVE_PREFIX + id); }catch(e){}
-  const arr = getSavesIndex().filter(x=>x.id !== id);
-  setSavesIndex(arr);
-}
-
-/* -------------------- Save/Load State -------------------- */
-function canSaveCurrent(){
-  return state && Array.isArray(state.players) && state.players.length > 0
-      && Array.isArray(state.schedule) && state.schedule.length > 0;
-}
-function buildMetaFromState(name, id){
-  const total = (state.schedule||[]).length;
-  const idx = Math.min((state.matchIndex||0) + 1, total);
-  return {
-    id,
-    name,
-    savedAt: now(),
-    n: state.n,
-    courts: state.courts,
-    round: idx,
-    total
-  };
-}
-function saveToSlot(id, name){
-  if(!canSaveCurrent()){
-    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
-    return false;
+function fillCourts(n, selected){
+  const max = maxCourtsForN(n);
+  courtCountEl.innerHTML = "";
+  for(let c=max; c>=1; c--){
+    const o = document.createElement("option");
+    o.value = String(c);
+    o.textContent = `${c} terrain${c>1?"s":""}`;
+    courtCountEl.appendChild(o);
   }
-  try{
-    state.savedAt = now();
-    const payload = deepClone(state);
-    localStorage.setItem(SAVE_PREFIX + id, JSON.stringify(payload));
-    upsertSaveMeta(buildMetaFromState(name, id));
-    return true;
-  }catch(e){
-    alert("❌ Impossible de sauvegarder (stockage plein ?).");
-    return false;
-  }
-}
-function loadFromSlot(id){
-  try{
-    const raw = localStorage.getItem(SAVE_PREFIX + id);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule) return false;
-    state = s;
-    return true;
-  }catch(e){ return false; }
+  courtCountEl.value = String(selected || max);
 }
 
-/* -------------------- UI : Multi-saves -------------------- */
-function refreshSavesUI(){
-  const arr = getSavesIndex();
-  saveCountBadge.textContent = String(arr.length);
-
-  saveSelect.innerHTML = "";
-  if(arr.length === 0){
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "Aucune sauvegarde";
-    saveSelect.appendChild(opt);
-    saveSelect.disabled = true;
-    saveHint.textContent = "Crée une sauvegarde avec « 💾 Sauver… » pendant un tournoi.";
-    return;
-  }
-
-  saveSelect.disabled = false;
-  for(const s of arr){
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    const info = `${s.n}J • ${s.courts}T • round ${s.round}/${s.total} • ${fmtDate(s.savedAt)}`;
-    opt.textContent = `${s.name} — ${info}`;
-    saveSelect.appendChild(opt);
-  }
-  saveHint.textContent = "Choisis une sauvegarde puis Charge/Supprime.";
-}
-
-function openLoadDialog(){
-  refreshSavesUI();
-  showSetup();
-  setTimeout(()=>{ saveSelect?.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
-}
-
-function loadSelectedSave(){
-  const id = saveSelect.value;
-  if(!id){ alert("Aucune sauvegarde à charger."); return; }
-  if(!loadFromSlot(id)){
-    alert("❌ Sauvegarde introuvable ou corrompue.");
-    refreshSavesUI();
-    return;
-  }
-  if(state.matchIndex >= (state.schedule||[]).length){
-    renderFinishTable();
-    showFinish();
-  }else{
-    showGame();
-    renderMatch();
-    renderRanking();
-  }
-  refreshSavesUI();
-}
-
-function deleteSelectedSave(){
-  const id = saveSelect.value;
-  if(!id){ alert("Aucune sauvegarde à supprimer."); return; }
-  const arr = getSavesIndex();
-  const meta = arr.find(x=>x.id === id);
-  const label = meta ? `"${meta.name}"` : "cette sauvegarde";
-  if(!confirm(`Supprimer ${label} ?`)) return;
-  deleteSaveById(id);
-  refreshSavesUI();
-}
-
-function manualSaveAs(){
-  if(!canSaveCurrent()){
-    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
-    return;
-  }
-  const defaultName = `Tournoi ${fmtDate(now())}`;
-  const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
-  if(!name) return;
-
-  const arr = getSavesIndex();
-  const existing = arr.find(x => (x.name||"").toLowerCase() === name.toLowerCase());
-  let id;
-  if(existing){
-    if(!confirm(`Une sauvegarde "${existing.name}" existe déjà.\nÉcraser ?`)) return;
-    id = existing.id;
-  }else{
-    id = makeId();
-  }
-
-  if(saveToSlot(id, name)){
-    refreshSavesUI();
-    autosaveText.textContent = `✅ Sauvegardé : ${name} (${fmtDate(now())})`;
-  }
-}
-
-/* -------------------- UI SETUP -------------------- */
 function createInputs(){
   playersDiv.innerHTML = "";
   const n = +playerCountEl.value;
@@ -547,58 +373,22 @@ function createInputs(){
     playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
   }
 }
-
-function maxCourtsForN(n){
-  if(n === 4) return 1;
-  if(n === 6) return 1;
-  if(n === 8) return 2;
-  if(n === 12) return 3;
-  if(n === 16) return 4;
-  return 1;
-}
-
-function fillCourtOptions(selectEl, n, selected){
-  const max = maxCourtsForN(n);
-  selectEl.innerHTML = "";
-  for(let c=max; c>=1; c--){
-    const opt = document.createElement("option");
-    opt.value = String(c);
-    opt.textContent = `${c} terrain${c>1?"s":""}`;
-    selectEl.appendChild(opt);
-  }
-  selectEl.value = String(selected || max);
-}
-
-function updateCourtChoiceUI(){
+function updateCourtUI(){
   const n = +playerCountEl.value;
   const max = maxCourtsForN(n);
-  const show = (max > 1);
-  courtWrap.style.display = show ? "block" : "none";
-  if(show) fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
+  courtWrap.style.display = (max>1) ? "block" : "none";
+  if(max>1) fillCourts(n, +courtCountEl.value || max);
 }
 
-function updateFinishCourtUI(){
-  const n = +finishPlayerCountEl.value;
-  const max = maxCourtsForN(n);
-  const show = (max > 1);
-  finishCourtWrap.style.display = show ? "block" : "none";
-  if(show) fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
-}
+playerCountEl.addEventListener("change", ()=>{ createInputs(); updateCourtUI(); });
 
-playerCountEl.addEventListener("change", ()=>{
-  createInputs();
-  updateCourtChoiceUI();
-});
-finishPlayerCountEl.addEventListener("change", updateFinishCourtUI);
-
-/* -------------------- Ranking helpers -------------------- */
 function scoreOptions(){
   let s="";
   for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
   return s;
 }
 function playerName(i){ return state.players[i].name; }
-function sortPlayersForRanking(arr){
+function sortPlayers(arr){
   return [...arr].sort((a,b)=>{
     const da = a.plus - a.minus;
     const db = b.plus - b.minus;
@@ -608,97 +398,159 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- Scheduling (Americano) -------------------- */
+/* ========= Planning (Americano simple) ========= */
 function scheduleAmericano(n, courtsChosen){
-  let arr = [];
-  for(let i=0;i<n;i++) arr.push(i);
-
-  const maxCourts = Math.floor(n / 4) || 1;
-  const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
-
+  let arr = Array.from({length:n}, (_,i)=>i);
+  const max = Math.floor(n/4) || 1;
+  const courtsUsed = Math.max(1, Math.min(courtsChosen || max, max));
   const rounds = [];
+
   for(let r=0;r<n-1;r++){
-    const pairs = [];
-    for(let i=0;i<n/2;i++){
-      pairs.push([arr[i], arr[n-1-i]]);
-    }
+    const pairs=[];
+    for(let i=0;i<n/2;i++) pairs.push([arr[i], arr[n-1-i]]);
 
-    const courts = [];
+    const courts=[];
     for(let k=0;k<courtsUsed;k++){
-      const p1 = pairs[2*k];
-      const p2 = pairs[2*k + 1];
+      const p1=pairs[2*k], p2=pairs[2*k+1];
       if(!p1 || !p2) break;
-      courts.push({ teamA: p1, teamB: p2 });
+      courts.push({teamA:p1, teamB:p2});
     }
-
-    const usedPairsCount = courts.length * 2;
-    const rest = pairs.slice(usedPairsCount).flat();
-
-    rounds.push({ rest, courts });
+    const rest = pairs.slice(courts.length*2).flat();
+    rounds.push({courts, rest});
 
     const fixed = arr[0];
-    const restArr = arr.slice(1);
-    restArr.unshift(restArr.pop());
-    arr = [fixed, ...restArr];
+    const rot = arr.slice(1);
+    rot.unshift(rot.pop());
+    arr = [fixed, ...rot];
   }
-
   return rounds;
 }
-
 function buildSchedule(n, courts){
-  if(![4,6,8,12,16].includes(n)) return [];
   return scheduleAmericano(n, courts);
 }
 
-/* -------------------- NAV / SCREENS -------------------- */
-function showSetup(){
-  gameEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
-  setupEl.classList.remove("hidden");
-  window.scrollTo(0,0);
-}
-function showGame(){
-  setupEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
-  gameEl.classList.remove("hidden");
-  window.scrollTo(0,0);
-}
-function showFinish(){
-  gameEl.classList.add("hidden");
-  setupEl.classList.add("hidden");
-  finishEl.classList.remove("hidden");
-  window.scrollTo(0,0);
-}
+/* ========= Saves UI ========= */
+function refreshSaves(){
+  const idx = getIndex();
+  saveCount.textContent = String(idx.length);
 
-function goToSetup(){
-  playerCountEl.value = String(state.n || +playerCountEl.value);
-  createInputs();
-  updateCourtChoiceUI();
-
-  if(courtWrap.style.display !== "none"){
-    fillCourtOptions(courtCountEl, +playerCountEl.value, state.courts || maxCourtsForN(+playerCountEl.value));
+  saveSelect.innerHTML = "";
+  if(idx.length === 0){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Aucune sauvegarde";
+    saveSelect.appendChild(opt);
+    saveSelect.disabled = true;
+    saveHint.textContent = "Sauvegarde un tournoi avec « 💾 Sauver… ».";
+    return;
   }
-
-  if(state.players && state.players.length){
-    for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
-      const inp = document.getElementById("p"+i);
-      if(inp) inp.value = state.players[i].name || "";
-    }
-    maxPointsEl.value = String(state.maxPoints || +maxPointsEl.value);
+  saveSelect.disabled = false;
+  for(const s of idx){
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = `${s.name} — ${s.n}J • ${s.courts}T • round ${s.round}/${s.total} • ${fmtDate(s.savedAt)}`;
+    saveSelect.appendChild(opt);
   }
+  saveHint.textContent = "Choisis une sauvegarde puis Charger/Supprimer.";
+}
 
-  refreshSavesUI();
+function canSave(){
+  return state.players && state.players.length>0 && state.schedule && state.schedule.length>0;
+}
+function saveToSlot(id, name){
+  const payload = deepClone(state);
+  const savedAt = Date.now();
+  try{
+    localStorage.setItem(SAVE_PREFIX+id, JSON.stringify(payload));
+    const total = payload.schedule.length;
+    const round = Math.min(payload.matchIndex+1, total);
+    const meta = { id, name, savedAt, n: payload.n, courts: payload.courts, round, total };
+    const idx = getIndex();
+    const i = idx.findIndex(x=>x.id===id);
+    if(i>=0) idx[i]=meta; else idx.unshift(meta);
+    idx.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+    setIndex(idx);
+    return true;
+  }catch(e){
+    alert("❌ Impossible de sauvegarder (stockage plein ?).");
+    return false;
+  }
+}
+
+function saveAs(){
+  if(!canSave()){
+    alert("ℹ️ Démarre un tournoi avant de sauvegarder.");
+    return;
+  }
+  const defaultName = `Tournoi ${fmtDate(Date.now())}`;
+  const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
+  if(!name) return;
+
+  const idx = getIndex();
+  const existing = idx.find(x => (x.name||"").toLowerCase() === name.toLowerCase());
+  const id = existing ? existing.id : makeId();
+
+  if(existing){
+    if(!confirm(`"${existing.name}" existe déjà.\nÉcraser ?`)) return;
+  }
+  if(saveToSlot(id, name)){
+    refreshSaves();
+    saveStatus.textContent = `✅ Sauvegardé : ${name}`;
+  }
+}
+
+function loadFromSlot(id){
+  try{
+    const raw = localStorage.getItem(SAVE_PREFIX+id);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s || !s.players || !s.schedule) return false;
+    state = s;
+    return true;
+  }catch(e){ return false; }
+}
+
+function openLoad(){
+  refreshSaves();
   showSetup();
+  setTimeout(()=>saveSelect.scrollIntoView({behavior:"smooth", block:"center"}), 50);
 }
 
-/* -------------------- GAME FLOW -------------------- */
-function startNewTournament(){
+function loadSelected(){
+  const id = saveSelect.value;
+  if(!id){ alert("Aucune sauvegarde."); return; }
+  if(!loadFromSlot(id)){
+    alert("❌ Sauvegarde introuvable/corrompue.");
+    refreshSaves();
+    return;
+  }
+  if(state.matchIndex >= state.schedule.length){
+    renderFinish();
+    showFinish();
+  }else{
+    showGame();
+    renderMatch();
+    renderRanking();
+  }
+  refreshSaves();
+}
+
+function deleteSelected(){
+  const id = saveSelect.value;
+  if(!id){ alert("Aucune sauvegarde."); return; }
+  if(!confirm("Supprimer cette sauvegarde ?")) return;
+  try{ localStorage.removeItem(SAVE_PREFIX+id); }catch(e){}
+  setIndex(getIndex().filter(x=>x.id!==id));
+  refreshSaves();
+}
+
+/* ========= Game ========= */
+function start(){
   state.n = +playerCountEl.value;
+  state.maxPoints = +maxPointsEl.value;
 
   const max = maxCourtsForN(state.n);
-  state.courts = (max > 1) ? (+courtCountEl.value || max) : 1;
-
-  state.maxPoints = +maxPointsEl.value;
+  state.courts = (max>1) ? (+courtCountEl.value || max) : 1;
 
   state.players = [];
   for(let i=0;i<state.n;i++){
@@ -710,9 +562,8 @@ function startNewTournament(){
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
-  state.savedAt = null;
 
-  autosaveText.textContent = "";
+  saveStatus.textContent = "";
   showGame();
   renderMatch();
   renderRanking();
@@ -720,7 +571,7 @@ function startNewTournament(){
 
 function renderMatch(){
   if(state.matchIndex >= state.schedule.length){
-    renderFinishTable();
+    renderFinish();
     showFinish();
     return;
   }
@@ -732,12 +583,9 @@ function renderMatch(){
     `<span class="badge">Round ${state.matchIndex+1} / ${total}</span>
      <span class="badge">${state.n} joueurs • ${state.courts} terrain(s)</span>`;
 
-  if(match.rest && match.rest.length){
-    const names = match.rest.map(i=>playerName(i)).join("</b> &nbsp; <b>");
-    restText.innerHTML = `Repos : <b>${names}</b>`;
-  }else{
-    restText.innerHTML = "";
-  }
+  restText.innerHTML = (match.rest && match.rest.length)
+    ? `Repos : <b>${match.rest.map(i=>playerName(i)).join("</b> &nbsp; <b>")}</b>`
+    : "";
 
   if(!Array.isArray(state.validatedCourts) || state.validatedCourts.length !== match.courts.length){
     state.validatedCourts = Array(match.courts.length).fill(false);
@@ -760,15 +608,11 @@ function renderMatch(){
         </div>
 
         <div class="row" style="margin-top:10px;">
-          <div>
-            <select id="scoreA_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
-          </div>
-          <div>
-            <select id="scoreB_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
-          </div>
+          <div><select id="scoreA_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select></div>
+          <div><select id="scoreB_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select></div>
         </div>
 
-        <button style="margin-top:10px;" onclick="validateCourt(${idx})" ${disabled?"disabled":""}>Valider</button>
+        <button style="margin-top:10px;" onclick="validate(${idx})" ${disabled?"disabled":""}>Valider</button>
       </div>
     `;
   });
@@ -777,9 +621,24 @@ function renderMatch(){
   undoBtn.disabled = state.history.length === 0;
 }
 
-function validateCourt(courtIndex){
+function applyResult(teamA, teamB, a, b){
+  for(const p of teamA){
+    state.players[p].mj++;
+    state.players[p].plus += a;
+    state.players[p].minus += b;
+  }
+  for(const p of teamB){
+    state.players[p].mj++;
+    state.players[p].plus += b;
+    state.players[p].minus += a;
+  }
+  if(a>b) for(const p of teamA) state.players[p].v++;
+  if(b>a) for(const p of teamB) state.players[p].v++;
+}
+
+function validate(idx){
   const match = state.schedule[state.matchIndex];
-  const court = match.courts[courtIndex];
+  const court = match.courts[idx];
 
   state.history.push(deepClone({
     players: state.players,
@@ -787,43 +646,24 @@ function validateCourt(courtIndex){
     validatedCourts: state.validatedCourts
   }));
 
-  const a = +document.getElementById(`scoreA_${courtIndex}`).value;
-  const b = +document.getElementById(`scoreB_${courtIndex}`).value;
+  const a = +document.getElementById(`scoreA_${idx}`).value;
+  const b = +document.getElementById(`scoreB_${idx}`).value;
 
   applyResult(court.teamA, court.teamB, a, b);
 
-  state.validatedCourts[courtIndex] = true;
-
+  state.validatedCourts[idx] = true;
   renderRanking();
   renderMatch();
 }
 
-function applyResult(teamA, teamB, scoreA, scoreB){
-  for(const p of teamA){
-    state.players[p].mj++;
-    state.players[p].plus += scoreA;
-    state.players[p].minus += scoreB;
-  }
-  for(const p of teamB){
-    state.players[p].mj++;
-    state.players[p].plus += scoreB;
-    state.players[p].minus += scoreA;
-  }
-  if(scoreA > scoreB){
-    for(const p of teamA) state.players[p].v++;
-  }else if(scoreB > scoreA){
-    for(const p of teamB) state.players[p].v++;
-  }
-}
-
-function nextMatch(){
+function nextRound(){
   if(!state.validatedCourts.every(Boolean)) return;
   state.matchIndex++;
   state.validatedCourts = [];
   renderMatch();
 }
 
-function undoLast(){
+function undo(){
   if(!state.history.length) return;
   const prev = state.history.pop();
   state.players = prev.players;
@@ -835,7 +675,7 @@ function undoLast(){
 
 function renderRanking(){
   rankingBody.innerHTML = "";
-  const sorted = sortPlayersForRanking(state.players);
+  const sorted = sortPlayers(state.players);
   for(const p of sorted){
     rankingBody.innerHTML += `
       <tr>
@@ -850,17 +690,11 @@ function renderRanking(){
   }
 }
 
-function renderFinishTable(){
-  finishPlayerCountEl.value = String(state.n || 4);
-  updateFinishCourtUI();
-  if(finishCourtWrap.style.display !== "none"){
-    fillCourtOptions(finishCourtCountEl, state.n, state.courts || maxCourtsForN(state.n));
-  }
-
-  const sorted = sortPlayersForRanking(state.players);
-  finalRankingBody.innerHTML = "";
-  sorted.forEach((p, i)=>{
-    finalRankingBody.innerHTML += `
+function renderFinish(){
+  finalBody.innerHTML = "";
+  const sorted = sortPlayers(state.players);
+  sorted.forEach((p,i)=>{
+    finalBody.innerHTML += `
       <tr>
         <td>${i+1}</td>
         <td>${p.name}</td>
@@ -874,70 +708,52 @@ function renderFinishTable(){
   });
 }
 
-function restartSamePlayers(){
+function restartSame(){
+  const names = state.players.map(p=>p.name);
   const n = state.n;
   const courts = state.courts;
-  const names = state.players.map(p=>p.name);
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
   state.schedule = buildSchedule(n, courts);
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
-  state.savedAt = null;
-
   showGame();
   renderMatch();
   renderRanking();
 }
 
-function newGameChoosePlayers(){
-  const n = +finishPlayerCountEl.value;
-  const max = maxCourtsForN(n);
-  const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
-
-  playerCountEl.value = String(n);
+function goSetup(){
+  playerCountEl.value = String(state.n || 4);
   createInputs();
-  updateCourtChoiceUI();
-
-  if(courtWrap.style.display !== "none"){
-    fillCourtOptions(courtCountEl, n, courts);
+  updateCourtUI();
+  if(state.players && state.players.length){
+    for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
+      const inp = document.getElementById("p"+i);
+      if(inp) inp.value = state.players[i].name || "";
+    }
+    maxPointsEl.value = String(state.maxPoints || 21);
   }
-
-  state = {
-    n: n,
-    courts: courts,
-    maxPoints: +maxPointsEl.value,
-    players: [],
-    schedule: [],
-    matchIndex: 0,
-    validatedCourts: [],
-    history: [],
-    savedAt: null
-  };
-
-  refreshSavesUI();
+  refreshSaves();
   showSetup();
 }
 
 function resetAll(){
   if(!confirm("Tout effacer (application + sauvegardes) ?")) return;
 
-  const arr = getSavesIndex();
-  for(const s of arr){
-    try{ localStorage.removeItem(SAVE_PREFIX + s.id); }catch(e){}
+  const idx = getIndex();
+  for(const s of idx){
+    try{ localStorage.removeItem(SAVE_PREFIX+s.id); }catch(e){}
   }
   try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
-
   location.reload();
 }
 
-/* -------------------- INIT -------------------- */
+/* ========= INIT ========= */
 (function init(){
   createInputs();
-  updateCourtChoiceUI();
-  updateFinishCourtUI();
-  refreshSavesUI();
+  updateCourtUI();
+  refreshSaves();
   showSetup();
 })();
 </script>
