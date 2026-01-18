@@ -7,7 +7,6 @@
 
 <style>
 :root{
-  /* Thème */
   --bg1:#1f7a5a;
   --bg2:#0b3b6f;
   --accent:#ffb35c;
@@ -27,11 +26,10 @@ body{
   color:#fff;
   min-height:100vh;
 
-  /* ✅ IMPORTANT : mots CSS en anglais (sinon fond blanc)
-     Overlay moins opaque pour voir + l'image */
+  /* Overlay: baisse/monte l'opacité pour voir + ou - l'image (0.25 = très visible, 0.60 = très filtré) */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.45), rgba(11,59,111,0.45)),
-    url("./bg.jpg?v=3"),
+    linear-gradient(135deg, rgba(31,122,90,0.35), rgba(11,59,111,0.35)),
+    url("./bg.jpg?v=7"),
     url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
 <defs>\
@@ -56,7 +54,6 @@ body{
 <circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
 <rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
 </svg>");
-
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -141,9 +138,16 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   box-shadow: 0 0 0 6px rgba(255,179,92,0.18);
 }
 .topbar .actions{
-  display:flex; gap:10px; align-items:center;
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  justify-content:flex-end;
 }
 .topbar button{ width:auto; padding:10px 12px; border-radius:12px; }
+
+/* Sur mobile: boutons topbar plus compacts */
+@media (max-width:520px){
+  .topbar{ align-items:flex-start; }
+  .topbar .actions button{ padding:9px 10px; font-size:14px; }
+}
 </style>
 </head>
 
@@ -153,7 +157,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <div class="topbar">
     <div class="brand"><span class="dot"></span> La Team</div>
     <div class="actions">
-      <button class="secondary" onclick="goToSetup(true)">⚙️ Menu / Réglages</button>
+      <button class="secondary" onclick="manualSave()">💾 Sauvegarder</button>
+      <button class="secondary" onclick="resumeTournament()">📂 Charger</button>
+      <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
       <button class="danger" onclick="resetAll()">🧹 Effacer</button>
     </div>
   </div>
@@ -194,6 +200,11 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <div><button id="resumeBtn" class="secondary" onclick="resumeTournament()" disabled>Reprendre</button></div>
     </div>
 
+    <div class="row" style="margin-top:10px;">
+      <div><button class="secondary" onclick="manualSave()">💾 Sauvegarder</button></div>
+      <div><button class="danger" onclick="deleteSave()" id="deleteBtn" disabled>🗑️ Supprimer sauvegarde</button></div>
+    </div>
+
     <div class="small" id="resumeHint" style="margin-top:10px;"></div>
   </div>
 
@@ -208,7 +219,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 
       <div class="row">
         <div><button id="undoBtn" class="secondary" onclick="undoLast()" disabled>↩︎ Retour</button></div>
-        <div><button id="nextBtn" onclick="nextMatch()" disabled>Match suivant</button></div>
+        <div><button id="nextBtn" onclick="nextMatch()" disabled>Round suivant</button></div>
       </div>
     </div>
 
@@ -287,10 +298,11 @@ let state = {
   schedule: [],
   matchIndex: 0,
   validatedCourts: [],
-  history: []
+  history: [],
+  savedAt: null
 };
 
-const LS_KEY = "la-team-state-v11";
+const LS_KEY = "la-team-state-v12";
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -319,6 +331,7 @@ const finishCourtCountEl = document.getElementById("finishCourtCount");
 
 const resumeBtn = document.getElementById("resumeBtn");
 const resumeHint = document.getElementById("resumeHint");
+const deleteBtn = document.getElementById("deleteBtn");
 
 /* -------------------- UI SETUP -------------------- */
 function createInputs(){
@@ -331,7 +344,7 @@ function createInputs(){
 
 function maxCourtsForN(n){
   if(n === 4) return 1;
-  if(n === 6) return 1;   // 1 terrain + 2 repos
+  if(n === 6) return 1;   // 1 terrain (4 jouent) + 2 repos
   if(n === 8) return 2;
   if(n === 12) return 3;
   if(n === 16) return 4;
@@ -380,8 +393,12 @@ updateFinishCourtUI();
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
 function saveState(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  try{
+    state.savedAt = Date.now();
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }catch(e){}
 }
+
 function loadState(){
   try{
     const raw = localStorage.getItem(LS_KEY);
@@ -392,8 +409,31 @@ function loadState(){
     return true;
   }catch(e){ return false; }
 }
+
 function clearState(){
   try{ localStorage.removeItem(LS_KEY); }catch(e){}
+}
+
+function manualSave(){
+  // On n'enregistre pas si aucun tournoi n'a démarré
+  if(!state || !Array.isArray(state.players) || state.players.length === 0 || !Array.isArray(state.schedule) || state.schedule.length === 0){
+    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
+    return;
+  }
+  saveState();
+  alert("✅ Tournoi sauvegardé !");
+  updateResumeUI();
+}
+
+function deleteSave(){
+  if(!localStorage.getItem(LS_KEY)){
+    updateResumeUI();
+    return;
+  }
+  if(!confirm("Supprimer la sauvegarde ?")) return;
+  clearState();
+  alert("🗑️ Sauvegarde supprimée.");
+  updateResumeUI();
 }
 
 function scoreOptions(){
@@ -401,6 +441,7 @@ function scoreOptions(){
   for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
   return s;
 }
+
 function playerName(i){ return state.players[i].name; }
 
 function sortPlayersForRanking(arr){
@@ -413,12 +454,16 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- SCHEDULING (Americano) -------------------- */
+/* -------------------- SCHEDULING (Americano) --------------------
+   Circle method : on crée n/2 paires par round.
+   2 paires = 1 terrain (double vs double).
+   Si moins de terrains que le max, les paires restantes sont au repos.
+*/
 function scheduleAmericano(n, courtsChosen){
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
 
-  const maxCourts = Math.floor(n / 4) || 1;
+  const maxCourts = Math.floor(n / 4) || 1; // 4->1, 6->1, 8->2, 12->3, 16->4
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
 
   const rounds = [];
@@ -441,6 +486,7 @@ function scheduleAmericano(n, courtsChosen){
 
     rounds.push({ rest, courts });
 
+    // Rotation "circle method"
     const fixed = arr[0];
     const restArr = arr.slice(1);
     restArr.unshift(restArr.pop());
@@ -462,12 +508,14 @@ function showSetup(){
   setupEl.classList.remove("hidden");
   window.scrollTo(0,0);
 }
+
 function showGame(){
   setupEl.classList.add("hidden");
   finishEl.classList.add("hidden");
   gameEl.classList.remove("hidden");
   window.scrollTo(0,0);
 }
+
 function showFinish(){
   gameEl.classList.add("hidden");
   setupEl.classList.add("hidden");
@@ -475,6 +523,7 @@ function showFinish(){
   window.scrollTo(0,0);
 }
 
+/* Bouton global : Menu */
 function goToSetup(keepProgress){
   if(keepProgress) saveState();
 
@@ -517,6 +566,7 @@ function startNewTournament(){
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
+  state.savedAt = null;
 
   showGame();
   renderMatch();
@@ -526,7 +576,11 @@ function startNewTournament(){
 }
 
 function resumeTournament(){
-  if(!loadState()) return;
+  if(!loadState()){
+    alert("Aucune sauvegarde trouvée.");
+    updateResumeUI();
+    return;
+  }
   if(state.matchIndex >= state.schedule.length){
     renderFinishTable();
     showFinish();
@@ -596,6 +650,7 @@ function renderMatch(){
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
 
+  // autosave
   saveState();
 }
 
@@ -603,6 +658,7 @@ function validateCourt(courtIndex){
   const match = state.schedule[state.matchIndex];
   const court = match.courts[courtIndex];
 
+  // sauvegarde pour annulation
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
@@ -697,6 +753,7 @@ function renderFinishTable(){
       </tr>
     `;
   });
+
   saveState();
   updateResumeUI();
 }
@@ -711,6 +768,7 @@ function restartSamePlayers(){
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
+  state.savedAt = null;
 
   showGame();
   renderMatch();
@@ -724,8 +782,7 @@ function newGameChoosePlayers(){
   const max = maxCourtsForN(n);
   const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
 
-  clearState();
-
+  // ici on ne supprime pas automatiquement la sauvegarde, on repart "propre"
   playerCountEl.value = String(n);
   createInputs();
   updateCourtChoiceUI();
@@ -742,7 +799,8 @@ function newGameChoosePlayers(){
     schedule: [],
     matchIndex: 0,
     validatedCourts: [],
-    history: []
+    history: [],
+    savedAt: null
   };
 
   updateResumeUI();
@@ -750,36 +808,47 @@ function newGameChoosePlayers(){
 }
 
 function resetAll(){
-  if(!confirm("Tout effacer (scores + partie en cours) ?")) return;
+  if(!confirm("Tout effacer (scores + sauvegarde) ?")) return;
   clearState();
   location.reload();
 }
 
+/* UI reprise */
 function updateResumeUI(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     if(!raw){
       resumeBtn.disabled = true;
-      resumeHint.textContent = "Aucune partie sauvegardée.";
+      deleteBtn.disabled = true;
+      resumeHint.textContent = "Aucune sauvegarde.";
       return;
     }
     const s = JSON.parse(raw);
     if(!s || !s.players || !s.schedule){
       resumeBtn.disabled = true;
-      resumeHint.textContent = "Aucune partie sauvegardée.";
+      deleteBtn.disabled = true;
+      resumeHint.textContent = "Aucune sauvegarde.";
       return;
     }
+
     resumeBtn.disabled = false;
+    deleteBtn.disabled = false;
+
     const total = (s.schedule||[]).length;
     const idx = (s.matchIndex||0) + 1;
+
+    const when = s.savedAt ? new Date(s.savedAt).toLocaleString() : null;
+    const meta = when ? ` • sauvegardé le ${when}` : "";
+
     if((s.matchIndex||0) >= total){
-      resumeHint.textContent = "Une partie terminée est sauvegardée (FINI).";
+      resumeHint.textContent = `Une partie terminée est sauvegardée (FINI)${meta}.`;
     }else{
-      resumeHint.textContent = `Une partie est sauvegardée (round ${idx}/${total}).`;
+      resumeHint.textContent = `Une partie est sauvegardée (round ${idx}/${total})${meta}.`;
     }
   }catch(e){
     resumeBtn.disabled = true;
-    resumeHint.textContent = "Aucune partie sauvegardée.";
+    deleteBtn.disabled = true;
+    resumeHint.textContent = "Aucune sauvegarde.";
   }
 }
 
