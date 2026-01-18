@@ -26,36 +26,10 @@ body{
   color:#fff;
   min-height:100vh;
 
-  /* 🎾 Une seule image (SVG) plein écran + fondu */
+  /* 🎾 Image de fond + overlay pour garder le thème */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.92), rgba(11,59,111,0.92)),
-    url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
-<defs>\
-  <radialGradient id='g' cx='50%' cy='45%' r='60%'>\
-    <stop offset='0%' stop-color='white' stop-opacity='0.09'/>\
-    <stop offset='100%' stop-color='white' stop-opacity='0'/>\
-  </radialGradient>\
-</defs>\
-<rect width='1200' height='1200' fill='none'/>\
-<!-- grand halo -->\
-<circle cx='560' cy='520' r='520' fill='url(%23g)'/>\
-<!-- terrain stylisé -->\
-<rect x='160' y='220' width='880' height='760' rx='26' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='18'/>\
-<line x1='600' y1='220' x2='600' y2='980' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
-<line x1='160' y1='600' x2='1040' y2='600' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
-<!-- raquette padel stylisée -->\
-<ellipse cx='860' cy='380' rx='130' ry='170' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='18'/>\
-<circle cx='820' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='860' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='900' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='820' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='860' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='900' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='840' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
-<rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
-</svg>");
+    linear-gradient(135deg, rgba(31,122,90,0.86), rgba(11,59,111,0.86)),
+    url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/6/oKSlACEQAAAAEAASfjanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAA)"); /* base64 long, ok en 1 fichier */
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -166,26 +140,17 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     <select id="playerCount">
       <option value="4">4 joueurs (1 terrain)</option>
       <option value="6">6 joueurs (1 terrain, 2 repos)</option>
-      <option value="8">8 joueurs (1 ou 2 terrains)</option>
+      <option value="12">12 joueurs (3 terrains)</option>
+      <option value="16">16 joueurs (4 terrains)</option>
     </select>
-
-    <!-- Choix terrains UNIQUEMENT pour 8 -->
-    <div id="courtWrap" style="margin-top:10px; display:none;">
-      <label>Nombre de terrains (si 8 joueurs)</label>
-      <select id="courtCount">
-        <option value="2" selected>2 terrains (8 jouent en même temps)</option>
-        <option value="1">1 terrain (4 jouent, 4 au repos)</option>
-      </select>
-    </div>
 
     <div id="players"></div>
 
     <label>Points pour gagner</label>
     <select id="maxPoints">
-      <option>7</option>
-      <option selected>10</option>
-      <option>15</option>
-      <option>21</option>
+      <option>11</option>
+      <option selected>21</option>
+      <option>31</option>
     </select>
 
     <div class="row">
@@ -260,16 +225,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <select id="finishPlayerCount">
         <option value="4">4 joueurs</option>
         <option value="6">6 joueurs</option>
-        <option value="8">8 joueurs</option>
+        <option value="12">12 joueurs</option>
+        <option value="16">16 joueurs</option>
       </select>
-
-      <div id="finishCourtWrap" style="display:none;">
-        <label>Nombre de terrains (si 8 joueurs)</label>
-        <select id="finishCourtCount">
-          <option value="2" selected>2 terrains</option>
-          <option value="1">1 terrain</option>
-        </select>
-      </div>
 
       <button class="secondary" onclick="newGameChoosePlayers()">Nouvelle partie (changer le format)</button>
     </div>
@@ -281,8 +239,8 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 /* -------------------- STATE -------------------- */
 let state = {
   n: 4,
-  courts: 1,          // 👈 1 ou 2 (pour 8 joueurs)
-  maxPoints: 10,
+  courts: 1,
+  maxPoints: 21,
   players: [],
   schedule: [],
   matchIndex: 0,
@@ -290,7 +248,7 @@ let state = {
   history: []
 };
 
-const LS_KEY = "la-team-state-v6";
+const LS_KEY = "la-team-state-v7";
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -300,9 +258,6 @@ const finishEl = document.getElementById("finish");
 const playerCountEl = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
 const maxPointsEl = document.getElementById("maxPoints");
-
-const courtWrap = document.getElementById("courtWrap");
-const courtCountEl = document.getElementById("courtCount");
 
 const courtsDiv = document.getElementById("courts");
 const rankingBody = document.getElementById("ranking");
@@ -314,8 +269,6 @@ const progressText = document.getElementById("progressText");
 const restText = document.getElementById("restText");
 
 const finishPlayerCountEl = document.getElementById("finishPlayerCount");
-const finishCourtWrap = document.getElementById("finishCourtWrap");
-const finishCourtCountEl = document.getElementById("finishCourtCount");
 
 const resumeBtn = document.getElementById("resumeBtn");
 const resumeHint = document.getElementById("resumeHint");
@@ -328,18 +281,8 @@ function createInputs(){
     playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
   }
 }
-function updateCourtChoiceUI(){
-  courtWrap.style.display = (+playerCountEl.value === 8) ? "block" : "none";
-}
-playerCountEl.addEventListener("change", ()=>{ createInputs(); updateCourtChoiceUI(); });
+playerCountEl.addEventListener("change", createInputs);
 createInputs();
-updateCourtChoiceUI();
-
-/* Finish UI */
-function updateFinishCourtUI(){
-  finishCourtWrap.style.display = (+finishPlayerCountEl.value === 8) ? "block" : "none";
-}
-finishPlayerCountEl.addEventListener("change", updateFinishCourtUI);
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -378,111 +321,54 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- SCHEDULING -------------------- */
-function scheduleFor4(){
-  return [
-    { courts:[{teamA:[0,1], teamB:[2,3]}] },
-    { courts:[{teamA:[0,2], teamB:[1,3]}] },
-    { courts:[{teamA:[0,3], teamB:[1,2]}] }
-  ];
+function computeCourts(n){
+  if(n === 6) return 1;      // 1 terrain, 2 repos
+  return Math.floor(n / 4);  // 4->1, 12->3, 16->4
 }
 
-/* 8 joueurs : round-robin basé sur “circle method”
-   - si courts=2 : 7 rounds, 2 terrains/round
-   - si courts=1 : 14 matchs, 1 terrain, 4 repos
+/* -------------------- SCHEDULING (Americano) --------------------
+   Méthode "circle" (round-robin) sur les paires, puis on regroupe 2 paires = 1 terrain.
+   - Si n multiple de 4 : tout le monde joue (n/4 terrains)
+   - Si n=6 : 1 terrain (2 paires) + 1 paire au repos
 */
-function scheduleFor8(courts){
-  const n = 8;
+function scheduleAmericano(n){
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
 
-  const rounds2 = [];
+  const rounds = [];
   for(let r=0;r<n-1;r++){
     const pairs = [];
     for(let i=0;i<n/2;i++){
       pairs.push([arr[i], arr[n-1-i]]);
     }
-    rounds2.push({
-      courts: [
-        {teamA:pairs[0], teamB:pairs[1]},
-        {teamA:pairs[2], teamB:pairs[3]}
-      ]
-    });
-    const fixed = arr[0];
-    const rest = arr.slice(1);
-    rest.unshift(rest.pop());
-    arr = [fixed, ...rest];
-  }
 
-  if(courts === 2) return rounds2;
+    const courts = [];
+    let rest = [];
 
-  // courts === 1 : on “déplie” chaque round (2 terrains) en 2 matchs successifs
-  const rounds1 = [];
-  for(const r of rounds2){
-    const c1 = r.courts[0];
-    const c2 = r.courts[1];
-
-    rounds1.push({
-      rest: [...c2.teamA, ...c2.teamB],
-      courts: [c1]
-    });
-    rounds1.push({
-      rest: [...c1.teamA, ...c1.teamB],
-      courts: [c2]
-    });
-  }
-  return rounds1;
-}
-
-/* 6 joueurs : tournée simple (8 rounds max) */
-function scheduleFor6(){
-  const players = [0,1,2,3,4,5];
-  const rounds = [];
-  const usedPairs = new Set();
-  function pairKey(a,b){ return a<b ? `${a}-${b}` : `${b}-${a}`; }
-
-  for(let i=0;i<players.length;i++){
-    for(let j=i+1;j<players.length;j++){
-      const rest = [players[i], players[j]];
-      const playing = players.filter(x=>x!==players[i] && x!==players[j]);
-
-      const options = [
-        [[playing[0],playing[1]],[playing[2],playing[3]]],
-        [[playing[0],playing[2]],[playing[1],playing[3]]],
-        [[playing[0],playing[3]],[playing[1],playing[2]]],
-      ];
-
-      let best = null;
-      let bestScore = -1;
-      for(const opt of options){
-        const k1 = pairKey(opt[0][0], opt[0][1]);
-        const k2 = pairKey(opt[1][0], opt[1][1]);
-        let score = 0;
-        if(!usedPairs.has(k1)) score++;
-        if(!usedPairs.has(k2)) score++;
-        if(score > bestScore){
-          bestScore = score;
-          best = opt;
-        }
+    if(n === 6){
+      courts.push({teamA:pairs[0], teamB:pairs[1]});
+      rest = [...pairs[2]];
+    }else{
+      for(let k=0;k<pairs.length;k+=2){
+        courts.push({teamA:pairs[k], teamB:pairs[k+1]});
       }
-
-      if(best){
-        const k1 = pairKey(best[0][0], best[0][1]);
-        const k2 = pairKey(best[1][0], best[1][1]);
-        usedPairs.add(k1); usedPairs.add(k2);
-        rounds.push({ rest, courts:[{teamA:best[0], teamB:best[1]}] });
-      }
-      if(rounds.length >= 8) return rounds;
     }
+
+    rounds.push({ rest, courts });
+
+    // rotation
+    const fixed = arr[0];
+    const restArr = arr.slice(1);
+    restArr.unshift(restArr.pop());
+    arr = [fixed, ...restArr];
   }
+
   return rounds;
 }
 
-function buildSchedule(n, courts){
-  if(n===4) return scheduleFor4();
-  if(n===6) return scheduleFor6();
-  if(n===8) return scheduleFor8(courts);
-  return [];
+function buildSchedule(n){
+  if(![4,6,12,16].includes(n)) return [];
+  return scheduleAmericano(n);
 }
 
 /* -------------------- NAV / SCREENS -------------------- */
@@ -510,10 +396,6 @@ function goToSetup(keepProgress){
   if(keepProgress) saveState();
   // pré-remplir menu
   playerCountEl.value = String(state.n || +playerCountEl.value);
-  updateCourtChoiceUI();
-  if(+playerCountEl.value === 8){
-    courtCountEl.value = String(state.courts || 2);
-  }
   createInputs();
   if(state.players && state.players.length){
     for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
@@ -529,7 +411,7 @@ function goToSetup(keepProgress){
 /* -------------------- GAME FLOW -------------------- */
 function startNewTournament(){
   state.n = +playerCountEl.value;
-  state.courts = (state.n === 8) ? +courtCountEl.value : 1;
+  state.courts = computeCourts(state.n);
   state.maxPoints = +maxPointsEl.value;
 
   state.players = [];
@@ -538,7 +420,7 @@ function startNewTournament(){
     state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
   }
 
-  state.schedule = buildSchedule(state.n, state.courts);
+  state.schedule = buildSchedule(state.n);
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
@@ -574,7 +456,7 @@ function renderMatch(){
   const total = state.schedule.length;
 
   progressText.innerHTML =
-    `<span class="badge">Match ${state.matchIndex+1} / ${total}</span>`;
+    `<span class="badge">Round ${state.matchIndex+1} / ${total}</span> <span class="badge">${state.n} joueurs • ${state.courts} terrain(s)</span>`;
 
   if(match.rest && match.rest.length){
     const names = match.rest.map(i=>playerName(i)).join("</b> &nbsp; <b>");
@@ -702,8 +584,6 @@ function renderRanking(){
 
 function renderFinishTable(){
   finishPlayerCountEl.value = String(state.n || 4);
-  finishCourtCountEl.value = String(state.courts || 2);
-  updateFinishCourtUI();
 
   const sorted = sortPlayersForRanking(state.players);
   finalRankingBody.innerHTML = "";
@@ -726,11 +606,11 @@ function renderFinishTable(){
 
 function restartSamePlayers(){
   const n = state.n;
-  const courts = state.courts;
   const names = state.players.map(p=>p.name);
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
-  state.schedule = buildSchedule(n, courts);
+  state.schedule = buildSchedule(n);
+  state.courts = computeCourts(n);
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
@@ -744,18 +624,15 @@ function restartSamePlayers(){
 
 function newGameChoosePlayers(){
   const n = +finishPlayerCountEl.value;
-  const courts = (n === 8) ? +finishCourtCountEl.value : 1;
 
   clearState();
 
   playerCountEl.value = String(n);
-  updateCourtChoiceUI();
-  if(n===8) courtCountEl.value = String(courts);
   createInputs();
 
   state = {
     n: n,
-    courts: courts,
+    courts: computeCourts(n),
     maxPoints: +maxPointsEl.value,
     players: [],
     schedule: [],
@@ -795,7 +672,7 @@ function updateResumeUI(){
     if((s.matchIndex||0) >= total){
       resumeHint.textContent = "Une partie terminée est sauvegardée (FINI).";
     }else{
-      resumeHint.textContent = `Une partie est sauvegardée (match ${idx}/${total}).`;
+      resumeHint.textContent = `Une partie est sauvegardée (round ${idx}/${total}).`;
     }
   }catch(e){
     resumeBtn.disabled = true;
