@@ -7,10 +7,9 @@
 
 <style>
 :root{
-  /* 🎨 Thème plus chaud */
-  --bg1:#1f7a5a;     /* vert chaud */
-  --bg2:#0b3b6f;     /* bleu chaud */
-  --accent:#ffb35c;  /* orange doux */
+  --bg1:#1f7a5a;
+  --bg2:#0b3b6f;
+  --accent:#ffb35c;
   --btn:#00c9a7;
   --btnText:#073;
   --card:rgba(255,255,255,0.12);
@@ -27,10 +26,35 @@ body{
   color:#fff;
   min-height:100vh;
 
-  /* ✅ Image + overlay transparent pour garder le thème */
+  /* ✅ 1) photo bg.jpg (dans le repo) + overlay pour garder le thème
+     ✅ 2) fallback SVG si bg.jpg absent */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.88), rgba(11,59,111,0.88)),
-    url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/6/oKSlACEQAAAAEAASfjanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAA)"); /* image intégrée */
+    linear-gradient(135deg, rgba(31,122,90,0.86), rgba(11,59,111,0.86)),
+    url("bg.jpg?v=1"),
+    url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
+<defs>\
+  <radialGradient id='g' cx='50%25' cy='45%25' r='60%25'>\
+    <stop offset='0%25' stop-color='white' stop-opacity='0.09'/>\
+    <stop offset='100%25' stop-color='white' stop-opacity='0'/>\
+  </radialGradient>\
+</defs>\
+<rect width='1200' height='1200' fill='none'/>\
+<circle cx='560' cy='520' r='520' fill='url(%23g)'/>\
+<rect x='160' y='220' width='880' height='760' rx='26' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='18'/>\
+<line x1='600' y1='220' x2='600' y2='980' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
+<line x1='160' y1='600' x2='1040' y2='600' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
+<ellipse cx='860' cy='380' rx='130' ry='170' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='18'/>\
+<circle cx='820' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='860' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='900' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='820' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='860' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='900' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='840' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
+<rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
+</svg>");
 
   background-size: cover;
   background-position: center;
@@ -95,7 +119,6 @@ th{ background: var(--card2); }
 }
 hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 0; }
 
-/* Barre d’action globale */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -142,6 +165,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     <select id="playerCount">
       <option value="4">4 joueurs</option>
       <option value="6">6 joueurs</option>
+      <option value="8">8 joueurs</option>
       <option value="12">12 joueurs</option>
       <option value="16">16 joueurs</option>
     </select>
@@ -235,6 +259,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <select id="finishPlayerCount">
         <option value="4">4 joueurs</option>
         <option value="6">6 joueurs</option>
+        <option value="8">8 joueurs</option>
         <option value="12">12 joueurs</option>
         <option value="16">16 joueurs</option>
       </select>
@@ -263,7 +288,7 @@ let state = {
   history: []
 };
 
-const LS_KEY = "la-team-state-v9";
+const LS_KEY = "la-team-state-v10";
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -304,7 +329,8 @@ function createInputs(){
 
 function maxCourtsForN(n){
   if(n === 4) return 1;
-  if(n === 6) return 1;     // 1 terrain (4 jouent) + 2 repos
+  if(n === 6) return 1;   // 1 terrain + 2 repos
+  if(n === 8) return 2;   // ✅ 8 joueurs = max 2 terrains
   if(n === 12) return 3;
   if(n === 16) return 4;
   return 1;
@@ -316,8 +342,7 @@ function fillCourtOptions(selectEl, n, selected){
   for(let c=max; c>=1; c--){
     const opt = document.createElement("option");
     opt.value = String(c);
-    const label = `${c} terrain${c>1?"s":""}`;
-    opt.textContent = label;
+    opt.textContent = `${c} terrain${c>1?"s":""}`;
     selectEl.appendChild(opt);
   }
   selectEl.value = String(selected || max);
@@ -388,13 +413,13 @@ function sortPlayersForRanking(arr){
 
 /* -------------------- SCHEDULING (Americano) --------------------
    Circle method -> paires (n/2) -> 2 paires = 1 terrain.
-   Si on choisit moins de terrains que le max, les paires restantes vont au repos.
+   Si moins de terrains que le max, les paires restantes reposent.
 */
 function scheduleAmericano(n, courtsChosen){
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
 
-  const maxCourts = Math.floor(n / 4) || 1;     // 4->1, 6->1, 12->3, 16->4
+  const maxCourts = Math.floor(n / 4) || 1; // 4->1, 6->1, 8->2, 12->3, 16->4
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
 
   const rounds = [];
@@ -412,10 +437,8 @@ function scheduleAmericano(n, courtsChosen){
       courts.push({ teamA: p1, teamB: p2 });
     }
 
-    // paires restantes => repos
     const usedPairsCount = courts.length * 2;
-    const restPairs = pairs.slice(usedPairsCount);
-    const rest = restPairs.flat();
+    const rest = pairs.slice(usedPairsCount).flat();
 
     rounds.push({ rest, courts });
 
@@ -430,7 +453,7 @@ function scheduleAmericano(n, courtsChosen){
 }
 
 function buildSchedule(n, courts){
-  if(![4,6,12,16].includes(n)) return [];
+  if(![4,6,8,12,16].includes(n)) return [];
   return scheduleAmericano(n, courts);
 }
 
@@ -461,13 +484,11 @@ function goToSetup(keepProgress){
   playerCountEl.value = String(state.n || +playerCountEl.value);
   createInputs();
 
-  // terrains
   updateCourtChoiceUI();
   if(courtWrap.style.display !== "none"){
     fillCourtOptions(courtCountEl, +playerCountEl.value, state.courts || maxCourtsForN(+playerCountEl.value));
   }
 
-  // joueurs + points
   if(state.players && state.players.length){
     for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
       const inp = document.getElementById("p"+i);
@@ -484,13 +505,8 @@ function goToSetup(keepProgress){
 function startNewTournament(){
   state.n = +playerCountEl.value;
 
-  // terrains choisis si possible, sinon max auto
   const max = maxCourtsForN(state.n);
-  if(max > 1){
-    state.courts = +courtCountEl.value || max;
-  }else{
-    state.courts = 1;
-  }
+  state.courts = (max > 1) ? (+courtCountEl.value || max) : 1;
 
   state.maxPoints = +maxPointsEl.value;
 
@@ -590,7 +606,6 @@ function validateCourt(courtIndex){
   const match = state.schedule[state.matchIndex];
   const court = match.courts[courtIndex];
 
-  // sauvegarde pour annulation
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
@@ -775,7 +790,7 @@ function updateResumeUI(){
 /* -------------------- INIT -------------------- */
 (function init(){
   updateResumeUI();
-  showSetup(); // Toujours commencer sur le menu
+  showSetup();
 })();
 </script>
 </body>
