@@ -20,16 +20,18 @@
 }
 
 *{ box-sizing:border-box; }
+
 body{
   margin:0;
   font-family: Arial, sans-serif;
   color:#fff;
   min-height:100vh;
 
-  /* 🎾 Image de fond + overlay pour garder le thème */
+  /* ✅ Image + overlay transparent pour garder le thème */
   background:
-    linear-gradient(135deg, rgba(31,122,90,0.86), rgba(11,59,111,0.86)),
-    url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/6/oKSlACEQAAAAEAASfjanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAA)"); /* base64 long, ok en 1 fichier */
+    linear-gradient(135deg, rgba(31,122,90,0.88), rgba(11,59,111,0.88)),
+    url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/6/oKSlACEQAAAAEAASfjanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAANvVqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjdiNTg2OWI5LTdiYzEtNGRhNC1iYWNhLWU2NzA4ODExY2FkYgAA)"); /* image intégrée */
+
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -138,11 +140,19 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 
     <label>Nombre de joueurs</label>
     <select id="playerCount">
-      <option value="4">4 joueurs (1 terrain)</option>
-      <option value="6">6 joueurs (1 terrain, 2 repos)</option>
-      <option value="12">12 joueurs (3 terrains)</option>
-      <option value="16">16 joueurs (4 terrains)</option>
+      <option value="4">4 joueurs</option>
+      <option value="6">6 joueurs</option>
+      <option value="12">12 joueurs</option>
+      <option value="16">16 joueurs</option>
     </select>
+
+    <div id="courtWrap" style="margin-top:10px; display:none;">
+      <label>Nombre de terrains</label>
+      <select id="courtCount"></select>
+      <div class="small" style="text-align:left; margin-top:6px;">
+        Si tu choisis moins de terrains que le maximum, certains joueurs seront automatiquement au repos.
+      </div>
+    </div>
 
     <div id="players"></div>
 
@@ -229,6 +239,11 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
         <option value="16">16 joueurs</option>
       </select>
 
+      <div id="finishCourtWrap" style="display:none;">
+        <label>Nombre de terrains</label>
+        <select id="finishCourtCount"></select>
+      </div>
+
       <button class="secondary" onclick="newGameChoosePlayers()">Nouvelle partie (changer le format)</button>
     </div>
   </div>
@@ -248,7 +263,7 @@ let state = {
   history: []
 };
 
-const LS_KEY = "la-team-state-v7";
+const LS_KEY = "la-team-state-v9";
 
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
@@ -258,6 +273,9 @@ const finishEl = document.getElementById("finish");
 const playerCountEl = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
 const maxPointsEl = document.getElementById("maxPoints");
+
+const courtWrap = document.getElementById("courtWrap");
+const courtCountEl = document.getElementById("courtCount");
 
 const courtsDiv = document.getElementById("courts");
 const rankingBody = document.getElementById("ranking");
@@ -269,6 +287,8 @@ const progressText = document.getElementById("progressText");
 const restText = document.getElementById("restText");
 
 const finishPlayerCountEl = document.getElementById("finishPlayerCount");
+const finishCourtWrap = document.getElementById("finishCourtWrap");
+const finishCourtCountEl = document.getElementById("finishCourtCount");
 
 const resumeBtn = document.getElementById("resumeBtn");
 const resumeHint = document.getElementById("resumeHint");
@@ -281,8 +301,53 @@ function createInputs(){
     playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
   }
 }
-playerCountEl.addEventListener("change", createInputs);
+
+function maxCourtsForN(n){
+  if(n === 4) return 1;
+  if(n === 6) return 1;     // 1 terrain (4 jouent) + 2 repos
+  if(n === 12) return 3;
+  if(n === 16) return 4;
+  return 1;
+}
+
+function fillCourtOptions(selectEl, n, selected){
+  const max = maxCourtsForN(n);
+  selectEl.innerHTML = "";
+  for(let c=max; c>=1; c--){
+    const opt = document.createElement("option");
+    opt.value = String(c);
+    const label = `${c} terrain${c>1?"s":""}`;
+    opt.textContent = label;
+    selectEl.appendChild(opt);
+  }
+  selectEl.value = String(selected || max);
+}
+
+function updateCourtChoiceUI(){
+  const n = +playerCountEl.value;
+  const max = maxCourtsForN(n);
+  const show = (max > 1);
+  courtWrap.style.display = show ? "block" : "none";
+  if(show) fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
+}
+
+function updateFinishCourtUI(){
+  const n = +finishPlayerCountEl.value;
+  const max = maxCourtsForN(n);
+  const show = (max > 1);
+  finishCourtWrap.style.display = show ? "block" : "none";
+  if(show) fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
+}
+
+playerCountEl.addEventListener("change", ()=>{
+  createInputs();
+  updateCourtChoiceUI();
+});
+finishPlayerCountEl.addEventListener("change", updateFinishCourtUI);
+
 createInputs();
+updateCourtChoiceUI();
+updateFinishCourtUI();
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -321,19 +386,16 @@ function sortPlayersForRanking(arr){
   });
 }
 
-function computeCourts(n){
-  if(n === 6) return 1;      // 1 terrain, 2 repos
-  return Math.floor(n / 4);  // 4->1, 12->3, 16->4
-}
-
 /* -------------------- SCHEDULING (Americano) --------------------
-   Méthode "circle" (round-robin) sur les paires, puis on regroupe 2 paires = 1 terrain.
-   - Si n multiple de 4 : tout le monde joue (n/4 terrains)
-   - Si n=6 : 1 terrain (2 paires) + 1 paire au repos
+   Circle method -> paires (n/2) -> 2 paires = 1 terrain.
+   Si on choisit moins de terrains que le max, les paires restantes vont au repos.
 */
-function scheduleAmericano(n){
+function scheduleAmericano(n, courtsChosen){
   let arr = [];
   for(let i=0;i<n;i++) arr.push(i);
+
+  const maxCourts = Math.floor(n / 4) || 1;     // 4->1, 6->1, 12->3, 16->4
+  const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
 
   const rounds = [];
   for(let r=0;r<n-1;r++){
@@ -343,16 +405,17 @@ function scheduleAmericano(n){
     }
 
     const courts = [];
-    let rest = [];
-
-    if(n === 6){
-      courts.push({teamA:pairs[0], teamB:pairs[1]});
-      rest = [...pairs[2]];
-    }else{
-      for(let k=0;k<pairs.length;k+=2){
-        courts.push({teamA:pairs[k], teamB:pairs[k+1]});
-      }
+    for(let k=0;k<courtsUsed;k++){
+      const p1 = pairs[2*k];
+      const p2 = pairs[2*k + 1];
+      if(!p1 || !p2) break;
+      courts.push({ teamA: p1, teamB: p2 });
     }
+
+    // paires restantes => repos
+    const usedPairsCount = courts.length * 2;
+    const restPairs = pairs.slice(usedPairsCount);
+    const rest = restPairs.flat();
 
     rounds.push({ rest, courts });
 
@@ -366,9 +429,9 @@ function scheduleAmericano(n){
   return rounds;
 }
 
-function buildSchedule(n){
+function buildSchedule(n, courts){
   if(![4,6,12,16].includes(n)) return [];
-  return scheduleAmericano(n);
+  return scheduleAmericano(n, courts);
 }
 
 /* -------------------- NAV / SCREENS -------------------- */
@@ -394,9 +457,17 @@ function showFinish(){
 /* Bouton global : Menu/Réglages partout */
 function goToSetup(keepProgress){
   if(keepProgress) saveState();
-  // pré-remplir menu
+
   playerCountEl.value = String(state.n || +playerCountEl.value);
   createInputs();
+
+  // terrains
+  updateCourtChoiceUI();
+  if(courtWrap.style.display !== "none"){
+    fillCourtOptions(courtCountEl, +playerCountEl.value, state.courts || maxCourtsForN(+playerCountEl.value));
+  }
+
+  // joueurs + points
   if(state.players && state.players.length){
     for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
       const inp = document.getElementById("p"+i);
@@ -404,6 +475,7 @@ function goToSetup(keepProgress){
     }
     maxPointsEl.value = String(state.maxPoints || +maxPointsEl.value);
   }
+
   updateResumeUI();
   showSetup();
 }
@@ -411,7 +483,15 @@ function goToSetup(keepProgress){
 /* -------------------- GAME FLOW -------------------- */
 function startNewTournament(){
   state.n = +playerCountEl.value;
-  state.courts = computeCourts(state.n);
+
+  // terrains choisis si possible, sinon max auto
+  const max = maxCourtsForN(state.n);
+  if(max > 1){
+    state.courts = +courtCountEl.value || max;
+  }else{
+    state.courts = 1;
+  }
+
   state.maxPoints = +maxPointsEl.value;
 
   state.players = [];
@@ -420,7 +500,7 @@ function startNewTournament(){
     state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
   }
 
-  state.schedule = buildSchedule(state.n);
+  state.schedule = buildSchedule(state.n, state.courts);
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
@@ -456,7 +536,8 @@ function renderMatch(){
   const total = state.schedule.length;
 
   progressText.innerHTML =
-    `<span class="badge">Round ${state.matchIndex+1} / ${total}</span> <span class="badge">${state.n} joueurs • ${state.courts} terrain(s)</span>`;
+    `<span class="badge">Round ${state.matchIndex+1} / ${total}</span>
+     <span class="badge">${state.n} joueurs • ${state.courts} terrain(s)</span>`;
 
   if(match.rest && match.rest.length){
     const names = match.rest.map(i=>playerName(i)).join("</b> &nbsp; <b>");
@@ -584,6 +665,10 @@ function renderRanking(){
 
 function renderFinishTable(){
   finishPlayerCountEl.value = String(state.n || 4);
+  updateFinishCourtUI();
+  if(finishCourtWrap.style.display !== "none"){
+    fillCourtOptions(finishCourtCountEl, state.n, state.courts || maxCourtsForN(state.n));
+  }
 
   const sorted = sortPlayersForRanking(state.players);
   finalRankingBody.innerHTML = "";
@@ -606,11 +691,11 @@ function renderFinishTable(){
 
 function restartSamePlayers(){
   const n = state.n;
+  const courts = state.courts;
   const names = state.players.map(p=>p.name);
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
-  state.schedule = buildSchedule(n);
-  state.courts = computeCourts(n);
+  state.schedule = buildSchedule(n, courts);
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.history = [];
@@ -624,15 +709,22 @@ function restartSamePlayers(){
 
 function newGameChoosePlayers(){
   const n = +finishPlayerCountEl.value;
+  const max = maxCourtsForN(n);
+  const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
 
   clearState();
 
   playerCountEl.value = String(n);
   createInputs();
+  updateCourtChoiceUI();
+
+  if(courtWrap.style.display !== "none"){
+    fillCourtOptions(courtCountEl, n, courts);
+  }
 
   state = {
     n: n,
-    courts: computeCourts(n),
+    courts: courts,
     maxPoints: +maxPointsEl.value,
     players: [],
     schedule: [],
