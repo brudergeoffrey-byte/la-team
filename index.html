@@ -335,6 +335,9 @@ let state = {
 const SAVES_INDEX_KEY = "la-team-saves-index-v1";     // liste des sauvegardes
 const SAVE_PREFIX     = "la-team-save-v1:";           // SAVE_PREFIX + id -> state
 
+/* Auto-save rapide */
+const AUTOSAVE_KEY    = "la-team-autosave-v1";
+
 /* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
 const gameEl = document.getElementById("game");
@@ -373,7 +376,6 @@ function fmtDate(ts){
   try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; }
 }
 function makeId(){
-  // id court et court: timestamp + random
   return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10);
 }
 
@@ -394,7 +396,6 @@ function upsertSaveMeta(meta){
   const i = arr.findIndex(x=>x.id === meta.id);
   if(i >= 0) arr[i] = meta;
   else arr.unshift(meta);
-  // tri: plus récent en premier
   arr.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
   setSavesIndex(arr);
 }
@@ -452,6 +453,28 @@ function loadFromSlot(id){
   }catch(e){ return false; }
 }
 
+/* -------------------- Auto-save rapide -------------------- */
+function writeAutoSave(){
+  try{
+    if(!canSaveCurrent()) return;
+    const payload = deepClone(state);
+    payload._autosaveAt = now();
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
+    autosaveText.textContent = `🟢 Auto-save : ${fmtDate(payload._autosaveAt)}`;
+  }catch(e){}
+}
+
+function tryLoadAutoSave(){
+  try{
+    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s || !s.players || !s.schedule) return false;
+    state = s;
+    return true;
+  }catch(e){ return false; }
+}
+
 /* -------------------- UI : Multi-saves -------------------- */
 function refreshSavesUI(){
   const arr = getSavesIndex();
@@ -480,10 +503,8 @@ function refreshSavesUI(){
 }
 
 function openLoadDialog(){
-  // On affiche la zone de chargement sur le menu (setup)
   refreshSavesUI();
   showSetup();
-  // scroll vers le bloc sauvegardes
   setTimeout(()=>{ saveSelect?.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
 }
 
@@ -495,7 +516,6 @@ function loadSelectedSave(){
     refreshSavesUI();
     return;
   }
-  // afficher l'écran correct
   if(state.matchIndex >= (state.schedule||[]).length){
     renderFinishTable();
     showFinish();
@@ -503,6 +523,7 @@ function loadSelectedSave(){
     showGame();
     renderMatch();
     renderRanking();
+    writeAutoSave(); // met à jour l'affichage
   }
   refreshSavesUI();
 }
@@ -528,7 +549,6 @@ function manualSaveAs(){
   const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
   if(!name) return;
 
-  // Si le nom existe déjà, on propose d'écraser
   const arr = getSavesIndex();
   const existing = arr.find(x => (x.name||"").toLowerCase() === name.toLowerCase());
   let id;
@@ -614,46 +634,149 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- Scheduling (Americano) -------------------- */
-function scheduleAmericano(n, courtsChosen){
-  let arr = [];
-  for(let i=0;i<n;i++) arr.push(i);
+/* -------------------- Scheduling (Americano / rotation heuristique) -------------------- */
+/*
+Objectif:
+- Doubles uniquement
+- Rotation: nouveaux partenaires/adversaires au maximum
+- Repos si courts < max, distribué équitablement
+- Compatible n = 4,6,8,12,16
+*/
+function buildSchedule(n, courtsChosen){
+  if(![4,6,8,12,16].includes(n)) return [];
 
   const maxCourts = Math.floor(n / 4) || 1;
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
+  const activePerRound = Math.min(n, courtsUsed * 4);
+  const restCount = n - activePerRound;
+
+  const partner = Array.from({length:n}, ()=>Array(n).fill(0)); // partner[i][j]
+  const against = Array.from({length:n}, ()=>Array(n).fill(0)); // against[i][j]
+  const rests = Array(n).fill(0);
 
   const rounds = [];
-  for(let r=0;r<n-1;r++){
+  const totalRounds = n - 1;
+
+  function incPartner(a,b){
+    partner[a][b]++; partner[b][a]++;
+  }
+  function incAgainst(teamA, teamB){
+    for(const a of teamA){
+      for(const b of teamB){
+        against[a][b]++; against[b][a]++;
+      }
+    }
+  }
+
+  function pickRestPlayers(){
+    const idx = [...Array(n).keys()];
+    idx.sort((i,j)=>{
+      if(rests[i] !== rests[j]) return rests[i]-rests[j];
+      return (Math.random() - 0.5);
+    });
+    const rest = idx.slice(0, restCount);
+    for(const r of rest) rests[r]++;
+    return rest;
+  }
+
+  function scorePair(a,b){
+    if(a === b) return 1e9;
+    return partner[a][b] * 100 + (Math.random()*0.01);
+  }
+
+  function scoreMatch(teamA, teamB){
+    let s = 0;
+    for(const a of teamA){
+      for(const b of teamB){
+        s += against[a][b] * 10;
+      }
+    }
+    return s + (Math.random()*0.01);
+  }
+
+  function makeTeams(activePlayers){
+    const remaining = new Set(activePlayers);
     const pairs = [];
-    for(let i=0;i<n/2;i++){
-      pairs.push([arr[i], arr[n-1-i]]);
+
+    while(remaining.size > 0){
+      const arr = [...remaining];
+      const p = arr[0];
+
+      let bestQ = null;
+      let bestScore = 1e18;
+
+      for(const q of arr){
+        if(q === p) continue;
+        const sc = scorePair(p,q);
+        if(sc < bestScore){
+          bestScore = sc;
+          bestQ = q;
+        }
+      }
+
+      if(bestQ === null){
+        const q = arr[1];
+        pairs.push([p,q]);
+        remaining.delete(p); remaining.delete(q);
+      }else{
+        pairs.push([p,bestQ]);
+        remaining.delete(p); remaining.delete(bestQ);
+      }
     }
 
-    const courts = [];
-    for(let k=0;k<courtsUsed;k++){
-      const p1 = pairs[2*k];
-      const p2 = pairs[2*k + 1];
-      if(!p1 || !p2) break;
-      courts.push({ teamA: p1, teamB: p2 });
+    const pairIdx = [...Array(pairs.length).keys()];
+    const unused = new Set(pairIdx);
+    const matches = [];
+
+    while(unused.size > 0){
+      const pIdx = [...unused][0];
+      unused.delete(pIdx);
+
+      let bestOpp = null;
+      let bestScore = 1e18;
+
+      for(const oIdx of unused){
+        const sc = scoreMatch(pairs[pIdx], pairs[oIdx]);
+        if(sc < bestScore){
+          bestScore = sc;
+          bestOpp = oIdx;
+        }
+      }
+
+      if(bestOpp === null){
+        const oIdx = [...unused][0];
+        unused.delete(oIdx);
+        matches.push({teamA:pairs[pIdx], teamB:pairs[oIdx]});
+      }else{
+        unused.delete(bestOpp);
+        matches.push({teamA:pairs[pIdx], teamB:pairs[bestOpp]});
+      }
     }
 
-    const usedPairsCount = courts.length * 2;
-    const rest = pairs.slice(usedPairsCount).flat();
+    return matches;
+  }
+
+  for(let r=0; r<totalRounds; r++){
+    const rest = restCount > 0 ? pickRestPlayers() : [];
+    const active = [...Array(n).keys()].filter(i => !rest.includes(i));
+
+    if(active.length % 2 !== 0){
+      rest.push(active.pop());
+    }
+
+    const matches = makeTeams(active);
+    const courts = matches.slice(0, courtsUsed).map(m=>({teamA:m.teamA, teamB:m.teamB}));
+
+    for(const c of courts){
+      incPartner(c.teamA[0], c.teamA[1]);
+      incPartner(c.teamB[0], c.teamB[1]);
+      incAgainst(c.teamA, c.teamB);
+    }
 
     rounds.push({ rest, courts });
-
-    const fixed = arr[0];
-    const restArr = arr.slice(1);
-    restArr.unshift(restArr.pop());
-    arr = [fixed, ...restArr];
   }
 
   return rounds;
-}
-
-function buildSchedule(n, courts){
-  if(![4,6,8,12,16].includes(n)) return [];
-  return scheduleAmericano(n, courts);
 }
 
 /* -------------------- NAV / SCREENS -------------------- */
@@ -678,7 +801,6 @@ function showFinish(){
 
 function goToSetup(keepProgress){
   if(keepProgress){
-    // pas d'autosave forcée dans un slot (on garde la logique "Sauver…")
     state.savedAt = now();
   }
 
@@ -727,6 +849,7 @@ function startNewTournament(){
   showGame();
   renderMatch();
   renderRanking();
+  writeAutoSave();
 }
 
 function renderMatch(){
@@ -789,10 +912,13 @@ function renderMatch(){
 }
 
 function validateCourt(courtIndex){
+  // anti double-clic / déjà validé
+  if(state.validatedCourts?.[courtIndex]) return;
+
   const match = state.schedule[state.matchIndex];
   const court = match.courts[courtIndex];
 
-  // sauvegarde pour annulation
+  // snapshot pour annulation
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
@@ -802,10 +928,23 @@ function validateCourt(courtIndex){
   const a = +document.getElementById(`scoreA_${courtIndex}`).value;
   const b = +document.getElementById(`scoreB_${courtIndex}`).value;
 
+  // règles de score
+  if(a === b){
+    alert("❌ Score invalide : pas d’égalité (il faut un vainqueur).");
+    state.history.pop();
+    return;
+  }
+  if(Math.max(a,b) !== state.maxPoints){
+    alert(`❌ Score invalide : le vainqueur doit atteindre ${state.maxPoints}.`);
+    state.history.pop();
+    return;
+  }
+
   applyResult(court.teamA, court.teamB, a, b);
 
   state.validatedCourts[courtIndex] = true;
 
+  writeAutoSave();
   renderRanking();
   renderMatch();
 }
@@ -832,6 +971,7 @@ function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
   state.matchIndex++;
   state.validatedCourts = [];
+  writeAutoSave();
   renderMatch();
 }
 
@@ -841,6 +981,7 @@ function undoLast(){
   state.players = prev.players;
   state.matchIndex = prev.matchIndex;
   state.validatedCourts = prev.validatedCourts;
+  writeAutoSave();
   renderRanking();
   renderMatch();
 }
@@ -901,6 +1042,7 @@ function restartSamePlayers(){
   showGame();
   renderMatch();
   renderRanking();
+  writeAutoSave();
 }
 
 function newGameChoosePlayers(){
@@ -934,12 +1076,15 @@ function newGameChoosePlayers(){
 
 function resetAll(){
   if(!confirm("Tout effacer (application + sauvegardes) ?")) return;
-  // Supprime toutes les sauvegardes
+
   const arr = getSavesIndex();
   for(const s of arr){
     try{ localStorage.removeItem(SAVE_PREFIX + s.id); }catch(e){}
   }
   try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
+
+  try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
+
   location.reload();
 }
 
@@ -949,6 +1094,24 @@ function resetAll(){
   updateCourtChoiceUI();
   updateFinishCourtUI();
   refreshSavesUI();
+
+  // proposer de reprendre l'auto-save si disponible
+  if(tryLoadAutoSave()){
+    if(confirm("Reprendre la dernière partie (auto-save) ?")){
+      refreshSavesUI();
+      if(state.matchIndex >= (state.schedule||[]).length){
+        renderFinishTable();
+        showFinish();
+      }else{
+        showGame();
+        renderMatch();
+        renderRanking();
+      }
+      writeAutoSave(); // met à jour le label
+      return;
+    }
+  }
+
   showSetup();
 })();
 </script>
