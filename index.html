@@ -327,13 +327,14 @@ let state = {
   schedule: [],
   matchIndex: 0,
   validatedCourts: [],
+  courtScores: [], // <-- mémorise les scores par terrain (round courant)
   history: [],
   savedAt: null
 };
 
 /* Multi-sauvegardes */
-const SAVES_INDEX_KEY = "la-team-saves-index-v1";     // liste des sauvegardes
-const SAVE_PREFIX     = "la-team-save-v1:";           // SAVE_PREFIX + id -> state
+const SAVES_INDEX_KEY = "la-team-saves-index-v1";
+const SAVE_PREFIX     = "la-team-save-v1:";
 
 /* Auto-save rapide */
 const AUTOSAVE_KEY    = "la-team-autosave-v1";
@@ -449,6 +450,8 @@ function loadFromSlot(id){
     const s = JSON.parse(raw);
     if(!s || !s.players || !s.schedule) return false;
     state = s;
+    // garde-fou si vieille save sans courtScores
+    if(!Array.isArray(state.courtScores)) state.courtScores = [];
     return true;
   }catch(e){ return false; }
 }
@@ -471,6 +474,7 @@ function tryLoadAutoSave(){
     const s = JSON.parse(raw);
     if(!s || !s.players || !s.schedule) return false;
     state = s;
+    if(!Array.isArray(state.courtScores)) state.courtScores = [];
     return true;
   }catch(e){ return false; }
 }
@@ -523,7 +527,7 @@ function loadSelectedSave(){
     showGame();
     renderMatch();
     renderRanking();
-    writeAutoSave(); // met à jour l'affichage
+    writeAutoSave();
   }
   refreshSavesUI();
 }
@@ -635,13 +639,6 @@ function sortPlayersForRanking(arr){
 }
 
 /* -------------------- Scheduling (Americano / rotation heuristique) -------------------- */
-/*
-Objectif:
-- Doubles uniquement
-- Rotation: nouveaux partenaires/adversaires au maximum
-- Repos si courts < max, distribué équitablement
-- Compatible n = 4,6,8,12,16
-*/
 function buildSchedule(n, courtsChosen){
   if(![4,6,8,12,16].includes(n)) return [];
 
@@ -650,8 +647,8 @@ function buildSchedule(n, courtsChosen){
   const activePerRound = Math.min(n, courtsUsed * 4);
   const restCount = n - activePerRound;
 
-  const partner = Array.from({length:n}, ()=>Array(n).fill(0)); // partner[i][j]
-  const against = Array.from({length:n}, ()=>Array(n).fill(0)); // against[i][j]
+  const partner = Array.from({length:n}, ()=>Array(n).fill(0));
+  const against = Array.from({length:n}, ()=>Array(n).fill(0));
   const rests = Array(n).fill(0);
 
   const rounds = [];
@@ -824,6 +821,19 @@ function goToSetup(keepProgress){
   showSetup();
 }
 
+/* -------------------- Score memory -------------------- */
+function onScoreChange(courtIndex){
+  const sa = document.getElementById(`scoreA_${courtIndex}`);
+  const sb = document.getElementById(`scoreB_${courtIndex}`);
+  if(!sa || !sb) return;
+
+  if(!Array.isArray(state.courtScores)) state.courtScores = [];
+  if(!state.courtScores[courtIndex]) state.courtScores[courtIndex] = {a:0,b:0};
+
+  state.courtScores[courtIndex].a = +sa.value;
+  state.courtScores[courtIndex].b = +sb.value;
+}
+
 /* -------------------- GAME FLOW -------------------- */
 function startNewTournament(){
   state.n = +playerCountEl.value;
@@ -842,6 +852,7 @@ function startNewTournament(){
   state.schedule = buildSchedule(state.n, state.courts);
   state.matchIndex = 0;
   state.validatedCourts = [];
+  state.courtScores = []; // reset mémoire scores
   state.history = [];
   state.savedAt = null;
 
@@ -877,6 +888,11 @@ function renderMatch(){
     state.validatedCourts = Array(match.courts.length).fill(false);
   }
 
+  // init mémoire scores du round si besoin
+  if(!Array.isArray(state.courtScores) || state.courtScores.length !== match.courts.length){
+    state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:0}));
+  }
+
   courtsDiv.innerHTML = "";
   match.courts.forEach((c, idx)=>{
     const disabled = state.validatedCourts[idx];
@@ -895,16 +911,26 @@ function renderMatch(){
 
         <div class="row" style="margin-top:10px;">
           <div>
-            <select id="scoreA_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
+            <select id="scoreA_${idx}" ${disabled?"disabled":""} onchange="onScoreChange(${idx})">${scoreOptions()}</select>
           </div>
           <div>
-            <select id="scoreB_${idx}" ${disabled?"disabled":""}>${scoreOptions()}</select>
+            <select id="scoreB_${idx}" ${disabled?"disabled":""} onchange="onScoreChange(${idx})">${scoreOptions()}</select>
           </div>
         </div>
 
         <button style="margin-top:10px;" onclick="validateCourt(${idx})" ${disabled?"disabled":""}>Valider</button>
       </div>
     `;
+  });
+
+  // ré-appliquer les valeurs mémorisées après re-render
+  match.courts.forEach((_, idx)=>{
+    const sa = document.getElementById(`scoreA_${idx}`);
+    const sb = document.getElementById(`scoreB_${idx}`);
+    if(!sa || !sb) return;
+    const mem = state.courtScores[idx] || {a:0,b:0};
+    sa.value = String(mem.a ?? 0);
+    sb.value = String(mem.b ?? 0);
   });
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
@@ -918,15 +944,21 @@ function validateCourt(courtIndex){
   const match = state.schedule[state.matchIndex];
   const court = match.courts[courtIndex];
 
-  // snapshot pour annulation
+  // snapshot pour annulation (inclut scores)
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
-    validatedCourts: state.validatedCourts
+    validatedCourts: state.validatedCourts,
+    courtScores: state.courtScores
   }));
 
   const a = +document.getElementById(`scoreA_${courtIndex}`).value;
   const b = +document.getElementById(`scoreB_${courtIndex}`).value;
+
+  // mémoriser les scores saisis
+  if(!state.courtScores?.[courtIndex]) state.courtScores[courtIndex] = {a:0,b:0};
+  state.courtScores[courtIndex].a = a;
+  state.courtScores[courtIndex].b = b;
 
   // règles de score
   if(a === b){
@@ -971,6 +1003,7 @@ function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
   state.matchIndex++;
   state.validatedCourts = [];
+  state.courtScores = []; // reset mémoire scores au round suivant
   writeAutoSave();
   renderMatch();
 }
@@ -981,6 +1014,7 @@ function undoLast(){
   state.players = prev.players;
   state.matchIndex = prev.matchIndex;
   state.validatedCourts = prev.validatedCourts;
+  state.courtScores = prev.courtScores || [];
   writeAutoSave();
   renderRanking();
   renderMatch();
@@ -1036,6 +1070,7 @@ function restartSamePlayers(){
   state.schedule = buildSchedule(n, courts);
   state.matchIndex = 0;
   state.validatedCourts = [];
+  state.courtScores = [];
   state.history = [];
   state.savedAt = null;
 
@@ -1066,6 +1101,7 @@ function newGameChoosePlayers(){
     schedule: [],
     matchIndex: 0,
     validatedCourts: [],
+    courtScores: [],
     history: [],
     savedAt: null
   };
@@ -1082,7 +1118,6 @@ function resetAll(){
     try{ localStorage.removeItem(SAVE_PREFIX + s.id); }catch(e){}
   }
   try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
-
   try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
 
   location.reload();
@@ -1107,7 +1142,7 @@ function resetAll(){
         renderMatch();
         renderRanking();
       }
-      writeAutoSave(); // met à jour le label
+      writeAutoSave();
       return;
     }
   }
