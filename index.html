@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
@@ -43,6 +42,16 @@ body{
 <rect x='160' y='220' width='880' height='760' rx='26' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='18'/>\
 <line x1='600' y1='220' x2='600' y2='980' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
 <line x1='160' y1='600' x2='1040' y2='600' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
+<ellipse cx='860' cy='380' rx='130' ry='170' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='18'/>\
+<circle cx='820' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='860' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='900' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='820' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='860' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='900' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='840' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
+<circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
+<rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
 </svg>");
   background-size: cover;
   background-position: center;
@@ -169,7 +178,6 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 .ladderArrows .up{ color:#7CFF7C; font-weight:900; }
 .ladderArrows .down{ color:#FF7C7C; font-weight:900; }
 </style>
-
 </head>
 
 <body>
@@ -212,6 +220,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <option value="americano" selected>Americano (rotation)</option>
       <option value="ladder">Montée / Descente (gagnants montent)</option>
     </select>
+    <div class="small" style="text-align:left; margin-top:6px;">
+      Montée/Descente recommandé à partir de 2 terrains et sans repos (4×terrains joueurs).
+    </div>
 
     <div id="players"></div>
 
@@ -354,7 +365,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 <script>
 /* -------------------- STATE -------------------- */
 let state = {
-  mode: "americano",     // "americano" | "ladder"
+  mode: "americano",
   n: 4,
   courts: 1,
   maxPoints: 21,
@@ -367,11 +378,9 @@ let state = {
   validatedCourts: [],
   courtScores: [],
   results: [],
-
   history: [],
   savedAt: null,
 
-  // ladder opposition memory
   ladderOpp: null
 };
 
@@ -412,7 +421,6 @@ const finishCourtCountEl = document.getElementById("finishCourtCount");
 const finishGameModeEl = document.getElementById("finishGameMode");
 const finishMaxPointsEl = document.getElementById("finishMaxPoints");
 
-/* Saves UI */
 const saveSelect = document.getElementById("saveSelect");
 const saveHint = document.getElementById("saveHint");
 const saveCountBadge = document.getElementById("saveCountBadge");
@@ -427,7 +435,7 @@ function makeId(){
   return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10);
 }
 function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
-</script>
+
 /* -------------------- Saves (Index) -------------------- */
 function getSavesIndex(){
   try{
@@ -497,12 +505,11 @@ function loadFromSlot(id){
     if(!Array.isArray(state.history)) state.history = [];
     if(!state.mode) state.mode = "americano";
     if(!state.ladderOpp) state.ladderOpp = null;
-
     return true;
   }catch(e){ return false; }
 }
 
-/* -------------------- Auto-save rapide -------------------- */
+/* -------------------- Auto-save -------------------- */
 function writeAutoSave(){
   try{
     if(!canSaveCurrent()) return;
@@ -519,17 +526,15 @@ function tryLoadAutoSave(){
     const s = JSON.parse(raw);
     if(!s || !s.players || !s.schedule) return false;
     state = s;
-
     if(!Array.isArray(state.courtScores)) state.courtScores = [];
     if(!Array.isArray(state.results)) state.results = [];
     if(!state.mode) state.mode = "americano";
     if(!state.ladderOpp) state.ladderOpp = null;
-
     return true;
   }catch(e){ return false; }
 }
 
-/* -------------------- UI : Multi-saves -------------------- */
+/* -------------------- UI Saves -------------------- */
 function refreshSavesUI(){
   const arr = getSavesIndex();
   saveCountBadge.textContent = String(arr.length);
@@ -561,7 +566,6 @@ function openLoadDialog(){
   showSetup();
   setTimeout(()=>{ saveSelect?.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
 }
-
 function loadSelectedSave(){
   const id = saveSelect.value;
   if(!id){ alert("Aucune sauvegarde à charger."); return; }
@@ -582,7 +586,6 @@ function loadSelectedSave(){
   }
   refreshSavesUI();
 }
-
 function deleteSelectedSave(){
   const id = saveSelect.value;
   if(!id){ alert("Aucune sauvegarde à supprimer."); return; }
@@ -593,13 +596,11 @@ function deleteSelectedSave(){
   deleteSaveById(id);
   refreshSavesUI();
 }
-
 function manualSaveAs(){
   if(!canSaveCurrent()){
     alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
     return;
   }
-
   const defaultName = `Tournoi ${fmtDate(now())}`;
   const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
   if(!name) return;
@@ -613,14 +614,13 @@ function manualSaveAs(){
   }else{
     id = makeId();
   }
-
   if(saveToSlot(id, name)){
     refreshSavesUI();
     autosaveText.textContent = `✅ Sauvegardé : ${name} (${fmtDate(now())})`;
   }
 }
 
-/* -------------------- UI SETUP -------------------- */
+/* -------------------- UI Setup -------------------- */
 function createInputs(){
   playersDiv.innerHTML = "";
   const n = +playerCountEl.value;
@@ -628,7 +628,6 @@ function createInputs(){
     playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
   }
 }
-
 function maxCourtsForN(n){
   if(n === 4) return 1;
   if(n === 6) return 1;
@@ -637,7 +636,6 @@ function maxCourtsForN(n){
   if(n === 16) return 4;
   return 1;
 }
-
 function fillCourtOptions(selectEl, n, selected){
   const max = maxCourtsForN(n);
   selectEl.innerHTML = "";
@@ -649,7 +647,6 @@ function fillCourtOptions(selectEl, n, selected){
   }
   selectEl.value = String(selected || max);
 }
-
 function updateCourtChoiceUI(){
   const n = +playerCountEl.value;
   const max = maxCourtsForN(n);
@@ -657,7 +654,6 @@ function updateCourtChoiceUI(){
   courtWrap.style.display = show ? "block" : "none";
   if(show) fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
 }
-
 function updateFinishCourtUI(){
   const n = +finishPlayerCountEl.value;
   const max = maxCourtsForN(n);
@@ -665,7 +661,6 @@ function updateFinishCourtUI(){
   finishCourtWrap.style.display = show ? "block" : "none";
   if(show) fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
 }
-
 playerCountEl.addEventListener("change", ()=>{
   createInputs();
   updateCourtChoiceUI();
@@ -707,11 +702,8 @@ function buildScheduleAmericano(n, courtsChosen){
 
   function incPartner(a,b){ partner[a][b]++; partner[b][a]++; }
   function incAgainst(teamA, teamB){
-    for(const a of teamA) for(const b of teamB){
-      against[a][b]++; against[b][a]++;
-    }
+    for(const a of teamA) for(const b of teamB){ against[a][b]++; against[b][a]++; }
   }
-
   function pickRestPlayers(){
     const idx = [...Array(n).keys()];
     idx.sort((i,j)=>{
@@ -722,20 +714,15 @@ function buildScheduleAmericano(n, courtsChosen){
     for(const r of rest) rests[r]++;
     return rest;
   }
-
   function scorePair(a,b){
     if(a === b) return 1e9;
     return partner[a][b] * 100 + (Math.random()*0.01);
   }
-
   function scoreMatch(teamA, teamB){
     let s = 0;
-    for(const a of teamA) for(const b of teamB){
-      s += against[a][b] * 10;
-    }
+    for(const a of teamA) for(const b of teamB){ s += against[a][b] * 10; }
     return s + (Math.random()*0.01);
   }
-
   function makeTeams(activePlayers){
     const remaining = new Set(activePlayers);
     const pairs = [];
@@ -743,9 +730,7 @@ function buildScheduleAmericano(n, courtsChosen){
     while(remaining.size > 0){
       const arr = [...remaining];
       const p = arr[0];
-
-      let bestQ = null;
-      let bestScore = 1e18;
+      let bestQ = null, bestScore = 1e18;
 
       for(const q of arr){
         if(q === p) continue;
@@ -753,14 +738,9 @@ function buildScheduleAmericano(n, courtsChosen){
         if(sc < bestScore){ bestScore = sc; bestQ = q; }
       }
 
-      if(bestQ === null){
-        const q = arr[1];
-        pairs.push([p,q]);
-        remaining.delete(p); remaining.delete(q);
-      }else{
-        pairs.push([p,bestQ]);
-        remaining.delete(p); remaining.delete(bestQ);
-      }
+      const q = (bestQ === null) ? arr[1] : bestQ;
+      pairs.push([p,q]);
+      remaining.delete(p); remaining.delete(q);
     }
 
     const pairIdx = [...Array(pairs.length).keys()];
@@ -771,34 +751,23 @@ function buildScheduleAmericano(n, courtsChosen){
       const pIdx = [...unused][0];
       unused.delete(pIdx);
 
-      let bestOpp = null;
-      let bestScore = 1e18;
-
+      let bestOpp = null, bestScore = 1e18;
       for(const oIdx of unused){
         const sc = scoreMatch(pairs[pIdx], pairs[oIdx]);
         if(sc < bestScore){ bestScore = sc; bestOpp = oIdx; }
       }
 
-      if(bestOpp === null){
-        const oIdx = [...unused][0];
-        unused.delete(oIdx);
-        matches.push({teamA:pairs[pIdx], teamB:pairs[oIdx]});
-      }else{
-        unused.delete(bestOpp);
-        matches.push({teamA:pairs[pIdx], teamB:pairs[bestOpp]});
-      }
+      const oIdx = (bestOpp === null) ? [...unused][0] : bestOpp;
+      unused.delete(oIdx);
+      matches.push({teamA:pairs[pIdx], teamB:pairs[oIdx]});
     }
-
     return matches;
   }
 
   for(let r=0; r<totalRounds; r++){
     const rest = restCount > 0 ? pickRestPlayers() : [];
     const active = [...Array(n).keys()].filter(i => !rest.includes(i));
-
-    if(active.length % 2 !== 0){
-      rest.push(active.pop());
-    }
+    if(active.length % 2 !== 0) rest.push(active.pop());
 
     const matches = makeTeams(active);
     const courts = matches.slice(0, courtsUsed).map(m=>({teamA:m.teamA, teamB:m.teamB}));
@@ -808,10 +777,8 @@ function buildScheduleAmericano(n, courtsChosen){
       incPartner(c.teamB[0], c.teamB[1]);
       incAgainst(c.teamA, c.teamB);
     }
-
     rounds.push({ rest, courts });
   }
-
   return rounds;
 }
 
@@ -823,26 +790,19 @@ function buildFirstRoundLadder(n, courts){
     [idx[i], idx[j]] = [idx[j], idx[i]];
   }
   const teams = [];
-  for(let t=0;t<courts*2;t++){
-    teams.push([idx[2*t], idx[2*t+1]]);
-  }
+  for(let t=0;t<courts*2;t++) teams.push([idx[2*t], idx[2*t+1]]);
   const roundCourts = [];
   for(let c=0;c<courts;c++){
     roundCourts.push({ teamA: teams[2*c], teamB: teams[2*c+1] });
   }
   return { rest: [], courts: roundCourts };
 }
-
-/* --- Ladder: score des re-oppositions --- */
 function ladderOppScore(teamA, teamB){
   if(!state.ladderOpp) return 0;
   let s = 0;
-  for(const a of teamA) for(const b of teamB){
-    s += (state.ladderOpp[a]?.[b] || 0);
-  }
+  for(const a of teamA) for(const b of teamB) s += (state.ladderOpp[a]?.[b] || 0);
   return s;
 }
-
 function buildNextRoundLadder(prevRoundCourts, prevResults){
   const courtsN = prevRoundCourts.length;
   const last = courtsN - 1;
@@ -851,12 +811,11 @@ function buildNextRoundLadder(prevRoundCourts, prevResults){
   for(let i=0;i<courtsN;i++){
     const court = prevRoundCourts[i];
     const res = prevResults?.[i];
-    if(!res){
-      moved[i].push(court.teamA, court.teamB);
-      continue;
-    }
-    const winner = (res.a > res.b) ? court.teamA : court.teamB;
-    const loser  = (res.a > res.b) ? court.teamB : court.teamA;
+    if(!res){ moved[i].push(court.teamA, court.teamB); continue; }
+
+    const a = res.a, b = res.b;
+    const winner = (a > b) ? court.teamA : court.teamB;
+    const loser  = (a > b) ? court.teamB : court.teamA;
 
     moved[Math.max(0, i - 1)].push(winner);
     moved[Math.min(last, i + 1)].push(loser);
@@ -867,7 +826,6 @@ function buildNextRoundLadder(prevRoundCourts, prevResults){
     const t1 = moved[c][0] || prevRoundCourts[c].teamA;
     const t2 = moved[c][1] || prevRoundCourts[c].teamB;
 
-    // casser les équipes + choisir recompo qui minimise les re-adversaires
     const opt1A = [t1[0], t2[0]];
     const opt1B = [t1[1], t2[1]];
     const opt2A = [t1[0], t2[1]];
@@ -879,11 +837,10 @@ function buildNextRoundLadder(prevRoundCourts, prevResults){
     let teamA, teamB;
     if(s1 < s2){ teamA = opt1A; teamB = opt1B; }
     else if(s2 < s1){ teamA = opt2A; teamB = opt2B; }
-    else { (Math.random()<0.5) ? (teamA=opt1A,teamB=opt1B) : (teamA=opt2A,teamB=opt2B); }
+    else { (Math.random()<0.5) ? (teamA=opt1A, teamB=opt1B) : (teamA=opt2A, teamB=opt2B); }
 
     newCourts.push({ teamA, teamB });
   }
-
   return { rest: [], courts: newCourts };
 }
 
@@ -906,32 +863,28 @@ function showFinish(){
   finishEl.classList.remove("hidden");
   window.scrollTo(0,0);
 }
-
-/* -------------------- MENU -> SETUP -------------------- */
 function goToSetup(keepProgress){
   if(keepProgress) state.savedAt = now();
 
   playerCountEl.value = String(state.n || +playerCountEl.value);
   createInputs();
-
   updateCourtChoiceUI();
   if(courtWrap.style.display !== "none"){
     fillCourtOptions(courtCountEl, +playerCountEl.value, state.courts || maxCourtsForN(+playerCountEl.value));
   }
-
   if(state.players && state.players.length){
     for(let i=0;i<Math.min(state.players.length, +playerCountEl.value);i++){
       const inp = document.getElementById("p"+i);
       if(inp) inp.value = state.players[i].name || "";
     }
   }
-
   gameModeEl.value = state.mode || "americano";
   maxPointsEl.value = String(state.maxPoints || 21);
 
   refreshSavesUI();
   showSetup();
 }
+
 /* -------------------- Scores: total points + auto-complement -------------------- */
 function onScoreChange(courtIndex, side){
   const sa = document.getElementById(`scoreA_${courtIndex}`);
@@ -939,10 +892,9 @@ function onScoreChange(courtIndex, side){
   if(!sa || !sb) return;
 
   const total = state.maxPoints;
-
   let a = +sa.value;
-  let b = +sb.value;
-
+  let b = +sb.value
+;
   if(side === "A"){
     a = clamp(a, 0, total);
     b = clamp(total - a, 0, total);
@@ -978,7 +930,6 @@ function startNewTournament(){
 
   state.totalRounds = state.n - 1;
 
-  // init ladder opposition matrix
   state.ladderOpp = (state.mode === "ladder")
     ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
     : null;
@@ -1026,7 +977,7 @@ function renderMatch(){
     return;
   }
 
-  // ladder: générer round manquant à l’affichage
+  // ladder: si le round n'est pas encore généré, on le crée à partir du précédent
   if(state.mode === "ladder" && !state.schedule[state.matchIndex]){
     const prev = state.schedule[state.matchIndex - 1];
     const prevRes = state.results?.[state.matchIndex - 1];
@@ -1052,6 +1003,7 @@ function renderMatch(){
   if(!Array.isArray(state.validatedCourts) || state.validatedCourts.length !== match.courts.length){
     state.validatedCourts = Array(match.courts.length).fill(false);
   }
+
   if(!Array.isArray(state.courtScores) || state.courtScores.length !== match.courts.length){
     state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
   }
@@ -1059,6 +1011,7 @@ function renderMatch(){
   courtsDiv.innerHTML = "";
   match.courts.forEach((c, idx)=>{
     const disabled = state.validatedCourts[idx];
+
     courtsDiv.innerHTML += `
       <div class="card" style="margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
@@ -1127,7 +1080,6 @@ function validateCourt(courtIndex){
   const a = +document.getElementById(`scoreA_${courtIndex}`).value;
   const b = +document.getElementById(`scoreB_${courtIndex}`).value;
 
-  // mémoriser scores
   if(!state.courtScores?.[courtIndex]) state.courtScores[courtIndex] = {a:0,b:0};
   state.courtScores[courtIndex].a = a;
   state.courtScores[courtIndex].b = b;
@@ -1148,7 +1100,7 @@ function validateCourt(courtIndex){
   ensureRoundResults();
   state.results[state.matchIndex][courtIndex] = {a, b};
 
-  // ladder opposition memory + flèches
+  // ladder: oppositions + flèches
   if(state.mode === "ladder"){
     if(!state.ladderOpp){
       state.ladderOpp = Array.from({length: state.n}, ()=>Array(state.n).fill(0));
@@ -1157,9 +1109,11 @@ function validateCourt(courtIndex){
     const winnerTeam = (a > b) ? court.teamA : court.teamB;
     const loserTeam  = (a > b) ? court.teamB : court.teamA;
 
-    for(const x of winnerTeam) for(const y of loserTeam){
-      state.ladderOpp[x][y]++;
-      state.ladderOpp[y][x]++;
+    for(const x of winnerTeam){
+      for(const y of loserTeam){
+        state.ladderOpp[x][y]++;
+        state.ladderOpp[y][x]++;
+      }
     }
 
     const el = document.getElementById(`ladderArrows_${courtIndex}`);
@@ -1223,7 +1177,7 @@ function undoLast(){
   state.courtScores = prev.courtScores || [];
   state.results = prev.results || [];
   state.schedule = prev.schedule || state.schedule;
-  state.ladderOpp = prev.ladderOpp || state.ladderOpp;
+  state.ladderOpp = prev.ladderOpp ?? state.ladderOpp;
 
   writeAutoSave();
   renderRanking();
@@ -1240,6 +1194,8 @@ function renderRanking(){
         <td>${p.name}</td>
         <td>${p.mj}</td>
         <td>${p.v}</td>
+        <td>${p.plus}</td>
+        <td>${p.minus}</td>
         <td>${p.plus - p.minus}</td>
       </tr>
     `;
@@ -1279,16 +1235,13 @@ function renderRecap(targetEl, includeAll){
 
 function toggleRecap(){
   recapInGame.classList.toggle("hidden");
-  if(!recapInGame.classList.contains("hidden")){
-    renderRecapInGame();
-  }
+  if(!recapInGame.classList.contains("hidden")) renderRecapInGame();
 }
 function renderRecapInGame(){
   if(recapInGame.classList.contains("hidden")) return;
   renderRecap(recapInGame, false);
 }
 
-/* -------------------- Finish -------------------- */
 function renderFinishTable(){
   finishPlayerCountEl.value = String(state.n || 4);
   updateFinishCourtUI();
@@ -1336,9 +1289,15 @@ function restartSamePlayers(){
     ? Array.from({length: n}, ()=>Array(n).fill(0))
     : null;
 
-  state.schedule = (mode === "ladder")
-    ? [buildFirstRoundLadder(n, courts)]
-    : buildScheduleAmericano(n, courts);
+  if(mode === "ladder"){
+    if(n !== courts*4){
+      alert("❌ Montée/Descente nécessite 4×terrains joueurs.");
+      return;
+    }
+    state.schedule = [buildFirstRoundLadder(n, courts)];
+  }else{
+    state.schedule = buildScheduleAmericano(n, courts);
+  }
 
   state.matchIndex = 0;
   state.validatedCourts = [];
@@ -1399,7 +1358,6 @@ function newGameChoosePlayers(){
   showSetup();
 }
 
-/* -------------------- Reset -------------------- */
 function resetAll(){
   if(!confirm("Tout effacer (application + sauvegardes) ?")) return;
 
