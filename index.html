@@ -186,7 +186,6 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   <div class="topbar">
     <div class="brand"><span class="dot"></span> La Team</div>
     <div class="actions">
-      <!-- ✅ Sauver = écrase la sauvegarde en cours -->
       <button class="secondary" onclick="manualSaveAs()">💾 Sauver</button>
       <button class="secondary" onclick="openLoadDialog()">📂 Charger</button>
       <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
@@ -268,8 +267,11 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       </div>
 
       <div class="row" style="margin-top:10px;">
+        <div><button class="danger" onclick="finishNow()">⏹ Terminer</button></div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
         <div><button class="secondary" onclick="toggleRecap()">📜 Récap</button></div>
-        <!-- ✅ Sauver = écrase la sauvegarde en cours -->
         <div><button class="secondary" onclick="manualSaveAs()">💾 Sauver</button></div>
       </div>
 
@@ -370,22 +372,26 @@ let state = {
   mode: "americano",     // "americano" | "ladder"
   n: 4,
   courts: 1,
-  maxPoints: 21,         // TOTAL points (ex: 21 -> 10/11)
-  totalRounds: 0,
+  maxPoints: 21,         // TOTAL points
+  totalRounds: null,     // ✅ plus de fin auto (vous terminez quand vous voulez)
 
   players: [],
   schedule: [],          // rounds: {rest:[], courts:[{teamA:[i,j],teamB:[k,l]}]}
   matchIndex: 0,
 
   validatedCourts: [],
-  courtScores: [],       // [{a,b}, ...] for current round (kept visible even validated)
-  results: [],           // results[round][court] = {a,b} (for recap)
+  courtScores: [],
+  results: [],
 
   history: [],
   savedAt: null,
 
   // Ladder opposition memory (éviter re-match adversaires)
   ladderOpp: null,
+
+  // ✅ NEW: Ladder partner & team memory (éviter doublons d'équipe / partenaires)
+  ladderPartner: null,   // matrice n*n
+  ladderTeams: null,     // map "i-j" -> count
 
   // ✅ NEW: sauvegarde active (pour écraser automatiquement)
   activeSaveId: null
@@ -444,6 +450,7 @@ function makeId(){
   return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10);
 }
 function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function playerName(i){ return state.players[i].name; }
 
 function readActiveSaveId(){
   try{
@@ -456,6 +463,12 @@ function writeActiveSaveId(id){
     if(!id) localStorage.removeItem(ACTIVE_SAVE_KEY);
     else localStorage.setItem(ACTIVE_SAVE_KEY, id);
   }catch(e){}
+}
+
+function teamKey(team){
+  const a = Math.min(team[0], team[1]);
+  const b = Math.max(team[0], team[1]);
+  return `${a}-${b}`;
 }
 
 /* -------------------- Saves (Index) -------------------- */
@@ -483,7 +496,6 @@ function deleteSaveById(id){
   const arr = getSavesIndex().filter(x=>x.id !== id);
   setSavesIndex(arr);
 
-  // si on supprime la sauvegarde active, on la vide
   if(state.activeSaveId === id){
     state.activeSaveId = null;
     writeActiveSaveId(null);
@@ -496,8 +508,8 @@ function canSaveCurrent(){
       && Array.isArray(state.schedule) && state.schedule.length > 0;
 }
 function buildMetaFromState(name, id){
-  const total = (state.schedule||[]).length || state.totalRounds || 0;
-  const idx = Math.min((state.matchIndex||0) + 1, total);
+  const total = (state.totalRounds == null) ? "∞" : state.totalRounds;
+  const idx = (state.matchIndex||0) + 1;
   return { id, name, savedAt: now(), n: state.n, courts: state.courts, round: idx, total };
 }
 
@@ -512,7 +524,6 @@ function saveToSlot(id, name){
     localStorage.setItem(SAVE_PREFIX + id, JSON.stringify(payload));
     upsertSaveMeta(buildMetaFromState(name, id));
 
-    // ✅ devient la sauvegarde active
     state.activeSaveId = id;
     writeActiveSaveId(id);
     return true;
@@ -520,6 +531,13 @@ function saveToSlot(id, name){
     alert("❌ Impossible de sauvegarder (stockage plein ?).");
     return false;
   }
+}
+
+function ensureLadderMemory(){
+  if(state.mode !== "ladder") return;
+  if(!state.ladderOpp) state.ladderOpp = Array.from({length: state.n}, ()=>Array(state.n).fill(0));
+  if(!state.ladderPartner) state.ladderPartner = Array.from({length: state.n}, ()=>Array(state.n).fill(0));
+  if(!state.ladderTeams) state.ladderTeams = {};
 }
 
 function loadFromSlot(id){
@@ -536,12 +554,13 @@ function loadFromSlot(id){
     if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
     if(!Array.isArray(state.history)) state.history = [];
     if(!state.mode) state.mode = "americano";
-    if(!state.ladderOpp) state.ladderOpp = null;
+    if(state.totalRounds === undefined) state.totalRounds = null;
 
     // ✅ restore/force active save id
     state.activeSaveId = id;
     writeActiveSaveId(id);
 
+    ensureLadderMemory();
     return true;
   }catch(e){ return false; }
 }
@@ -567,12 +586,10 @@ function tryLoadAutoSave(){
     if(!Array.isArray(state.courtScores)) state.courtScores = [];
     if(!Array.isArray(state.results)) state.results = [];
     if(!state.mode) state.mode = "americano";
-    if(!state.ladderOpp) state.ladderOpp = null;
+    if(state.totalRounds === undefined) state.totalRounds = null;
 
-    // ✅ on ne force pas une sauvegarde active sur un autosave,
-    // mais on peut restaurer si elle existait
     state.activeSaveId = readActiveSaveId();
-
+    ensureLadderMemory();
     return true;
   }catch(e){ return false; }
 }
@@ -602,7 +619,6 @@ function refreshSavesUI(){
     saveSelect.appendChild(opt);
   }
 
-  // pré-selection: sauvegarde active si possible
   if(state.activeSaveId && arr.some(x=>x.id === state.activeSaveId)){
     saveSelect.value = state.activeSaveId;
     saveHint.textContent = "La sauvegarde sélectionnée est la sauvegarde active.";
@@ -626,16 +642,11 @@ function loadSelectedSave(){
     return;
   }
 
-  if(state.matchIndex >= (state.totalRounds || (state.schedule||[]).length)){
-    renderFinishTable();
-    showFinish();
-  }else{
-    showGame();
-    renderMatch();
-    renderRanking();
-    renderRecapInGame();
-    writeAutoSave();
-  }
+  showGame();
+  renderMatch();
+  renderRanking();
+  renderRecapInGame();
+  writeAutoSave();
   refreshSavesUI();
 }
 
@@ -650,7 +661,7 @@ function deleteSelectedSave(){
   refreshSavesUI();
 }
 
-/* ✅ IMPORTANT: Sauver = écrase la sauvegarde active */
+/* ✅ Sauver = écrase la sauvegarde active */
 function manualSaveAs(){
   if(!canSaveCurrent()){
     alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
@@ -659,7 +670,6 @@ function manualSaveAs(){
 
   const arr = getSavesIndex();
 
-  // 1) si on a une sauvegarde active -> on écrase, sans demander
   if(state.activeSaveId){
     const meta = arr.find(x=>x.id === state.activeSaveId);
     const name = meta?.name || "Tournoi";
@@ -670,7 +680,6 @@ function manualSaveAs(){
     return;
   }
 
-  // 2) sinon: première sauvegarde -> demander un nom UNE FOIS
   const defaultName = `Tournoi ${fmtDate(now())}`;
   const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
   if(!name) return;
@@ -740,7 +749,6 @@ function scoreOptions(){
   for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
   return s;
 }
-function playerName(i){ return state.players[i].name; }
 function sortPlayersForRanking(arr){
   return [...arr].sort((a,b)=>{
     const da = a.plus - a.minus;
@@ -751,25 +759,49 @@ function sortPlayersForRanking(arr){
   });
 }
 
-/* -------------------- Scheduling: Americano (rotation) -------------------- */
+/* -------------------- Scheduling: Americano -------------------- */
+/* Génère un plan initial (n-1 rounds), puis on peut continuer en générant round par round */
 function buildScheduleAmericano(n, courtsChosen){
   if(![4,6,8,12,16].includes(n)) return [];
 
   const maxCourts = Math.floor(n / 4) || 1;
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
-  const activePerRound = Math.min(n, courtsUsed * 4);
-  const restCount = n - activePerRound;
-
-  const partner = Array.from({length:n}, ()=>Array(n).fill(0));
-  const against = Array.from({length:n}, ()=>Array(n).fill(0));
-  const rests = Array(n).fill(0);
 
   const rounds = [];
   const totalRounds = n - 1;
 
+  // on génère les n-1 premiers rounds avec l'heuristique existante
+  for(let i=0;i<totalRounds;i++){
+    const next = generateNextAmericanoRound(n, courtsUsed, rounds);
+    rounds.push(next);
+  }
+  return rounds;
+}
+
+/* ✅ Génère UN round Americano en se basant sur l'historique déjà dans `existingRounds` */
+function generateNextAmericanoRound(n, courtsUsed, existingRounds){
+  const maxCourts = Math.floor(n / 4) || 1;
+  courtsUsed = Math.max(1, Math.min(courtsUsed || maxCourts, maxCourts));
+  const activePerRound = Math.min(n, courtsUsed * 4);
+  const restCount = n - activePerRound;
+
+  // reconstruire compteurs depuis l'historique existant
+  const partner = Array.from({length:n}, ()=>Array(n).fill(0));
+  const against = Array.from({length:n}, ()=>Array(n).fill(0));
+  const rests = Array(n).fill(0);
+
   function incPartner(a,b){ partner[a][b]++; partner[b][a]++; }
   function incAgainst(teamA, teamB){
     for(const a of teamA) for(const b of teamB){ against[a][b]++; against[b][a]++; }
+  }
+
+  for(const r of existingRounds){
+    for(const rr of (r.rest || [])) rests[rr]++;
+    for(const c of (r.courts || [])){
+      incPartner(c.teamA[0], c.teamA[1]);
+      incPartner(c.teamB[0], c.teamB[1]);
+      incAgainst(c.teamA, c.teamB);
+    }
   }
 
   function pickRestPlayers(){
@@ -778,9 +810,7 @@ function buildScheduleAmericano(n, courtsChosen){
       if(rests[i] !== rests[j]) return rests[i]-rests[j];
       return (Math.random() - 0.5);
     });
-    const rest = idx.slice(0, restCount);
-    for(const r of rest) rests[r]++;
-    return rest;
+    return idx.slice(0, restCount);
   }
 
   function scorePair(a,b){
@@ -846,45 +876,33 @@ function buildScheduleAmericano(n, courtsChosen){
     return matches;
   }
 
-  for(let r=0; r<totalRounds; r++){
-    const rest = restCount > 0 ? pickRestPlayers() : [];
-    const active = [...Array(n).keys()].filter(i => !rest.includes(i));
+  const rest = restCount > 0 ? pickRestPlayers() : [];
+  const active = [...Array(n).keys()].filter(i => !rest.includes(i));
 
-    if(active.length % 2 !== 0){
-      rest.push(active.pop());
-    }
-
-    const matches = makeTeams(active);
-    const courts = matches.slice(0, courtsUsed).map(m=>({teamA:m.teamA, teamB:m.teamB}));
-
-    for(const c of courts){
-      incPartner(c.teamA[0], c.teamA[1]);
-      incPartner(c.teamB[0], c.teamB[1]);
-      incAgainst(c.teamA, c.teamB);
-    }
-
-    rounds.push({ rest, courts });
+  // sécurité (au cas où)
+  if(active.length % 2 !== 0){
+    rest.push(active.pop());
   }
 
-  return rounds;
+  const matches = makeTeams(active);
+  const courts = matches.slice(0, courtsUsed).map(m=>({teamA:m.teamA, teamB:m.teamB}));
+
+  return { rest, courts };
 }
-/* -------------------- Scheduling: Ladder (Montée/Descente) -------------------- */
+
+/* -------------------- Scheduling: Ladder -------------------- */
 function buildFirstRoundLadder(n, courts){
   const idx = [...Array(n).keys()];
-
-  // shuffle joueurs
   for(let i=idx.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
     [idx[i], idx[j]] = [idx[j], idx[i]];
   }
 
-  // créer équipes initiales
   const teams = [];
   for(let t=0;t<courts*2;t++){
     teams.push([idx[2*t], idx[2*t+1]]);
   }
 
-  // assigner aux terrains
   const roundCourts = [];
   for(let c=0;c<courts;c++){
     roundCourts.push({
@@ -896,11 +914,10 @@ function buildFirstRoundLadder(n, courts){
   return { rest: [], courts: roundCourts };
 }
 
-/* ✅ OppScore: évite de rejouer contre les mêmes adversaires */
+/* OppScore: évite de rejouer contre les mêmes adversaires */
 function ladderOppScore(teamA, teamB){
   if(!state.ladderOpp) return 0;
   let score = 0;
-
   for(const a of teamA){
     for(const b of teamB){
       score += state.ladderOpp[a][b] || 0;
@@ -909,14 +926,35 @@ function ladderOppScore(teamA, teamB){
   return score;
 }
 
-/* ✅ Next round Ladder : gagnants montent, perdants descendent
-   ✅ équipes se séparent automatiquement */
-function buildNextRoundLadder(prevRoundCourts, prevResults){
+function ladderPartnerScore(team){
+  ensureLadderMemory();
+  return (state.ladderPartner?.[team[0]]?.[team[1]] || 0);
+}
 
+function ladderTeamRepeatScore(team){
+  ensureLadderMemory();
+  return (state.ladderTeams?.[teamKey(team)] || 0);
+}
+
+function totalLadderScore(teamA, teamB){
+  // pondérations
+  const W_OPP = 10;       // adversaires
+  const W_PARTNER = 200;  // rejouer avec même partenaire
+  const W_TEAM = 300;     // reformer exactement la même équipe
+
+  const opp = ladderOppScore(teamA, teamB);
+  const partners = ladderPartnerScore(teamA) + ladderPartnerScore(teamB);
+  const teams = ladderTeamRepeatScore(teamA) + ladderTeamRepeatScore(teamB);
+
+  return (W_OPP * opp) + (W_PARTNER * partners) + (W_TEAM * teams) + Math.random()*0.01;
+}
+
+/* Next round Ladder : gagnants montent, perdants descendent
+   ✅ recomposition sur 3 options + score complet (contre + partenaire + équipe) */
+function buildNextRoundLadder(prevRoundCourts, prevResults){
   const courtsN = prevRoundCourts.length;
   const last = courtsN - 1;
 
-  // moved[courtIndex] = teams envoyées sur ce terrain
   const moved = Array.from({length:courtsN}, ()=>[]);
 
   for(let i=0;i<courtsN;i++){
@@ -931,48 +969,40 @@ function buildNextRoundLadder(prevRoundCourts, prevResults){
     const winner = (res.a > res.b) ? court.teamA : court.teamB;
     const loser  = (res.a > res.b) ? court.teamB : court.teamA;
 
-    // gagnant monte
     moved[Math.max(0, i-1)].push(winner);
-
-    // perdant descend
     moved[Math.min(last, i+1)].push(loser);
   }
 
   const newCourts = [];
 
   for(let c=0;c<courtsN;c++){
-
-    // 2 équipes attendues sur le terrain
     const t1 = moved[c][0] || prevRoundCourts[c].teamA;
     const t2 = moved[c][1] || prevRoundCourts[c].teamB;
 
-    // ✅ casser les partenaires : recomposition croisée
-    const opt1A = [t1[0], t2[0]];
-    const opt1B = [t1[1], t2[1]];
+    // 4 joueurs présents
+    const players = [t1[0], t1[1], t2[0], t2[1]];
+    const [a,b,cc,d] = players;
 
-    const opt2A = [t1[0], t2[1]];
-    const opt2B = [t1[1], t2[0]];
+    // 3 séparations possibles
+    const options = [
+      { A:[a,b],  B:[cc,d]  },
+      { A:[a,cc], B:[b,d]   },
+      { A:[a,d],  B:[b,cc]  },
+    ];
 
-    // ✅ choisir la recompo avec moins de re-adversaires
-    const s1 = ladderOppScore(opt1A, opt1B);
-    const s2 = ladderOppScore(opt2A, opt2B);
+    let best = options[0];
+    let bestScore = totalLadderScore(best.A, best.B);
 
-    let teamA, teamB;
-
-    if(s1 < s2){
-      teamA = opt1A; teamB = opt1B;
-    }else if(s2 < s1){
-      teamA = opt2A; teamB = opt2B;
-    }else{
-      // égalité → hasard
-      if(Math.random() < 0.5){
-        teamA = opt1A; teamB = opt1B;
-      }else{
-        teamA = opt2A; teamB = opt2B;
+    for(let i=1;i<options.length;i++){
+      const opt = options[i];
+      const sc = totalLadderScore(opt.A, opt.B);
+      if(sc < bestScore){
+        bestScore = sc;
+        best = opt;
       }
     }
 
-    newCourts.push({ teamA, teamB });
+    newCourts.push({ teamA: best.A, teamB: best.B });
   }
 
   return { rest: [], courts: newCourts };
@@ -1049,7 +1079,6 @@ function onScoreChange(courtIndex, side){
 
 /* -------------------- START TOURNAMENT -------------------- */
 function startNewTournament(){
-
   state.mode = gameModeEl.value;
   state.n = +playerCountEl.value;
 
@@ -1065,12 +1094,19 @@ function startNewTournament(){
     state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
   }
 
-  state.totalRounds = state.n - 1;
+  // ✅ plus de limite de rounds: vous terminez quand vous voulez
+  state.totalRounds = null;
 
-  // init ladderOpp
+  // init ladder memory
   state.ladderOpp = (state.mode === "ladder")
     ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
     : null;
+
+  state.ladderPartner = (state.mode === "ladder")
+    ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
+    : null;
+
+  state.ladderTeams = (state.mode === "ladder") ? {} : null;
 
   // schedule
   if(state.mode === "ladder"){
@@ -1083,7 +1119,6 @@ function startNewTournament(){
     state.schedule = buildScheduleAmericano(state.n, state.courts);
   }
 
-  // reset match
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.courtScores = [];
@@ -1107,25 +1142,32 @@ function ensureRoundResults(){
 
 /* -------------------- MATCH DISPLAY -------------------- */
 function renderMatch(){
-
-  if(state.matchIndex >= state.totalRounds){
-    renderFinishTable();
-    showFinish();
-    return;
+  // ✅ Americano: si on dépasse schedule.length, on génère un round de plus
+  if(state.mode === "americano" && state.matchIndex >= state.schedule.length){
+    state.schedule.push(generateNextAmericanoRound(state.n, state.courts, state.schedule));
   }
 
-  // ladder : générer le round suivant si manquant
+  // ✅ Ladder: générer le round suivant si manquant
   if(state.mode === "ladder" && !state.schedule[state.matchIndex]){
     const prev = state.schedule[state.matchIndex-1];
     const prevRes = state.results[state.matchIndex-1];
-    state.schedule[state.matchIndex] =
-      buildNextRoundLadder(prev.courts, prevRes);
+    state.schedule[state.matchIndex] = buildNextRoundLadder(prev.courts, prevRes);
   }
 
   const match = state.schedule[state.matchIndex];
+  if(!match){
+    // cas ultra rare: pas de match généré
+    progressText.innerHTML = `<span class="badge">Aucun match</span>`;
+    courtsDiv.innerHTML = "";
+    nextBtn.disabled = true;
+    undoBtn.disabled = state.history.length === 0;
+    return;
+  }
+
+  const totalTxt = (state.totalRounds == null) ? "∞" : state.totalRounds;
 
   progressText.innerHTML =
-    `<span class="badge">Round ${state.matchIndex+1}/${state.totalRounds}</span>
+    `<span class="badge">Round ${state.matchIndex+1}/${totalTxt}</span>
      <span class="badge">${state.mode}</span>
      <span class="badge">${state.maxPoints} pts total</span>`;
 
@@ -1133,18 +1175,15 @@ function renderMatch(){
     ? "Repos : " + match.rest.map(i=>playerName(i)).join(", ")
     : "";
 
-  // init validated + scores mémoire
   if(state.validatedCourts.length !== match.courts.length)
     state.validatedCourts = Array(match.courts.length).fill(false);
 
   if(state.courtScores.length !== match.courts.length)
-    state.courtScores = Array(match.courts.length)
-      .fill(null).map(()=>({a:0,b:state.maxPoints}));
+    state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
 
   courtsDiv.innerHTML = "";
 
   match.courts.forEach((c, idx)=>{
-
     const disabled = state.validatedCourts[idx];
 
     courtsDiv.innerHTML += `
@@ -1170,8 +1209,7 @@ function renderMatch(){
         </div>
       </div>
 
-      <button onclick="validateCourt(${idx})"
-        ${disabled?"disabled":""}>
+      <button onclick="validateCourt(${idx})" ${disabled?"disabled":""}>
         Valider
       </button>
 
@@ -1180,7 +1218,6 @@ function renderMatch(){
     `;
   });
 
-  // restore scores
   match.courts.forEach((_, idx)=>{
     document.getElementById(`scoreA_${idx}`).value = state.courtScores[idx].a;
     document.getElementById(`scoreB_${idx}`).value = state.courtScores[idx].b;
@@ -1189,7 +1226,18 @@ function renderMatch(){
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
 }
+
 /* -------------------- Validation / Undo / Next -------------------- */
+function incLadderPartnerAndTeam(team){
+  ensureLadderMemory();
+  const a = team[0], b = team[1];
+  state.ladderPartner[a][b] = (state.ladderPartner[a][b]||0) + 1;
+  state.ladderPartner[b][a] = (state.ladderPartner[b][a]||0) + 1;
+
+  const key = teamKey(team);
+  state.ladderTeams[key] = (state.ladderTeams[key]||0) + 1;
+}
+
 function validateCourt(courtIndex){
   if(state.validatedCourts[courtIndex]) return;
 
@@ -1204,16 +1252,16 @@ function validateCourt(courtIndex){
     courtScores: state.courtScores,
     results: state.results,
     schedule: state.schedule,
-    ladderOpp: state.ladderOpp
+    ladderOpp: state.ladderOpp,
+    ladderPartner: state.ladderPartner,
+    ladderTeams: state.ladderTeams
   }));
 
   const a = +document.getElementById(`scoreA_${courtIndex}`).value;
   const b = +document.getElementById(`scoreB_${courtIndex}`).value;
 
-  // mémoriser scores
   state.courtScores[courtIndex] = {a,b};
 
-  // validation somme + pas d'égalité
   if(a + b !== state.maxPoints){
     alert(`❌ Score invalide : la somme doit faire ${state.maxPoints}.`);
     state.history.pop();
@@ -1227,15 +1275,12 @@ function validateCourt(courtIndex){
 
   applyResult(court.teamA, court.teamB, a, b);
 
-  // store results recap
   ensureRoundResults();
   state.results[state.matchIndex][courtIndex] = {a,b};
 
-  // ladder opp memory + flèches
+  // ✅ Ladder memory: adversaires + partenaires + équipes
   if(state.mode === "ladder"){
-    if(!state.ladderOpp){
-      state.ladderOpp = Array.from({length: state.n}, ()=>Array(state.n).fill(0));
-    }
+    ensureLadderMemory();
 
     const winnerTeam = (a > b) ? court.teamA : court.teamB;
     const loserTeam  = (a > b) ? court.teamB : court.teamA;
@@ -1247,6 +1292,10 @@ function validateCourt(courtIndex){
         state.ladderOpp[y][x] = (state.ladderOpp[y][x]||0) + 1;
       }
     }
+
+    // ✅ incr partenaires / équipes (peu importe gagnant/perdant)
+    incLadderPartnerAndTeam(court.teamA);
+    incLadderPartnerAndTeam(court.teamB);
 
     const el = document.getElementById(`ladderArrows_${courtIndex}`);
     if(el){
@@ -1264,14 +1313,7 @@ function validateCourt(courtIndex){
   renderMatch();
   renderRecapInGame();
 
-  // activer "round suivant" si tout validé
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
-
-  // ✅ autosave + sauvegarde manuelle "en cours" (si activée)
-  if(state._currentSaveId){
-    // écrase silencieusement la sauvegarde courante
-    saveToSlot(state._currentSaveId, state._currentSaveName || "Tournoi");
-  }
 }
 
 function applyResult(teamA, teamB, scoreA, scoreB){
@@ -1295,8 +1337,8 @@ function applyResult(teamA, teamB, scoreA, scoreB){
 function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
 
-  // ladder: générer le prochain round maintenant
-  if(state.mode === "ladder" && state.matchIndex + 1 < state.totalRounds){
+  // Ladder: on peut pré-générer le prochain round (optionnel)
+  if(state.mode === "ladder" && !state.schedule[state.matchIndex + 1]){
     const cur = state.schedule[state.matchIndex];
     const curRes = state.results?.[state.matchIndex];
     state.schedule[state.matchIndex + 1] = buildNextRoundLadder(cur.courts, curRes);
@@ -1309,11 +1351,6 @@ function nextMatch(){
 
   renderMatch();
   renderRecapInGame();
-
-  // ✅ écrase la sauvegarde en cours (si activée)
-  if(state._currentSaveId){
-    saveToSlot(state._currentSaveId, state._currentSaveName || "Tournoi");
-  }
 }
 
 function undoLast(){
@@ -1326,17 +1363,15 @@ function undoLast(){
   state.courtScores = prev.courtScores || [];
   state.results = prev.results || [];
   state.schedule = prev.schedule || state.schedule;
-  state.ladderOpp = prev.ladderOpp || state.ladderOpp;
+
+  state.ladderOpp = prev.ladderOpp ?? state.ladderOpp;
+  state.ladderPartner = prev.ladderPartner ?? state.ladderPartner;
+  state.ladderTeams = prev.ladderTeams ?? state.ladderTeams;
 
   writeAutoSave();
   renderRanking();
   renderMatch();
   renderRecapInGame();
-
-  // ✅ écrase la sauvegarde en cours (si activée)
-  if(state._currentSaveId){
-    saveToSlot(state._currentSaveId, state._currentSaveName || "Tournoi");
-  }
 }
 
 /* -------------------- Ranking -------------------- */
@@ -1407,8 +1442,12 @@ function renderRecapInGame(){
 }
 
 /* -------------------- Finish -------------------- */
+function finishNow(){
+  renderFinishTable();
+  showFinish();
+}
+
 function renderFinishTable(){
-  // sync finish settings
   finishPlayerCountEl.value = String(state.n || 4);
   updateFinishCourtUI();
   if(finishCourtWrap.style.display !== "none"){
@@ -1448,13 +1487,19 @@ function restartSamePlayers(){
   state.n = n;
   state.courts = courts;
   state.maxPoints = maxPoints;
-  state.totalRounds = n - 1;
+  state.totalRounds = null; // ✅
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
 
   state.ladderOpp = (mode === "ladder")
     ? Array.from({length:n}, ()=>Array(n).fill(0))
     : null;
+
+  state.ladderPartner = (mode === "ladder")
+    ? Array.from({length:n}, ()=>Array(n).fill(0))
+    : null;
+
+  state.ladderTeams = (mode === "ladder") ? {} : null;
 
   if(mode === "ladder"){
     if(n !== courts*4){
@@ -1479,11 +1524,6 @@ function restartSamePlayers(){
   renderMatch();
   renderRanking();
   writeAutoSave();
-
-  // ✅ écrase sauvegarde en cours (si activée)
-  if(state._currentSaveId){
-    saveToSlot(state._currentSaveId, state._currentSaveName || "Tournoi");
-  }
 }
 
 /* -------------------- New game choose players -------------------- */
@@ -1502,13 +1542,12 @@ function newGameChoosePlayers(){
   gameModeEl.value = finishGameModeEl.value;
   maxPointsEl.value = String(clamp(+finishMaxPointsEl.value || 21, 1, 31));
 
-  // reset state complet
   state = {
     mode: gameModeEl.value,
     n,
     courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),
-    totalRounds: n - 1,
+    totalRounds: null,
 
     players: [],
     schedule: [],
@@ -1520,13 +1559,12 @@ function newGameChoosePlayers(){
 
     history: [],
     savedAt: null,
-    ladderOpp: (gameModeEl.value === "ladder")
-      ? Array.from({length:n}, ()=>Array(n).fill(0))
-      : null,
 
-    // ✅ NEW: sauvegarde manuelle "en cours" (écrasement)
-    _currentSaveId: null,
-    _currentSaveName: null
+    ladderOpp: (gameModeEl.value === "ladder") ? Array.from({length:n}, ()=>Array(n).fill(0)) : null,
+    ladderPartner: (gameModeEl.value === "ladder") ? Array.from({length:n}, ()=>Array(n).fill(0)) : null,
+    ladderTeams: (gameModeEl.value === "ladder") ? {} : null,
+
+    activeSaveId: state.activeSaveId || null
   };
 
   refreshSavesUI();
@@ -1543,53 +1581,10 @@ function resetAll(){
   }
   try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
   try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
+  try{ localStorage.removeItem(ACTIVE_SAVE_KEY); }catch(e){}
 
   location.reload();
 }
-
-/* -------------------- ✅ MODIF IMPORTANT : Sauvegarde manuelle = écrase la sauvegarde en cours -------------------- */
-/* Remplace le comportement: on ne demande pas à chaque fois un nouveau nom.
-   - 1ère fois: on demande un nom et on crée une sauvegarde "courante"
-   - fois suivantes: on écrase automatiquement cette même sauvegarde
-*/
-(function patchManualSaveOverwrite(){
-  // on garde l'ancienne fonction si elle existe
-  const oldManualSaveAs = window.manualSaveAs;
-
-  window.manualSaveAs = function(){
-    if(!canSaveCurrent()){
-      alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
-      return;
-    }
-
-    // si déjà une sauvegarde "courante": écrase directement
-    if(state._currentSaveId){
-      const ok = saveToSlot(state._currentSaveId, state._currentSaveName || "Tournoi");
-      if(ok) autosaveText.textContent = `✅ Sauvegardé (écrasé) : ${state._currentSaveName || "Tournoi"} — ${fmtDate(now())}`;
-      refreshSavesUI();
-      return;
-    }
-
-    // sinon: 1ère sauvegarde -> demande un nom UNE SEULE FOIS
-    const defaultName = `Tournoi ${fmtDate(now())}`;
-    const name = (prompt("Nom de la sauvegarde (une seule fois) :", defaultName) || "").trim();
-    if(!name) return;
-
-    const id = makeId();
-    state._currentSaveId = id;
-    state._currentSaveName = name;
-
-    const ok = saveToSlot(id, name);
-    if(ok){
-      autosaveText.textContent = `✅ Sauvegardé : ${name} — ${fmtDate(now())}`;
-      refreshSavesUI();
-    }
-  };
-
-  // init champs si manquants (compat anciennes saves)
-  if(state._currentSaveId === undefined) state._currentSaveId = null;
-  if(state._currentSaveName === undefined) state._currentSaveName = null;
-})();
 
 /* -------------------- INIT -------------------- */
 (function init(){
@@ -1599,19 +1594,13 @@ function resetAll(){
   refreshSavesUI();
   showSetup();
 
-  // proposer auto-save
   if(tryLoadAutoSave()){
     if(confirm("Reprendre la dernière partie (auto-save) ?")){
       refreshSavesUI();
-      if(state.matchIndex >= (state.totalRounds || (state.schedule||[]).length)){
-        renderFinishTable();
-        showFinish();
-      }else{
-        showGame();
-        renderMatch();
-        renderRanking();
-        renderRecapInGame();
-      }
+      showGame();
+      renderMatch();
+      renderRanking();
+      renderRecapInGame();
       writeAutoSave();
     }
   }
