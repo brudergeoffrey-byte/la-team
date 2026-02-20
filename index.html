@@ -367,13 +367,23 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 </div>
 
 <script>
+/* =========================================================
+   ✅ AJOUTS DEMANDÉS
+   - plus d'arrêt auto -> bouton "Terminer"
+   - Ladder: ZÉRO doublon partenaires sur les 7 premiers rounds
+   - Alerte "tour complet partenaires" (tous modes, tout n)
+   - Normalisation équipes (J2/J5 = J5/J2)
+========================================================= */
+
+const HARD_UNIQUE_PARTNERS_ROUNDS = 7; // ✅ aucun doublon de partenaires sur les 7 premiers rounds (8 joueurs / 2 terrains = maximum théorique)
+
 /* -------------------- STATE -------------------- */
 let state = {
   mode: "americano",     // "americano" | "ladder"
   n: 4,
   courts: 1,
   maxPoints: 21,         // TOTAL points
-  totalRounds: null,     // ✅ plus de fin auto (vous terminez quand vous voulez)
+  totalRounds: null,     // ✅ infini (vous terminez quand vous voulez)
 
   players: [],
   schedule: [],          // rounds: {rest:[], courts:[{teamA:[i,j],teamB:[k,l]}]}
@@ -391,7 +401,11 @@ let state = {
   ladderPartner: null,   // matrice n*n (partenaires)
   ladderTeams: null,     // map "i-j" -> count (équipe exacte)
 
-  // sauvegarde active (pour écraser automatiquement)
+  // ✅ Tour complet partenaires (tous modes)
+  partnersSeen: null,               // map "i-j" -> 1
+  partnersFullCycleNotified: false, // alerte affichée une seule fois
+
+  // sauvegarde active
   activeSaveId: null
 };
 
@@ -472,6 +486,32 @@ function writeActiveSaveId(id){
   }catch(e){}
 }
 
+/* -------------------- Alerte "tour complet partenaires" -------------------- */
+function totalPartnerPairs(n){
+  return (n * (n - 1)) / 2;
+}
+function addPartnerPair(team){
+  const t = normalizeTeam(team);
+  const key = `${t[0]}-${t[1]}`;
+  if(!state.partnersSeen) state.partnersSeen = {};
+  state.partnersSeen[key] = 1;
+}
+function maybeNotifyFullPartnerCycle(){
+  if(state.partnersFullCycleNotified) return;
+  if(!state.partnersSeen) state.partnersSeen = {};
+  const seen = Object.keys(state.partnersSeen).length;
+  const total = totalPartnerPairs(state.n);
+
+  if(seen >= total){
+    state.partnersFullCycleNotified = true;
+    alert(
+      `✅ Tour complet !\n` +
+      `Tout le monde a joué avec tout le monde (en partenaire).\n\n` +
+      `Vous pouvez continuer, mais des doublons deviennent probables (et souvent inévitables).`
+    );
+  }
+}
+
 /* -------------------- Saves (Index) -------------------- */
 function getSavesIndex(){
   try{
@@ -541,6 +581,13 @@ function ensureLadderMemory(){
   if(!state.ladderTeams) state.ladderTeams = {};
 }
 
+/* ✅ Ladder: test "répète une équipe déjà jouée ?" */
+function wouldRepeatTeam(team){
+  ensureLadderMemory();
+  const key = teamKey(team);
+  return (state.ladderTeams?.[key] || 0) > 0;
+}
+
 function loadFromSlot(id){
   try{
     const raw = localStorage.getItem(SAVE_PREFIX + id);
@@ -549,12 +596,17 @@ function loadFromSlot(id){
     if(!s || !s.players || !s.schedule) return false;
     state = s;
 
+    // garde-fous
     if(!Array.isArray(state.courtScores)) state.courtScores = [];
     if(!Array.isArray(state.results)) state.results = [];
     if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
     if(!Array.isArray(state.history)) state.history = [];
     if(!state.mode) state.mode = "americano";
     if(state.totalRounds === undefined) state.totalRounds = null;
+
+    // ✅ Tour complet partenaires (compat anciennes saves)
+    if(!state.partnersSeen) state.partnersSeen = {};
+    if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
 
     state.activeSaveId = id;
     writeActiveSaveId(id);
@@ -586,6 +638,10 @@ function tryLoadAutoSave(){
     if(!Array.isArray(state.results)) state.results = [];
     if(!state.mode) state.mode = "americano";
     if(state.totalRounds === undefined) state.totalRounds = null;
+
+    // ✅ Tour complet partenaires (compat anciennes saves)
+    if(!state.partnersSeen) state.partnersSeen = {};
+    if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
 
     state.activeSaveId = readActiveSaveId();
     ensureLadderMemory();
@@ -765,11 +821,9 @@ function buildScheduleAmericano(n, courtsChosen){
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
 
   const rounds = [];
-  const totalRounds = n - 1; // plan initial (puis on continue "infini" round par round)
-
+  const totalRounds = n - 1; // plan initial
   for(let i=0;i<totalRounds;i++){
-    const next = generateNextAmericanoRound(n, courtsUsed, rounds);
-    rounds.push(next);
+    rounds.push(generateNextAmericanoRound(n, courtsUsed, rounds));
   }
   return rounds;
 }
@@ -933,6 +987,7 @@ function ladderTeamRepeatScore(team){
 }
 
 function totalLadderScore(teamA, teamB){
+  // ✅ minimisation globale après le tour "parfait"
   const W_OPP = 10;
   const W_PARTNER = 200;
   const W_TEAM = 300;
@@ -947,7 +1002,8 @@ function totalLadderScore(teamA, teamB){
   return (W_OPP * opp) + (W_PARTNER * partners) + (W_TEAM * teams) + Math.random()*0.01;
 }
 
-function buildNextRoundLadder(prevRoundCourts, prevResults){
+/* ✅ roundIndex = index du round qu’on génère (0-based) */
+function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
   const courtsN = prevRoundCourts.length;
   const last = courtsN - 1;
 
@@ -984,11 +1040,22 @@ function buildNextRoundLadder(prevRoundCourts, prevResults){
       { A: normalizeTeam([a,d]),  B: normalizeTeam([b,cc])  },
     ];
 
-    let best = options[0];
+    // ✅ HARD RULE: sur les 7 premiers rounds, on interdit de rejouer avec le même partenaire
+    const hardNoRepeat = (roundIndex < HARD_UNIQUE_PARTNERS_ROUNDS);
+
+    let candidates = options;
+    if(hardNoRepeat){
+      candidates = options.filter(opt => !wouldRepeatTeam(opt.A) && !wouldRepeatTeam(opt.B));
+    }
+    // si (rarement) toutes les options répètent, on repasse en soft plutôt que planter
+    if(candidates.length === 0) candidates = options;
+
+    // choix meilleur score
+    let best = candidates[0];
     let bestScore = totalLadderScore(best.A, best.B);
 
-    for(let i=1;i<options.length;i++){
-      const opt = options[i];
+    for(let i=1;i<candidates.length;i++){
+      const opt = candidates[i];
       const sc = totalLadderScore(opt.A, opt.B);
       if(sc < bestScore){
         bestScore = sc;
@@ -1081,14 +1148,21 @@ function startNewTournament(){
 
   state.maxPoints = clamp(+maxPointsEl.value || 21, 1, 31);
 
+  // joueurs
   state.players = [];
   for(let i=0;i<state.n;i++){
     const name = (document.getElementById("p"+i).value || ("J"+(i+1))).trim();
     state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
   }
 
+  // ✅ infini
   state.totalRounds = null;
 
+  // ✅ reset "tour complet partenaires"
+  state.partnersSeen = {};
+  state.partnersFullCycleNotified = false;
+
+  // init ladder
   state.ladderOpp = (state.mode === "ladder")
     ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
     : null;
@@ -1099,6 +1173,7 @@ function startNewTournament(){
 
   state.ladderTeams = (state.mode === "ladder") ? {} : null;
 
+  // schedule
   if(state.mode === "ladder"){
     if(state.n !== state.courts * 4){
       alert("❌ Ladder nécessite exactement 4 joueurs par terrain (pas de repos).");
@@ -1109,6 +1184,7 @@ function startNewTournament(){
     state.schedule = buildScheduleAmericano(state.n, state.courts);
   }
 
+  // reset match
   state.matchIndex = 0;
   state.validatedCourts = [];
   state.courtScores = [];
@@ -1132,14 +1208,16 @@ function ensureRoundResults(){
 
 /* -------------------- MATCH DISPLAY -------------------- */
 function renderMatch(){
+  // Americano: si on dépasse le plan initial, on génère des rounds "à l’infini"
   if(state.mode === "americano" && state.matchIndex >= state.schedule.length){
     state.schedule.push(generateNextAmericanoRound(state.n, state.courts, state.schedule));
   }
 
+  // Ladder: générer le round suivant si manquant
   if(state.mode === "ladder" && !state.schedule[state.matchIndex]){
     const prev = state.schedule[state.matchIndex-1];
     const prevRes = state.results[state.matchIndex-1];
-    state.schedule[state.matchIndex] = buildNextRoundLadder(prev.courts, prevRes);
+    state.schedule[state.matchIndex] = buildNextRoundLadder(prev.courts, prevRes, state.matchIndex);
   }
 
   const match = state.schedule[state.matchIndex];
@@ -1235,6 +1313,7 @@ function validateCourt(courtIndex){
   const match = state.schedule[state.matchIndex];
   const court = match.courts[courtIndex];
 
+  // snapshot undo
   state.history.push(deepClone({
     players: state.players,
     matchIndex: state.matchIndex,
@@ -1244,14 +1323,18 @@ function validateCourt(courtIndex){
     schedule: state.schedule,
     ladderOpp: state.ladderOpp,
     ladderPartner: state.ladderPartner,
-    ladderTeams: state.ladderTeams
+    ladderTeams: state.ladderTeams,
+    partnersSeen: state.partnersSeen,
+    partnersFullCycleNotified: state.partnersFullCycleNotified
   }));
 
   const a = +document.getElementById(`scoreA_${courtIndex}`).value;
   const b = +document.getElementById(`scoreB_${courtIndex}`).value;
 
+  // mémoriser scores
   state.courtScores[courtIndex] = {a,b};
 
+  // validation
   if(a + b !== state.maxPoints){
     alert(`❌ Score invalide : la somme doit faire ${state.maxPoints}.`);
     state.history.pop();
@@ -1268,15 +1351,23 @@ function validateCourt(courtIndex){
 
   applyResult(teamA, teamB, a, b);
 
+  // ✅ Tour complet partenaires (tous modes)
+  addPartnerPair(teamA);
+  addPartnerPair(teamB);
+  maybeNotifyFullPartnerCycle();
+
+  // store results recap
   ensureRoundResults();
   state.results[state.matchIndex][courtIndex] = {a,b};
 
+  // ladder memory + flèches
   if(state.mode === "ladder"){
     ensureLadderMemory();
 
     const winnerTeam = (a > b) ? teamA : teamB;
     const loserTeam  = (a > b) ? teamB : teamA;
 
+    // incr opposition winner vs loser
     for(const x of winnerTeam){
       for(const y of loserTeam){
         state.ladderOpp[x][y] = (state.ladderOpp[x][y]||0) + 1;
@@ -1284,6 +1375,7 @@ function validateCourt(courtIndex){
       }
     }
 
+    // ✅ compter partenaires + équipe (pour pénaliser/éviter)
     incLadderPartnerAndTeam(teamA);
     incLadderPartnerAndTeam(teamB);
 
@@ -1327,10 +1419,11 @@ function applyResult(teamA, teamB, scoreA, scoreB){
 function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
 
+  // ladder: pré-génère le prochain round
   if(state.mode === "ladder" && !state.schedule[state.matchIndex + 1]){
     const cur = state.schedule[state.matchIndex];
     const curRes = state.results?.[state.matchIndex];
-    state.schedule[state.matchIndex + 1] = buildNextRoundLadder(cur.courts, curRes);
+    state.schedule[state.matchIndex + 1] = buildNextRoundLadder(cur.courts, curRes, state.matchIndex + 1);
   }
 
   state.matchIndex++;
@@ -1356,6 +1449,9 @@ function undoLast(){
   state.ladderOpp = prev.ladderOpp ?? state.ladderOpp;
   state.ladderPartner = prev.ladderPartner ?? state.ladderPartner;
   state.ladderTeams = prev.ladderTeams ?? state.ladderTeams;
+
+  state.partnersSeen = prev.partnersSeen ?? state.partnersSeen;
+  state.partnersFullCycleNotified = (prev.partnersFullCycleNotified ?? state.partnersFullCycleNotified);
 
   writeAutoSave();
   renderRanking();
@@ -1482,6 +1578,10 @@ function restartSamePlayers(){
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
 
+  // ✅ reset "tour complet partenaires"
+  state.partnersSeen = {};
+  state.partnersFullCycleNotified = false;
+
   state.ladderOpp = (mode === "ladder")
     ? Array.from({length:n}, ()=>Array(n).fill(0))
     : null;
@@ -1555,6 +1655,9 @@ function newGameChoosePlayers(){
     ladderPartner: (gameModeEl.value === "ladder") ? Array.from({length:n}, ()=>Array(n).fill(0)) : null,
     ladderTeams: (gameModeEl.value === "ladder") ? {} : null,
 
+    partnersSeen: {},
+    partnersFullCycleNotified: false,
+
     activeSaveId: state.activeSaveId || null
   };
 
@@ -1585,6 +1688,7 @@ function resetAll(){
   refreshSavesUI();
   showSetup();
 
+  // proposer auto-save
   if(tryLoadAutoSave()){
     if(confirm("Reprendre la dernière partie (auto-save) ?")){
       refreshSavesUI();
