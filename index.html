@@ -199,7 +199,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     <div class="small">Choisis le format puis démarre. (Tu peux revenir ici à tout moment.)</div>
 
     <label>Nombre de joueurs</label>
-    <input id="playerCount" type="number" min="4" max="32" step="1" value="8" />
+    <input id="playerCount" type="text" inputmode="numeric" pattern="[0-9]*" value="8" />
 
     <div id="courtWrap" style="margin-top:10px; display:none;">
       <label>Nombre de terrains</label>
@@ -332,7 +332,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <hr class="sep">
 
       <label>Nouvelle partie : nombre de joueurs</label>
-      <input id="finishPlayerCount" type="number" min="4" max="32" step="1" value="8" />
+      <input id="finishPlayerCount" type="text" inputmode="numeric" pattern="[0-9]*" value="8" />
 
       <div id="finishCourtWrap" style="display:none;">
         <label>Nombre de terrains</label>
@@ -361,15 +361,16 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
    - Ladder: ZÉRO doublon partenaires sur les 7 premiers rounds
    - Alerte "tour complet partenaires" (tous modes, tout n)
    - Normalisation équipes (J2/J5 = J5/J2)
-   - ✅ King/Ladder accepte maintenant 13 joueurs et plus
-   - ✅ Gestion automatique d'un ou plusieurs BYE équilibrés
+   - King/Ladder accepte 13 joueurs et plus
+   - Gestion automatique d'un ou plusieurs BYE équilibrés
+   - Correctif Paddle/WebView pour encoder 13 joueurs
 ========================================================= */
 
 const HARD_UNIQUE_PARTNERS_ROUNDS = 7;
 
 /* -------------------- STATE -------------------- */
 let state = {
-  mode: "americano",     // "americano" | "ladder"
+  mode: "americano",
   n: 8,
   courts: 2,
   maxPoints: 21,
@@ -462,6 +463,13 @@ function normalizeTeam(team){
 function teamKey(team){
   const t = normalizeTeam(team);
   return `${t[0]}-${t[1]}`;
+}
+
+function parsePlayerCountValue(raw){
+  const cleaned = String(raw || "").replace(/[^\d]/g, "");
+  let n = parseInt(cleaned, 10);
+  if(isNaN(n)) n = 4;
+  return clamp(n, 4, 32);
 }
 
 function readActiveSaveId(){
@@ -578,7 +586,7 @@ function ensureLadderMemory(){
   }
 }
 
-/* ✅ Ladder: test "répète une équipe déjà jouée ?" */
+/* Ladder: test "répète une équipe déjà jouée ?" */
 function wouldRepeatTeam(team){
   ensureLadderMemory();
   const key = teamKey(team);
@@ -724,7 +732,6 @@ function deleteSelectedSave(){
   refreshSavesUI();
 }
 
-/* ✅ Sauver = écrase la sauvegarde active */
 function manualSaveAs(){
   if(!canSaveCurrent()){
     alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
@@ -757,7 +764,8 @@ function manualSaveAs(){
 /* -------------------- UI SETUP -------------------- */
 function createInputs(){
   playersDiv.innerHTML = "";
-  const n = clamp(parseInt(playerCountEl.value || 4, 10), 4, 32);
+
+  const n = parsePlayerCountValue(playerCountEl.value);
   playerCountEl.value = String(n);
 
   for(let i=0;i<n;i++){
@@ -783,7 +791,9 @@ function fillCourtOptions(selectEl, n, selected){
 }
 
 function updateCourtChoiceUI(){
-  const n = clamp(parseInt(playerCountEl.value || 4, 10), 4, 32);
+  const n = parsePlayerCountValue(playerCountEl.value);
+  playerCountEl.value = String(n);
+
   const max = maxCourtsForN(n);
   const show = (max > 1);
   courtWrap.style.display = show ? "block" : "none";
@@ -791,7 +801,9 @@ function updateCourtChoiceUI(){
 }
 
 function updateFinishCourtUI(){
-  const n = clamp(parseInt(finishPlayerCountEl.value || 4, 10), 4, 32);
+  const n = parsePlayerCountValue(finishPlayerCountEl.value);
+  finishPlayerCountEl.value = String(n);
+
   const max = maxCourtsForN(n);
   const show = (max > 1);
   finishCourtWrap.style.display = show ? "block" : "none";
@@ -1227,7 +1239,8 @@ function onScoreChange(courtIndex, side){
 /* -------------------- START TOURNAMENT -------------------- */
 function startNewTournament(){
   state.mode = gameModeEl.value;
-  state.n = clamp(parseInt(playerCountEl.value || 4, 10), 4, 32);
+  state.n = parsePlayerCountValue(playerCountEl.value);
+  playerCountEl.value = String(state.n);
 
   const maxC = maxCourtsForN(state.n);
   state.courts = (maxC > 1) ? (+courtCountEl.value || maxC) : 1;
@@ -1705,7 +1718,9 @@ function restartSamePlayers(){
 
 /* -------------------- New game choose players -------------------- */
 function newGameChoosePlayers(){
-  const n = clamp(parseInt(finishPlayerCountEl.value || 4, 10), 4, 32);
+  const n = parsePlayerCountValue(finishPlayerCountEl.value);
+  finishPlayerCountEl.value = String(n);
+
   const max = maxCourtsForN(n);
   const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
 
