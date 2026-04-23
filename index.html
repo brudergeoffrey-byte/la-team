@@ -144,9 +144,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 @media (max-width:520px){
   .topbar{ align-items:flex-start; }
   .topbar .actions button{ padding:9px 10px; font-size:14px; }
+  .row{ flex-direction:column; }
 }
 
-/* Petit bloc sauvegardes */
 .savesBox{
   background: rgba(0,0,0,0.10);
   border-radius: 12px;
@@ -154,7 +154,6 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
   margin-top: 12px;
 }
 
-/* Recap */
 .recapLine{
   display:flex;
   justify-content:space-between;
@@ -168,7 +167,6 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 .recapLeft{ color:#fff; }
 .recapRight{ color:var(--muted); text-align:right; }
 
-/* Ladder arrows */
 .ladderArrows{
   text-align:left;
   margin-top:6px;
@@ -355,20 +353,8 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
 </div>
 
 <script>
-/* =========================================================
-   ✅ AJOUTS DEMANDÉS
-   - plus d'arrêt auto -> bouton "Terminer"
-   - Ladder: ZÉRO doublon partenaires sur les 7 premiers rounds
-   - Alerte "tour complet partenaires" (tous modes, tout n)
-   - Normalisation équipes (J2/J5 = J5/J2)
-   - King/Ladder accepte 13 joueurs et plus
-   - Gestion automatique d'un ou plusieurs BYE équilibrés
-   - Correctif Paddle/WebView pour encoder 13 joueurs
-========================================================= */
-
 const HARD_UNIQUE_PARTNERS_ROUNDS = 7;
 
-/* -------------------- STATE -------------------- */
 let state = {
   mode: "americano",
   n: 8,
@@ -387,28 +373,23 @@ let state = {
   history: [],
   savedAt: null,
 
-  // Ladder memory
   ladderOpp: null,
   ladderPartner: null,
   ladderTeams: null,
   ladderByeCounts: null,
   ladderLastRest: [],
 
-  // Tour complet partenaires
   partnersSeen: null,
   partnersFullCycleNotified: false,
 
-  // sauvegarde active
   activeSaveId: null
 };
 
-/* Multi-sauvegardes */
 const SAVES_INDEX_KEY = "la-team-saves-index-v1";
 const SAVE_PREFIX     = "la-team-save-v1:";
 const AUTOSAVE_KEY    = "la-team-autosave-v1";
 const ACTIVE_SAVE_KEY = "la-team-active-save-id-v1";
 
-/* -------------------- DOM -------------------- */
 const setupEl = document.getElementById("setup");
 const gameEl = document.getElementById("game");
 const finishEl = document.getElementById("finish");
@@ -440,7 +421,6 @@ const finishCourtCountEl = document.getElementById("finishCourtCount");
 const finishGameModeEl = document.getElementById("finishGameMode");
 const finishMaxPointsEl = document.getElementById("finishMaxPoints");
 
-/* Saves UI */
 const saveSelect = document.getElementById("saveSelect");
 const saveHint = document.getElementById("saveHint");
 const saveCountBadge = document.getElementById("saveCountBadge");
@@ -465,11 +445,29 @@ function teamKey(team){
   return `${t[0]}-${t[1]}`;
 }
 
-function parsePlayerCountValue(raw){
-  const cleaned = String(raw || "").replace(/[^\d]/g, "");
-  let n = parseInt(cleaned, 10);
-  if(isNaN(n)) n = 4;
-  return clamp(n, 4, 32);
+function sanitizeDigitsInput(el){
+  el.value = String(el.value || "").replace(/[^\d]/g, "");
+}
+
+function getTypedCount(el){
+  const raw = String(el.value || "").replace(/[^\d]/g, "");
+  if(raw === "") return null;
+  const n = parseInt(raw, 10);
+  return isNaN(n) ? null : n;
+}
+
+function getSafeCountForStart(el){
+  let n = getTypedCount(el);
+  if(n == null) n = 4;
+  n = clamp(n, 4, 32);
+  el.value = String(n);
+  return n;
+}
+
+function getPreviewCount(el){
+  const n = getTypedCount(el);
+  if(n == null) return 0;
+  return clamp(n, 0, 32);
 }
 
 function readActiveSaveId(){
@@ -485,7 +483,7 @@ function writeActiveSaveId(id){
   }catch(e){}
 }
 
-/* -------------------- Alerte "tour complet partenaires" -------------------- */
+/* -------------------- Alerte partenaires -------------------- */
 function totalPartnerPairs(n){
   return (n * (n - 1)) / 2;
 }
@@ -511,7 +509,7 @@ function maybeNotifyFullPartnerCycle(){
   }
 }
 
-/* -------------------- Saves (Index) -------------------- */
+/* -------------------- Saves -------------------- */
 function getSavesIndex(){
   try{
     const raw = localStorage.getItem(SAVES_INDEX_KEY);
@@ -542,7 +540,6 @@ function deleteSaveById(id){
   }
 }
 
-/* -------------------- Save/Load State -------------------- */
 function canSaveCurrent(){
   return state && Array.isArray(state.players) && state.players.length > 0
       && Array.isArray(state.schedule) && state.schedule.length > 0;
@@ -568,7 +565,7 @@ function saveToSlot(id, name){
     writeActiveSaveId(id);
     return true;
   }catch(e){
-    alert("❌ Impossible de sauvegarder (stockage plein ?).");
+    alert("❌ Impossible de sauvegarder.");
     return false;
   }
 }
@@ -586,7 +583,6 @@ function ensureLadderMemory(){
   }
 }
 
-/* Ladder: test "répète une équipe déjà jouée ?" */
 function wouldRepeatTeam(team){
   ensureLadderMemory();
   const key = teamKey(team);
@@ -607,7 +603,6 @@ function loadFromSlot(id){
     if(!Array.isArray(state.history)) state.history = [];
     if(!state.mode) state.mode = "americano";
     if(state.totalRounds === undefined) state.totalRounds = null;
-
     if(!state.partnersSeen) state.partnersSeen = {};
     if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
 
@@ -626,7 +621,6 @@ function loadFromSlot(id){
   }catch(e){ return false; }
 }
 
-/* -------------------- Auto-save rapide -------------------- */
 function writeAutoSave(){
   try{
     if(!canSaveCurrent()) return;
@@ -648,7 +642,6 @@ function tryLoadAutoSave(){
     if(!Array.isArray(state.results)) state.results = [];
     if(!state.mode) state.mode = "americano";
     if(state.totalRounds === undefined) state.totalRounds = null;
-
     if(!state.partnersSeen) state.partnersSeen = {};
     if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
 
@@ -665,7 +658,6 @@ function tryLoadAutoSave(){
   }catch(e){ return false; }
 }
 
-/* -------------------- UI : Multi-saves -------------------- */
 function refreshSavesUI(){
   const arr = getSavesIndex();
   saveCountBadge.textContent = String(arr.length);
@@ -762,17 +754,6 @@ function manualSaveAs(){
 }
 
 /* -------------------- UI SETUP -------------------- */
-function createInputs(){
-  playersDiv.innerHTML = "";
-
-  const n = parsePlayerCountValue(playerCountEl.value);
-  playerCountEl.value = String(n);
-
-  for(let i=0;i<n;i++){
-    playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
-  }
-}
-
 function maxCourtsForN(n){
   n = Math.max(4, parseInt(n || 4, 10));
   return Math.max(1, Math.floor(n / 4));
@@ -790,37 +771,67 @@ function fillCourtOptions(selectEl, n, selected){
   selectEl.value = String(selected || max);
 }
 
-function updateCourtChoiceUI(){
-  const n = parsePlayerCountValue(playerCountEl.value);
-  playerCountEl.value = String(n);
+function createInputs(){
+  playersDiv.innerHTML = "";
 
-  const max = maxCourtsForN(n);
-  const show = (max > 1);
+  const n = getPreviewCount(playerCountEl);
+  if(n <= 0) return;
+
+  const safeN = clamp(n, 1, 32);
+
+  for(let i=0;i<safeN;i++){
+    playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
+  }
+}
+
+function updateCourtChoiceUI(){
+  const n = getPreviewCount(playerCountEl);
+  const show = (n >= 4 && maxCourtsForN(n) > 1);
   courtWrap.style.display = show ? "block" : "none";
-  if(show) fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
+
+  if(show){
+    const max = maxCourtsForN(n);
+    fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
+  }
 }
 
 function updateFinishCourtUI(){
-  const n = parsePlayerCountValue(finishPlayerCountEl.value);
-  finishPlayerCountEl.value = String(n);
-
-  const max = maxCourtsForN(n);
-  const show = (max > 1);
+  const n = getPreviewCount(finishPlayerCountEl);
+  const show = (n >= 4 && maxCourtsForN(n) > 1);
   finishCourtWrap.style.display = show ? "block" : "none";
-  if(show) fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
+
+  if(show){
+    const max = maxCourtsForN(n);
+    fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
+  }
 }
 
-playerCountEl.addEventListener("change", ()=>{
+function normalizePlayerCountOnBlur(el, fallback=4){
+  let n = getTypedCount(el);
+  if(n == null) n = fallback;
+  n = clamp(n, 4, 32);
+  el.value = String(n);
+}
+
+playerCountEl.addEventListener("input", ()=>{
+  sanitizeDigitsInput(playerCountEl);
   createInputs();
   updateCourtChoiceUI();
 });
-playerCountEl.addEventListener("input", ()=>{
+playerCountEl.addEventListener("blur", ()=>{
+  normalizePlayerCountOnBlur(playerCountEl, 4);
   createInputs();
   updateCourtChoiceUI();
 });
 
-finishPlayerCountEl.addEventListener("change", updateFinishCourtUI);
-finishPlayerCountEl.addEventListener("input", updateFinishCourtUI);
+finishPlayerCountEl.addEventListener("input", ()=>{
+  sanitizeDigitsInput(finishPlayerCountEl);
+  updateFinishCourtUI();
+});
+finishPlayerCountEl.addEventListener("blur", ()=>{
+  normalizePlayerCountOnBlur(finishPlayerCountEl, 4);
+  updateFinishCourtUI();
+});
 
 /* -------------------- Ranking helpers -------------------- */
 function scoreOptions(){
@@ -840,7 +851,7 @@ function sortPlayersForRanking(arr){
 
 /* -------------------- Scheduling: Americano -------------------- */
 function buildScheduleAmericano(n, courtsChosen){
-  n = Math.max(4, parseInt(n || 4, 10));
+  if(n < 4) return [];
 
   const maxCourts = Math.floor(n / 4) || 1;
   const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
@@ -857,6 +868,7 @@ function buildScheduleAmericano(n, courtsChosen){
 function generateNextAmericanoRound(n, courtsUsed, existingRounds){
   const maxCourts = Math.floor(n / 4) || 1;
   courtsUsed = Math.max(1, Math.min(courtsUsed || maxCourts, maxCourts));
+
   const activePerRound = Math.min(n, courtsUsed * 4);
   const restCount = n - activePerRound;
 
@@ -920,7 +932,8 @@ function generateNextAmericanoRound(n, courtsUsed, existingRounds){
 
       const q = (bestQ === null) ? arr[1] : bestQ;
       pairs.push(normalizeTeam([p,q]));
-      remaining.delete(p); remaining.delete(q);
+      remaining.delete(p);
+      remaining.delete(q);
     }
 
     const pairIdx = [...Array(pairs.length).keys()];
@@ -1167,7 +1180,7 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
   return { rest, courts: newCourts };
 }
 
-/* -------------------- NAV / SCREENS -------------------- */
+/* -------------------- Screens -------------------- */
 function showSetup(){
   gameEl.classList.add("hidden");
   finishEl.classList.add("hidden");
@@ -1236,11 +1249,10 @@ function onScoreChange(courtIndex, side){
   state.courtScores[courtIndex].b = b;
 }
 
-/* -------------------- START TOURNAMENT -------------------- */
+/* -------------------- Start tournament -------------------- */
 function startNewTournament(){
   state.mode = gameModeEl.value;
-  state.n = parsePlayerCountValue(playerCountEl.value);
-  playerCountEl.value = String(state.n);
+  state.n = getSafeCountForStart(playerCountEl);
 
   const maxC = maxCourtsForN(state.n);
   state.courts = (maxC > 1) ? (+courtCountEl.value || maxC) : 1;
@@ -1249,12 +1261,11 @@ function startNewTournament(){
 
   state.players = [];
   for(let i=0;i<state.n;i++){
-    const name = (document.getElementById("p"+i).value || ("J"+(i+1))).trim();
+    const name = (document.getElementById("p"+i)?.value || ("J"+(i+1))).trim();
     state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
   }
 
   state.totalRounds = null;
-
   state.partnersSeen = {};
   state.partnersFullCycleNotified = false;
 
@@ -1295,13 +1306,13 @@ function startNewTournament(){
   writeAutoSave();
 }
 
-/* -------------------- RESULTS STORAGE -------------------- */
+/* -------------------- Results storage -------------------- */
 function ensureRoundResults(){
   if(!state.results[state.matchIndex])
     state.results[state.matchIndex] = [];
 }
 
-/* -------------------- MATCH DISPLAY -------------------- */
+/* -------------------- Match display -------------------- */
 function renderMatch(){
   if(state.mode === "americano" && state.matchIndex >= state.schedule.length){
     state.schedule.push(generateNextAmericanoRound(state.n, state.courts, state.schedule));
@@ -1718,8 +1729,7 @@ function restartSamePlayers(){
 
 /* -------------------- New game choose players -------------------- */
 function newGameChoosePlayers(){
-  const n = parsePlayerCountValue(finishPlayerCountEl.value);
-  finishPlayerCountEl.value = String(n);
+  const n = getSafeCountForStart(finishPlayerCountEl);
 
   const max = maxCourtsForN(n);
   const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
