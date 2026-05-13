@@ -17,164 +17,50 @@
   --muted:rgba(255,255,255,0.86);
   --danger:#ff6b6b;
 }
-
 *{ box-sizing:border-box; }
-
 body{
   margin:0;
   font-family: Arial, sans-serif;
   color:#fff;
   min-height:100vh;
-
   background:
     linear-gradient(135deg, rgba(31,122,90,0.30), rgba(11,59,111,0.30)),
-    url("./bg.jpg?v=9"),
-    url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
-<defs>\
-  <radialGradient id='g' cx='50%25' cy='45%25' r='60%25'>\
-    <stop offset='0%25' stop-color='white' stop-opacity='0.09'/>\
-    <stop offset='100%25' stop-color='white' stop-opacity='0'/>\
-  </radialGradient>\
-</defs>\
-<rect width='1200' height='1200' fill='none'/>\
-<circle cx='560' cy='520' r='520' fill='url(%23g)'/>\
-<rect x='160' y='220' width='880' height='760' rx='26' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='18'/>\
-<line x1='600' y1='220' x2='600' y2='980' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
-<line x1='160' y1='600' x2='1040' y2='600' stroke='white' stroke-opacity='0.05' stroke-width='12'/>\
-<ellipse cx='860' cy='380' rx='130' ry='170' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='18'/>\
-<circle cx='820' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='860' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='900' cy='330' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='820' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='860' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='900' cy='380' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='840' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
-<circle cx='880' cy='430' r='14' fill='white' fill-opacity='0.06'/>\
-<rect x='825' y='520' width='70' height='170' rx='35' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='16'/>\
-</svg>");
+    url("./bg.jpg?v=9");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
 }
-
-.container{ max-width: 980px; margin:auto; padding: 16px; }
+.container{ max-width:980px; margin:auto; padding:16px; }
 h1,h2{ text-align:center; margin:10px 0 14px; }
-.small{ text-align:center; color: var(--muted); margin-top:-6px; margin-bottom:10px; font-size:14px; }
-
-.card{
-  background: var(--card);
-  padding: 16px;
-  border-radius: 14px;
-  margin-bottom: 14px;
-  backdrop-filter: blur(2px);
-}
-
+.small{ text-align:center; color:var(--muted); margin-top:-6px; margin-bottom:10px; font-size:14px; }
+.card{ background:var(--card); padding:16px; border-radius:14px; margin-bottom:14px; backdrop-filter:blur(2px); }
 label{ display:block; margin-top:10px; color:var(--muted); font-size:14px; }
-
-input, select, button{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-}
-
-button{
-  background: var(--btn);
-  color: var(--btnText);
-  font-weight: 800;
-  cursor: pointer;
-}
-button.secondary{
-  background: rgba(255,255,255,0.16);
-  color:#fff;
-}
-button.danger{
-  background: rgba(255,107,107,0.24);
-  color:#fff;
-}
+input, select, button{ width:100%; padding:12px; margin-top:8px; border-radius:10px; border:none; font-size:16px; }
+button{ background:var(--btn); color:var(--btnText); font-weight:800; cursor:pointer; }
+button.secondary{ background:rgba(255,255,255,0.16); color:#fff; }
+button.danger{ background:rgba(255,107,107,0.24); color:#fff; }
 button:disabled{ opacity:0.5; cursor:not-allowed; }
-
 .row{ display:flex; gap:10px; }
 .row>div{ flex:1; }
-
 .hidden{ display:none; }
-
 table{ width:100%; border-collapse:collapse; }
 th,td{ padding:8px; text-align:center; }
-th{ background: var(--card2); }
-
-.badge{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(0,0,0,0.18);
-  font-size:13px;
-  color:var(--muted);
-}
+th{ background:var(--card2); }
+.badge{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(0,0,0,0.18); font-size:13px; color:var(--muted); margin:2px; }
 hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 0; }
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:10px;
-}
-.brand{
-  font-weight:900;
-  font-size:22px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.brand .dot{
-  width:10px; height:10px; border-radius:50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 6px rgba(255,179,92,0.18);
-}
-.topbar .actions{
-  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  justify-content:flex-end;
-}
+.topbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.brand{ font-weight:900; font-size:22px; display:flex; align-items:center; gap:10px; }
+.brand .dot{ width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 6px rgba(255,179,92,0.18); }
+.topbar .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
 .topbar button{ width:auto; padding:10px 12px; border-radius:12px; }
-
-@media (max-width:520px){
-  .topbar{ align-items:flex-start; }
-  .topbar .actions button{ padding:9px 10px; font-size:14px; }
-  .row{ flex-direction:column; }
-}
-
-.savesBox{
-  background: rgba(0,0,0,0.10);
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 12px;
-}
-
-.recapLine{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:8px 10px;
-  border-radius:10px;
-  background:rgba(0,0,0,0.12);
-  margin:6px 0;
-  font-size:14px;
-}
+.savesBox{ background:rgba(0,0,0,0.10); border-radius:12px; padding:12px; margin-top:12px; }
+.recapLine{ display:flex; justify-content:space-between; gap:10px; padding:8px 10px; border-radius:10px; background:rgba(0,0,0,0.12); margin:6px 0; font-size:14px; }
 .recapLeft{ color:#fff; }
 .recapRight{ color:var(--muted); text-align:right; }
-
-.ladderArrows{
-  text-align:left;
-  margin-top:6px;
-  font-size:13px;
-  color:var(--muted);
-}
+.ladderArrows{ text-align:left; margin-top:6px; font-size:13px; color:var(--muted); }
 .ladderArrows .up{ color:#7CFF7C; font-weight:900; }
 .ladderArrows .down{ color:#FF7C7C; font-weight:900; }
+@media (max-width:520px){ .topbar{ align-items:flex-start; } .topbar .actions button{ padding:9px 10px; font-size:14px; } .row{ flex-direction:column; } }
 </style>
 </head>
 
@@ -191,10 +77,9 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     </div>
   </div>
 
-  <!-- SETUP -->
   <div id="setup" class="card">
     <h2>Réglages</h2>
-    <div class="small">Choisis le format puis démarre. (Tu peux revenir ici à tout moment.)</div>
+    <div class="small">Choisis le format puis démarre. Tu peux revenir ici à tout moment.</div>
 
     <label>Nombre de joueurs</label>
     <input id="playerCount" type="text" inputmode="numeric" pattern="[0-9]*" value="8" />
@@ -203,7 +88,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <label>Nombre de terrains</label>
       <select id="courtCount"></select>
       <div class="small" style="text-align:left; margin-top:6px;">
-        Si tu choisis moins de terrains que le maximum, certains joueurs seront automatiquement au repos (Americano ou King).
+        Si tu choisis moins de terrains que le maximum, certains joueurs seront automatiquement au repos.
       </div>
     </div>
 
@@ -213,7 +98,7 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
       <option value="ladder">King / Montée - Descente</option>
     </select>
     <div class="small" style="text-align:left; margin-top:6px;">
-      En mode King, si le nombre de joueurs dépasse 4×terrains, un ou plusieurs joueurs auront un bye équilibré automatiquement.
+      En mode King, les gagnants montent et les perdants descendent. Si joueurs &gt; 4×terrains, les byes sont équilibrés.
     </div>
 
     <div id="players"></div>
@@ -244,7 +129,6 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     </div>
   </div>
 
-  <!-- GAME -->
   <div id="game" class="hidden">
     <div class="card">
       <h2>Matchs</h2>
@@ -274,61 +158,36 @@ hr.sep{ border:none; height:1px; background:rgba(255,255,255,0.14); margin:12px 
     <div class="card">
       <h2>Classement</h2>
       <table>
-        <thead>
-          <tr>
-            <th>Joueur</th>
-            <th>MJ</th>
-            <th>V</th>
-            <th>+</th>
-            <th>-</th>
-            <th>Diff</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Joueur</th><th>MJ</th><th>V</th><th>+</th><th>-</th><th>Diff</th></tr></thead>
         <tbody id="ranking"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- FINISH -->
   <div id="finish" class="hidden">
     <div class="card">
       <h2>✅ Fini !</h2>
       <div class="small">Classement final</div>
-
       <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Joueur</th>
-            <th>MJ</th>
-            <th>V</th>
-            <th>+</th>
-            <th>-</th>
-            <th>Diff</th>
-          </tr>
-        </thead>
+        <thead><tr><th>#</th><th>Joueur</th><th>MJ</th><th>V</th><th>+</th><th>-</th><th>Diff</th></tr></thead>
         <tbody id="finalRanking"></tbody>
       </table>
 
       <hr class="sep">
-
       <h2 style="margin-top:0;">📜 Récapitulatif des matchs</h2>
       <div class="small">Tous les rounds et scores</div>
       <div id="finalRecap"></div>
 
       <hr class="sep">
-
       <button onclick="restartSamePlayers()">🔁 Rejouer (mêmes joueurs)</button>
 
       <hr class="sep">
-
       <div class="row">
         <div><button class="secondary" onclick="manualSaveAs()">💾 Sauver</button></div>
         <div><button class="secondary" onclick="openLoadDialog()">📂 Charger</button></div>
       </div>
 
       <hr class="sep">
-
       <label>Nouvelle partie : nombre de joueurs</label>
       <input id="finishPlayerCount" type="text" inputmode="numeric" pattern="[0-9]*" value="8" />
 
@@ -361,27 +220,21 @@ let state = {
   courts: 2,
   maxPoints: 21,
   totalRounds: null,
-
   players: [],
   schedule: [],
   matchIndex: 0,
-
   validatedCourts: [],
   courtScores: [],
   results: [],
-
   history: [],
   savedAt: null,
-
   ladderOpp: null,
   ladderPartner: null,
   ladderTeams: null,
   ladderByeCounts: null,
   ladderLastRest: [],
-
   partnersSeen: null,
   partnersFullCycleNotified: false,
-
   activeSaveId: null
 };
 
@@ -393,1428 +246,300 @@ const ACTIVE_SAVE_KEY = "la-team-active-save-id-v1";
 const setupEl = document.getElementById("setup");
 const gameEl = document.getElementById("game");
 const finishEl = document.getElementById("finish");
-
 const playerCountEl = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
 const maxPointsEl = document.getElementById("maxPoints");
 const gameModeEl = document.getElementById("gameMode");
-
 const courtWrap = document.getElementById("courtWrap");
 const courtCountEl = document.getElementById("courtCount");
-
 const courtsDiv = document.getElementById("courts");
 const rankingBody = document.getElementById("ranking");
 const finalRankingBody = document.getElementById("finalRanking");
-
 const undoBtn = document.getElementById("undoBtn");
 const nextBtn = document.getElementById("nextBtn");
 const progressText = document.getElementById("progressText");
 const restText = document.getElementById("restText");
 const autosaveText = document.getElementById("autosaveText");
-
 const recapInGame = document.getElementById("recapInGame");
 const finalRecap = document.getElementById("finalRecap");
-
 const finishPlayerCountEl = document.getElementById("finishPlayerCount");
 const finishCourtWrap = document.getElementById("finishCourtWrap");
 const finishCourtCountEl = document.getElementById("finishCourtCount");
 const finishGameModeEl = document.getElementById("finishGameMode");
 const finishMaxPointsEl = document.getElementById("finishMaxPoints");
-
 const saveSelect = document.getElementById("saveSelect");
 const saveHint = document.getElementById("saveHint");
 const saveCountBadge = document.getElementById("saveCountBadge");
 
-/* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 function now(){ return Date.now(); }
-function fmtDate(ts){
-  try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; }
-}
-function makeId(){
-  return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10);
-}
-function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
-function playerName(i){ return state.players[i].name; }
-
-function normalizeTeam(team){
-  return (team[0] <= team[1]) ? team : [team[1], team[0]];
-}
-function teamKey(team){
-  const t = normalizeTeam(team);
-  return `${t[0]}-${t[1]}`;
-}
-
-function sanitizeDigitsInput(el){
-  el.value = String(el.value || "").replace(/[^\d]/g, "");
-}
-
-function getTypedCount(el){
-  const raw = String(el.value || "").replace(/[^\d]/g, "");
-  if(raw === "") return null;
-  const n = parseInt(raw, 10);
-  return isNaN(n) ? null : n;
-}
-
-function getSafeCountForStart(el){
-  let n = getTypedCount(el);
-  if(n == null) n = 4;
-  n = clamp(n, 4, 32);
-  el.value = String(n);
-  return n;
-}
-
-function getPreviewCount(el){
-  const n = getTypedCount(el);
-  if(n == null) return 0;
-  return clamp(n, 0, 32);
-}
-
-function readActiveSaveId(){
-  try{
-    const id = localStorage.getItem(ACTIVE_SAVE_KEY);
-    return id || null;
-  }catch(e){ return null; }
-}
-function writeActiveSaveId(id){
-  try{
-    if(!id) localStorage.removeItem(ACTIVE_SAVE_KEY);
-    else localStorage.setItem(ACTIVE_SAVE_KEY, id);
-  }catch(e){}
-}
-
-/* -------------------- Alerte partenaires -------------------- */
-function totalPartnerPairs(n){
-  return (n * (n - 1)) / 2;
-}
-function addPartnerPair(team){
-  const t = normalizeTeam(team);
-  const key = `${t[0]}-${t[1]}`;
-  if(!state.partnersSeen) state.partnersSeen = {};
-  state.partnersSeen[key] = 1;
-}
+function fmtDate(ts){ try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; } }
+function makeId(){ return String(Date.now()) + "-" + Math.random().toString(16).slice(2,10); }
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+function playerName(i){ return state.players[i]?.name || ("J"+(i+1)); }
+function normalizeTeam(team){ return (team[0] <= team[1]) ? team : [team[1], team[0]]; }
+function teamKey(team){ const t = normalizeTeam(team); return `${t[0]}-${t[1]}`; }
+function sanitizeDigitsInput(el){ el.value = String(el.value || "").replace(/[^\d]/g, ""); }
+function getTypedCount(el){ const raw = String(el.value || "").replace(/[^\d]/g, ""); if(raw === "") return null; const n = parseInt(raw, 10); return isNaN(n) ? null : n; }
+function getSafeCountForStart(el){ let n = getTypedCount(el); if(n == null) n = 4; n = clamp(n, 4, 32); el.value = String(n); return n; }
+function getPreviewCount(el){ const n = getTypedCount(el); if(n == null) return 0; return clamp(n, 0, 32); }
+function readActiveSaveId(){ try{ return localStorage.getItem(ACTIVE_SAVE_KEY) || null; }catch(e){ return null; } }
+function writeActiveSaveId(id){ try{ if(!id) localStorage.removeItem(ACTIVE_SAVE_KEY); else localStorage.setItem(ACTIVE_SAVE_KEY, id); }catch(e){} }
+function totalPartnerPairs(n){ return (n * (n - 1)) / 2; }
+function partnersProgressText(){ const seen = Object.keys(state.partnersSeen || {}).length; const total = totalPartnerPairs(state.n); return `Paires: ${seen}/${total}`; }
+function addPartnerPair(team){ const key = teamKey(team); if(!state.partnersSeen) state.partnersSeen = {}; state.partnersSeen[key] = 1; }
 function maybeNotifyFullPartnerCycle(){
   if(state.partnersFullCycleNotified) return;
   if(!state.partnersSeen) state.partnersSeen = {};
-  const seen = Object.keys(state.partnersSeen).length;
-  const total = totalPartnerPairs(state.n);
-
-  if(seen >= total){
+  if(Object.keys(state.partnersSeen).length >= totalPartnerPairs(state.n)){
     state.partnersFullCycleNotified = true;
-    alert(
-      `✅ Tour complet !\n` +
-      `Tout le monde a joué avec tout le monde (en partenaire).\n\n` +
-      `Vous pouvez continuer, mais des doublons deviennent probables (et souvent inévitables).`
-    );
+    alert("✅ Tour complet !\nTout le monde a joué avec tout le monde (en partenaire).\n\nVous pouvez continuer, mais des doublons deviennent probables et souvent inévitables.");
   }
 }
 
-/* -------------------- Saves -------------------- */
-function getSavesIndex(){
-  try{
-    const raw = localStorage.getItem(SAVES_INDEX_KEY);
-    if(!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  }catch(e){ return []; }
+function getSavesIndex(){ try{ const raw=localStorage.getItem(SAVES_INDEX_KEY); if(!raw) return []; const arr=JSON.parse(raw); return Array.isArray(arr)?arr:[]; }catch(e){ return []; } }
+function setSavesIndex(arr){ try{ localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(arr)); }catch(e){} }
+function upsertSaveMeta(meta){ const arr=getSavesIndex(); const i=arr.findIndex(x=>x.id===meta.id); if(i>=0) arr[i]=meta; else arr.unshift(meta); arr.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0)); setSavesIndex(arr); }
+function deleteSaveById(id){ try{ localStorage.removeItem(SAVE_PREFIX+id); }catch(e){} setSavesIndex(getSavesIndex().filter(x=>x.id!==id)); if(state.activeSaveId===id){ state.activeSaveId=null; writeActiveSaveId(null); } }
+function canSaveCurrent(){ return state && Array.isArray(state.players) && state.players.length>0 && Array.isArray(state.schedule) && state.schedule.length>0; }
+function buildMetaFromState(name,id){ return { id, name, savedAt: now(), n:state.n, courts:state.courts, round:(state.matchIndex||0)+1, total:(state.totalRounds==null?"∞":state.totalRounds) }; }
+function saveToSlot(id,name){
+  if(!canSaveCurrent()){ alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord."); return false; }
+  try{ state.savedAt=now(); localStorage.setItem(SAVE_PREFIX+id, JSON.stringify(deepClone(state))); upsertSaveMeta(buildMetaFromState(name,id)); state.activeSaveId=id; writeActiveSaveId(id); return true; }
+  catch(e){ alert("❌ Impossible de sauvegarder."); return false; }
 }
-function setSavesIndex(arr){
-  try{ localStorage.setItem(SAVES_INDEX_KEY, JSON.stringify(arr)); }catch(e){}
-}
-function upsertSaveMeta(meta){
-  const arr = getSavesIndex();
-  const i = arr.findIndex(x=>x.id === meta.id);
-  if(i >= 0) arr[i] = meta;
-  else arr.unshift(meta);
-  arr.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
-  setSavesIndex(arr);
-}
-function deleteSaveById(id){
-  try{ localStorage.removeItem(SAVE_PREFIX + id); }catch(e){}
-  const arr = getSavesIndex().filter(x=>x.id !== id);
-  setSavesIndex(arr);
-
-  if(state.activeSaveId === id){
-    state.activeSaveId = null;
-    writeActiveSaveId(null);
-  }
-}
-
-function canSaveCurrent(){
-  return state && Array.isArray(state.players) && state.players.length > 0
-      && Array.isArray(state.schedule) && state.schedule.length > 0;
-}
-function buildMetaFromState(name, id){
-  const total = (state.totalRounds == null) ? "∞" : state.totalRounds;
-  const idx = (state.matchIndex||0) + 1;
-  return { id, name, savedAt: now(), n: state.n, courts: state.courts, round: idx, total };
-}
-
-function saveToSlot(id, name){
-  if(!canSaveCurrent()){
-    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
-    return false;
-  }
-  try{
-    state.savedAt = now();
-    const payload = deepClone(state);
-    localStorage.setItem(SAVE_PREFIX + id, JSON.stringify(payload));
-    upsertSaveMeta(buildMetaFromState(name, id));
-
-    state.activeSaveId = id;
-    writeActiveSaveId(id);
-    return true;
-  }catch(e){
-    alert("❌ Impossible de sauvegarder.");
-    return false;
-  }
-}
-
 function ensureLadderMemory(){
-  if(state.mode !== "ladder") return;
-  if(!state.ladderOpp) state.ladderOpp = Array.from({length: state.n}, ()=>Array(state.n).fill(0));
-  if(!state.ladderPartner) state.ladderPartner = Array.from({length: state.n}, ()=>Array(state.n).fill(0));
-  if(!state.ladderTeams) state.ladderTeams = {};
-  if(!Array.isArray(state.ladderByeCounts) || state.ladderByeCounts.length !== state.n){
-    state.ladderByeCounts = Array(state.n).fill(0);
-  }
-  if(!Array.isArray(state.ladderLastRest)){
-    state.ladderLastRest = [];
-  }
+  if(state.mode!=="ladder") return;
+  if(!state.ladderOpp) state.ladderOpp=Array.from({length:state.n},()=>Array(state.n).fill(0));
+  if(!state.ladderPartner) state.ladderPartner=Array.from({length:state.n},()=>Array(state.n).fill(0));
+  if(!state.ladderTeams) state.ladderTeams={};
+  if(!Array.isArray(state.ladderByeCounts) || state.ladderByeCounts.length!==state.n) state.ladderByeCounts=Array(state.n).fill(0);
+  if(!Array.isArray(state.ladderLastRest)) state.ladderLastRest=[];
 }
-
-function wouldRepeatTeam(team){
+function wouldRepeatTeam(team){ ensureLadderMemory(); return (state.ladderTeams?.[teamKey(team)] || 0) > 0; }
+function repairLoadedState(){
+  if(!Array.isArray(state.courtScores)) state.courtScores=[];
+  if(!Array.isArray(state.results)) state.results=[];
+  if(!Array.isArray(state.validatedCourts)) state.validatedCourts=[];
+  if(!Array.isArray(state.history)) state.history=[];
+  if(!state.mode) state.mode="americano";
+  if(state.totalRounds===undefined) state.totalRounds=null;
+  if(!state.partnersSeen) state.partnersSeen={};
+  if(state.partnersFullCycleNotified===undefined) state.partnersFullCycleNotified=false;
+  if(!Array.isArray(state.ladderLastRest)) state.ladderLastRest=[];
   ensureLadderMemory();
-  const key = teamKey(team);
-  return (state.ladderTeams?.[key] || 0) > 0;
 }
-
-function loadFromSlot(id){
-  try{
-    const raw = localStorage.getItem(SAVE_PREFIX + id);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule) return false;
-    state = s;
-
-    if(!Array.isArray(state.courtScores)) state.courtScores = [];
-    if(!Array.isArray(state.results)) state.results = [];
-    if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
-    if(!Array.isArray(state.history)) state.history = [];
-    if(!state.mode) state.mode = "americano";
-    if(state.totalRounds === undefined) state.totalRounds = null;
-    if(!state.partnersSeen) state.partnersSeen = {};
-    if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
-
-    if(!Array.isArray(state.ladderByeCounts) || state.ladderByeCounts.length !== state.n){
-      state.ladderByeCounts = (state.mode === "ladder") ? Array(state.n).fill(0) : null;
-    }
-    if(!Array.isArray(state.ladderLastRest)){
-      state.ladderLastRest = [];
-    }
-
-    state.activeSaveId = id;
-    writeActiveSaveId(id);
-
-    ensureLadderMemory();
-    return true;
-  }catch(e){ return false; }
-}
-
-function writeAutoSave(){
-  try{
-    if(!canSaveCurrent()) return;
-    const payload = deepClone(state);
-    payload._autosaveAt = now();
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
-    autosaveText.textContent = `🟢 Auto-save : ${fmtDate(payload._autosaveAt)}`;
-  }catch(e){}
-}
-function tryLoadAutoSave(){
-  try{
-    const raw = localStorage.getItem(AUTOSAVE_KEY);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(!s || !s.players || !s.schedule) return false;
-
-    state = s;
-    if(!Array.isArray(state.courtScores)) state.courtScores = [];
-    if(!Array.isArray(state.results)) state.results = [];
-    if(!state.mode) state.mode = "americano";
-    if(state.totalRounds === undefined) state.totalRounds = null;
-    if(!state.partnersSeen) state.partnersSeen = {};
-    if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
-
-    if(!Array.isArray(state.ladderByeCounts) || state.ladderByeCounts.length !== state.n){
-      state.ladderByeCounts = (state.mode === "ladder") ? Array(state.n).fill(0) : null;
-    }
-    if(!Array.isArray(state.ladderLastRest)){
-      state.ladderLastRest = [];
-    }
-
-    state.activeSaveId = readActiveSaveId();
-    ensureLadderMemory();
-    return true;
-  }catch(e){ return false; }
-}
-
+function loadFromSlot(id){ try{ const raw=localStorage.getItem(SAVE_PREFIX+id); if(!raw) return false; state=JSON.parse(raw); if(!state || !state.players || !state.schedule) return false; repairLoadedState(); state.activeSaveId=id; writeActiveSaveId(id); return true; }catch(e){ return false; } }
+function writeAutoSave(){ try{ if(!canSaveCurrent()) return; const payload=deepClone(state); payload._autosaveAt=now(); localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload)); autosaveText.textContent=`🟢 Auto-save : ${fmtDate(payload._autosaveAt)}`; }catch(e){} }
+function tryLoadAutoSave(){ try{ const raw=localStorage.getItem(AUTOSAVE_KEY); if(!raw) return false; state=JSON.parse(raw); if(!state || !state.players || !state.schedule) return false; repairLoadedState(); state.activeSaveId=readActiveSaveId(); return true; }catch(e){ return false; } }
 function refreshSavesUI(){
-  const arr = getSavesIndex();
-  saveCountBadge.textContent = String(arr.length);
-
-  saveSelect.innerHTML = "";
-  if(arr.length === 0){
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "Aucune sauvegarde";
-    saveSelect.appendChild(opt);
-    saveSelect.disabled = true;
-    saveHint.textContent = "Tu peux sauvegarder avec « 💾 Sauver ».";
-    return;
-  }
-
-  saveSelect.disabled = false;
-  for(const s of arr){
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    const info = `${s.n}J • ${s.courts}T • round ${s.round}/${s.total} • ${fmtDate(s.savedAt)}`;
-    opt.textContent = `${s.name} — ${info}`;
-    saveSelect.appendChild(opt);
-  }
-
-  if(state.activeSaveId && arr.some(x=>x.id === state.activeSaveId)){
-    saveSelect.value = state.activeSaveId;
-    saveHint.textContent = "La sauvegarde sélectionnée est la sauvegarde active.";
-  }else{
-    saveHint.textContent = "Choisis une sauvegarde puis Charge/Supprime.";
-  }
+  const arr=getSavesIndex(); saveCountBadge.textContent=String(arr.length); saveSelect.innerHTML="";
+  if(arr.length===0){ const opt=document.createElement("option"); opt.value=""; opt.textContent="Aucune sauvegarde"; saveSelect.appendChild(opt); saveSelect.disabled=true; saveHint.textContent="Tu peux sauvegarder avec « 💾 Sauver »."; return; }
+  saveSelect.disabled=false;
+  for(const s of arr){ const opt=document.createElement("option"); opt.value=s.id; opt.textContent=`${s.name} — ${s.n}J • ${s.courts}T • round ${s.round}/${s.total} • ${fmtDate(s.savedAt)}`; saveSelect.appendChild(opt); }
+  if(state.activeSaveId && arr.some(x=>x.id===state.activeSaveId)){ saveSelect.value=state.activeSaveId; saveHint.textContent="La sauvegarde sélectionnée est la sauvegarde active."; } else saveHint.textContent="Choisis une sauvegarde puis Charge/Supprime.";
 }
-
-function openLoadDialog(){
-  refreshSavesUI();
-  showSetup();
-  setTimeout(()=>{ saveSelect?.scrollIntoView({behavior:"smooth", block:"center"}); }, 50);
-}
-
-function loadSelectedSave(){
-  const id = saveSelect.value;
-  if(!id){ alert("Aucune sauvegarde à charger."); return; }
-  if(!loadFromSlot(id)){
-    alert("❌ Sauvegarde introuvable ou corrompue.");
-    refreshSavesUI();
-    return;
-  }
-
-  showGame();
-  renderMatch();
-  renderRanking();
-  renderRecapInGame();
-  writeAutoSave();
-  refreshSavesUI();
-}
-
-function deleteSelectedSave(){
-  const id = saveSelect.value;
-  if(!id){ alert("Aucune sauvegarde à supprimer."); return; }
-  const arr = getSavesIndex();
-  const meta = arr.find(x=>x.id === id);
-  const label = meta ? `"${meta.name}"` : "cette sauvegarde";
-  if(!confirm(`Supprimer ${label} ?`)) return;
-  deleteSaveById(id);
-  refreshSavesUI();
-}
-
+function openLoadDialog(){ refreshSavesUI(); showSetup(); setTimeout(()=>saveSelect?.scrollIntoView({behavior:"smooth",block:"center"}),50); }
+function loadSelectedSave(){ const id=saveSelect.value; if(!id){ alert("Aucune sauvegarde à charger."); return; } if(!loadFromSlot(id)){ alert("❌ Sauvegarde introuvable ou corrompue."); refreshSavesUI(); return; } showGame(); renderMatch(); renderRanking(); renderRecapInGame(); writeAutoSave(); refreshSavesUI(); }
+function deleteSelectedSave(){ const id=saveSelect.value; if(!id){ alert("Aucune sauvegarde à supprimer."); return; } const meta=getSavesIndex().find(x=>x.id===id); if(!confirm(`Supprimer ${meta ? '"'+meta.name+'"' : "cette sauvegarde"} ?`)) return; deleteSaveById(id); refreshSavesUI(); }
 function manualSaveAs(){
-  if(!canSaveCurrent()){
-    alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord.");
-    return;
-  }
-
-  const arr = getSavesIndex();
-
-  if(state.activeSaveId){
-    const meta = arr.find(x=>x.id === state.activeSaveId);
-    const name = meta?.name || "Tournoi";
-    if(saveToSlot(state.activeSaveId, name)){
-      refreshSavesUI();
-      autosaveText.textContent = `✅ Sauvegarde mise à jour : ${name} (${fmtDate(now())})`;
-    }
-    return;
-  }
-
-  const defaultName = `Tournoi ${fmtDate(now())}`;
-  const name = (prompt("Nom de la sauvegarde :", defaultName) || "").trim();
-  if(!name) return;
-
-  const id = makeId();
-  if(saveToSlot(id, name)){
-    refreshSavesUI();
-    autosaveText.textContent = `✅ Sauvegardé : ${name} (${fmtDate(now())})`;
-  }
+  if(!canSaveCurrent()){ alert("ℹ️ Rien à sauvegarder pour l’instant. Démarre un tournoi d’abord."); return; }
+  const arr=getSavesIndex();
+  if(state.activeSaveId){ const meta=arr.find(x=>x.id===state.activeSaveId); const name=meta?.name||"Tournoi"; if(saveToSlot(state.activeSaveId,name)){ refreshSavesUI(); autosaveText.textContent=`✅ Sauvegarde mise à jour : ${name} (${fmtDate(now())})`; } return; }
+  const name=(prompt("Nom de la sauvegarde :", `Tournoi ${fmtDate(now())}`)||"").trim(); if(!name) return;
+  const id=makeId(); if(saveToSlot(id,name)){ refreshSavesUI(); autosaveText.textContent=`✅ Sauvegardé : ${name} (${fmtDate(now())})`; }
 }
 
-/* -------------------- UI SETUP -------------------- */
-function maxCourtsForN(n){
-  n = Math.max(4, parseInt(n || 4, 10));
-  return Math.max(1, Math.floor(n / 4));
-}
+function maxCourtsForN(n){ n=Math.max(4, parseInt(n||4,10)); return Math.max(1, Math.floor(n/4)); }
+function fillCourtOptions(selectEl,n,selected){ const max=maxCourtsForN(n); selectEl.innerHTML=""; for(let c=max;c>=1;c--){ const opt=document.createElement("option"); opt.value=String(c); opt.textContent=`${c} terrain${c>1?"s":""}`; selectEl.appendChild(opt); } selectEl.value=String(selected||max); }
+function createInputs(){ playersDiv.innerHTML=""; const n=getPreviewCount(playerCountEl); if(n<=0) return; const safeN=clamp(n,1,32); for(let i=0;i<safeN;i++) playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`; }
+function updateCourtChoiceUI(){ const n=getPreviewCount(playerCountEl); const show=(n>=4 && maxCourtsForN(n)>1); courtWrap.style.display=show?"block":"none"; if(show){ const max=maxCourtsForN(n); fillCourtOptions(courtCountEl,n,+courtCountEl.value||max); } }
+function updateFinishCourtUI(){ const n=getPreviewCount(finishPlayerCountEl); const show=(n>=4 && maxCourtsForN(n)>1); finishCourtWrap.style.display=show?"block":"none"; if(show){ const max=maxCourtsForN(n); fillCourtOptions(finishCourtCountEl,n,+finishCourtCountEl.value||max); } }
+function normalizePlayerCountOnBlur(el,fallback=4){ let n=getTypedCount(el); if(n==null) n=fallback; n=clamp(n,4,32); el.value=String(n); }
+playerCountEl.addEventListener("input",()=>{ sanitizeDigitsInput(playerCountEl); createInputs(); updateCourtChoiceUI(); });
+playerCountEl.addEventListener("blur",()=>{ normalizePlayerCountOnBlur(playerCountEl,4); createInputs(); updateCourtChoiceUI(); });
+finishPlayerCountEl.addEventListener("input",()=>{ sanitizeDigitsInput(finishPlayerCountEl); updateFinishCourtUI(); });
+finishPlayerCountEl.addEventListener("blur",()=>{ normalizePlayerCountOnBlur(finishPlayerCountEl,4); updateFinishCourtUI(); });
 
-function fillCourtOptions(selectEl, n, selected){
-  const max = maxCourtsForN(n);
-  selectEl.innerHTML = "";
-  for(let c=max; c>=1; c--){
-    const opt = document.createElement("option");
-    opt.value = String(c);
-    opt.textContent = `${c} terrain${c>1?"s":""}`;
-    selectEl.appendChild(opt);
-  }
-  selectEl.value = String(selected || max);
-}
+function scoreOptions(){ let s=""; for(let i=0;i<=state.maxPoints;i++) s+=`<option value="${i}">${i}</option>`; return s; }
+function sortPlayersForRanking(arr){ return [...arr].sort((a,b)=>{ const da=a.plus-a.minus, db=b.plus-b.minus; if(b.v!==a.v) return b.v-a.v; if(db!==da) return db-da; if(b.plus!==a.plus) return b.plus-a.plus; return a.name.localeCompare(b.name); }); }
 
-function createInputs(){
-  playersDiv.innerHTML = "";
-
-  const n = getPreviewCount(playerCountEl);
-  if(n <= 0) return;
-
-  const safeN = clamp(n, 1, 32);
-
-  for(let i=0;i<safeN;i++){
-    playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
-  }
-}
-
-function updateCourtChoiceUI(){
-  const n = getPreviewCount(playerCountEl);
-  const show = (n >= 4 && maxCourtsForN(n) > 1);
-  courtWrap.style.display = show ? "block" : "none";
-
-  if(show){
-    const max = maxCourtsForN(n);
-    fillCourtOptions(courtCountEl, n, +courtCountEl.value || max);
-  }
-}
-
-function updateFinishCourtUI(){
-  const n = getPreviewCount(finishPlayerCountEl);
-  const show = (n >= 4 && maxCourtsForN(n) > 1);
-  finishCourtWrap.style.display = show ? "block" : "none";
-
-  if(show){
-    const max = maxCourtsForN(n);
-    fillCourtOptions(finishCourtCountEl, n, +finishCourtCountEl.value || max);
-  }
-}
-
-function normalizePlayerCountOnBlur(el, fallback=4){
-  let n = getTypedCount(el);
-  if(n == null) n = fallback;
-  n = clamp(n, 4, 32);
-  el.value = String(n);
-}
-
-playerCountEl.addEventListener("input", ()=>{
-  sanitizeDigitsInput(playerCountEl);
-  createInputs();
-  updateCourtChoiceUI();
-});
-playerCountEl.addEventListener("blur", ()=>{
-  normalizePlayerCountOnBlur(playerCountEl, 4);
-  createInputs();
-  updateCourtChoiceUI();
-});
-
-finishPlayerCountEl.addEventListener("input", ()=>{
-  sanitizeDigitsInput(finishPlayerCountEl);
-  updateFinishCourtUI();
-});
-finishPlayerCountEl.addEventListener("blur", ()=>{
-  normalizePlayerCountOnBlur(finishPlayerCountEl, 4);
-  updateFinishCourtUI();
-});
-
-/* -------------------- Ranking helpers -------------------- */
-function scoreOptions(){
-  let s="";
-  for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
-  return s;
-}
-function sortPlayersForRanking(arr){
-  return [...arr].sort((a,b)=>{
-    const da = a.plus - a.minus;
-    const db = b.plus - b.minus;
-    if(b.v !== a.v) return b.v - a.v;
-    if(db !== da) return db - da;
-    return b.plus - a.plus;
-  });
-}
-
-/* -------------------- Scheduling: Americano -------------------- */
-function buildScheduleAmericano(n, courtsChosen){
-  if(n < 4) return [];
-
-  const maxCourts = Math.floor(n / 4) || 1;
-  const courtsUsed = Math.max(1, Math.min(courtsChosen || maxCourts, maxCourts));
-
-  const rounds = [];
-  const totalRounds = Math.max(1, n - 1);
-
-  for(let i=0;i<totalRounds;i++){
-    rounds.push(generateNextAmericanoRound(n, courtsUsed, rounds));
-  }
-  return rounds;
-}
-
-function generateNextAmericanoRound(n, courtsUsed, existingRounds){
-  const maxCourts = Math.floor(n / 4) || 1;
-  courtsUsed = Math.max(1, Math.min(courtsUsed || maxCourts, maxCourts));
-
-  const activePerRound = Math.min(n, courtsUsed * 4);
-  const restCount = n - activePerRound;
-
-  const partner = Array.from({length:n}, ()=>Array(n).fill(0));
-  const against = Array.from({length:n}, ()=>Array(n).fill(0));
-  const rests = Array(n).fill(0);
-
+function buildScheduleAmericano(n,courtsChosen){ if(n<4) return []; const maxCourts=Math.floor(n/4)||1; const courtsUsed=Math.max(1,Math.min(courtsChosen||maxCourts,maxCourts)); const rounds=[]; for(let i=0;i<Math.max(1,n-1);i++) rounds.push(generateNextAmericanoRound(n,courtsUsed,rounds)); return rounds; }
+function generateNextAmericanoRound(n,courtsUsed,existingRounds){
+  const maxCourts=Math.floor(n/4)||1; courtsUsed=Math.max(1,Math.min(courtsUsed||maxCourts,maxCourts));
+  const activePerRound=Math.min(n,courtsUsed*4); const restCount=n-activePerRound;
+  const partner=Array.from({length:n},()=>Array(n).fill(0)); const against=Array.from({length:n},()=>Array(n).fill(0)); const rests=Array(n).fill(0);
   function incPartner(a,b){ partner[a][b]++; partner[b][a]++; }
-  function incAgainst(teamA, teamB){
-    for(const a of teamA) for(const b of teamB){ against[a][b]++; against[b][a]++; }
-  }
-
-  for(const r of existingRounds){
-    for(const rr of (r.rest || [])) rests[rr]++;
-    for(const c of (r.courts || [])){
-      incPartner(c.teamA[0], c.teamA[1]);
-      incPartner(c.teamB[0], c.teamB[1]);
-      incAgainst(c.teamA, c.teamB);
-    }
-  }
-
-  function pickRestPlayers(){
-    const idx = [...Array(n).keys()];
-    idx.sort((i,j)=>{
-      if(rests[i] !== rests[j]) return rests[i]-rests[j];
-      return (Math.random() - 0.5);
-    });
-    return idx.slice(0, restCount);
-  }
-
-  function scorePair(a,b){
-    if(a === b) return 1e9;
-    return partner[a][b] * 100 + (Math.random()*0.01);
-  }
-
-  function scoreMatch(teamA, teamB){
-    let s = 0;
-    for(const a of teamA) for(const b of teamB){ s += against[a][b] * 10; }
-    return s + (Math.random()*0.01);
-  }
-
-  function makeTeams(activePlayers){
-    const remaining = new Set(activePlayers);
-    const pairs = [];
-
-    while(remaining.size > 0){
-      const arr = [...remaining];
-      const p = arr[0];
-
-      let bestQ = null;
-      let bestScore = 1e18;
-
-      for(const q of arr){
-        if(q === p) continue;
-        const sc = scorePair(p,q);
-        if(sc < bestScore){
-          bestScore = sc;
-          bestQ = q;
-        }
-      }
-
-      const q = (bestQ === null) ? arr[1] : bestQ;
-      pairs.push(normalizeTeam([p,q]));
-      remaining.delete(p);
-      remaining.delete(q);
-    }
-
-    const pairIdx = [...Array(pairs.length).keys()];
-    const unused = new Set(pairIdx);
-    const matches = [];
-
-    while(unused.size > 0){
-      const pIdx = [...unused][0];
-      unused.delete(pIdx);
-
-      let bestOpp = null;
-      let bestScore = 1e18;
-
-      for(const oIdx of unused){
-        const sc = scoreMatch(pairs[pIdx], pairs[oIdx]);
-        if(sc < bestScore){
-          bestScore = sc;
-          bestOpp = oIdx;
-        }
-      }
-
-      const oIdx = (bestOpp === null) ? [...unused][0] : bestOpp;
-      unused.delete(oIdx);
-
-      matches.push({teamA:pairs[pIdx], teamB:pairs[oIdx]});
-    }
-
-    return matches;
-  }
-
-  const rest = restCount > 0 ? pickRestPlayers() : [];
-  const active = [...Array(n).keys()].filter(i => !rest.includes(i));
-
-  if(active.length % 2 !== 0){
-    rest.push(active.pop());
-  }
-
-  const matches = makeTeams(active);
-  const courts = matches.slice(0, courtsUsed).map(m=>({
-    teamA: normalizeTeam(m.teamA),
-    teamB: normalizeTeam(m.teamB)
-  }));
-
-  return { rest, courts };
+  function incAgainst(A,B){ for(const a of A) for(const b of B){ against[a][b]++; against[b][a]++; } }
+  for(const r of existingRounds){ for(const rr of (r.rest||[])) rests[rr]++; for(const c of (r.courts||[])){ incPartner(c.teamA[0],c.teamA[1]); incPartner(c.teamB[0],c.teamB[1]); incAgainst(c.teamA,c.teamB); } }
+  const idx=[...Array(n).keys()]; idx.sort((i,j)=> rests[i]!==rests[j] ? rests[i]-rests[j] : Math.random()-0.5);
+  const rest=idx.slice(0,restCount); const active=[...Array(n).keys()].filter(i=>!rest.includes(i)); if(active.length%2!==0) rest.push(active.pop());
+  function scorePair(a,b){ return a===b ? 1e9 : partner[a][b]*100 + Math.random()*0.01; }
+  function scoreMatch(A,B){ let s=0; for(const a of A) for(const b of B) s+=against[a][b]*10; return s+Math.random()*0.01; }
+  const remaining=new Set(active); const pairs=[];
+  while(remaining.size>0){ const arr=[...remaining]; const p=arr[0]; let bestQ=arr[1], best=1e18; for(const q of arr){ if(q===p) continue; const sc=scorePair(p,q); if(sc<best){ best=sc; bestQ=q; } } pairs.push(normalizeTeam([p,bestQ])); remaining.delete(p); remaining.delete(bestQ); }
+  const unused=new Set([...Array(pairs.length).keys()]); const matches=[];
+  while(unused.size>0){ const pIdx=[...unused][0]; unused.delete(pIdx); let bestOpp=[...unused][0], best=1e18; for(const oIdx of unused){ const sc=scoreMatch(pairs[pIdx],pairs[oIdx]); if(sc<best){ best=sc; bestOpp=oIdx; } } unused.delete(bestOpp); matches.push({teamA:pairs[pIdx], teamB:pairs[bestOpp]}); }
+  return { rest, courts: matches.slice(0,courtsUsed).map(m=>({teamA:normalizeTeam(m.teamA), teamB:normalizeTeam(m.teamB)})) };
 }
 
-/* -------------------- Scheduling: Ladder / King -------------------- */
-function ensureLadderByeMemory(){
-  if(state.mode !== "ladder") return;
-
-  if(!Array.isArray(state.ladderByeCounts) || state.ladderByeCounts.length !== state.n){
-    state.ladderByeCounts = Array(state.n).fill(0);
-  }
-  if(!Array.isArray(state.ladderLastRest)){
-    state.ladderLastRest = [];
-  }
-}
-
+function ensureLadderByeMemory(){ if(state.mode!=="ladder") return; if(!Array.isArray(state.ladderByeCounts)||state.ladderByeCounts.length!==state.n) state.ladderByeCounts=Array(state.n).fill(0); if(!Array.isArray(state.ladderLastRest)) state.ladderLastRest=[]; }
 function chooseBalancedLadderRestPlayers(){
-  ensureLadderByeMemory();
-
-  const restCount = Math.max(0, state.n - (state.courts * 4));
-  if(restCount <= 0){
-    state.ladderLastRest = [];
-    return [];
-  }
-
-  const prevRestSet = new Set(state.ladderLastRest || []);
-
-  const candidates = [...Array(state.n).keys()].map(i => ({
-    i,
-    bye: state.ladderByeCounts[i] || 0,
-    wasRestLastRound: prevRestSet.has(i) ? 1 : 0,
-    rnd: Math.random()
-  }));
-
-  candidates.sort((a,b)=>{
-    if(a.bye !== b.bye) return a.bye - b.bye;
-    if(a.wasRestLastRound !== b.wasRestLastRound) return a.wasRestLastRound - b.wasRestLastRound;
-    return a.rnd - b.rnd;
-  });
-
-  const rest = candidates.slice(0, restCount).map(x=>x.i);
-
-  for(const i of rest){
-    state.ladderByeCounts[i] = (state.ladderByeCounts[i] || 0) + 1;
-  }
-
-  state.ladderLastRest = [...rest];
-  return rest;
+  ensureLadderByeMemory(); const restCount=Math.max(0,state.n-(state.courts*4)); if(restCount<=0){ state.ladderLastRest=[]; return []; }
+  const prevRestSet=new Set(state.ladderLastRest||[]);
+  const candidates=[...Array(state.n).keys()].map(i=>({i, bye:state.ladderByeCounts[i]||0, wasRestLastRound:prevRestSet.has(i)?1:0, rnd:Math.random()}));
+  candidates.sort((a,b)=> a.bye!==b.bye ? a.bye-b.bye : (a.wasRestLastRound!==b.wasRestLastRound ? a.wasRestLastRound-b.wasRestLastRound : a.rnd-b.rnd));
+  const rest=candidates.slice(0,restCount).map(x=>x.i); for(const i of rest) state.ladderByeCounts[i]=(state.ladderByeCounts[i]||0)+1; state.ladderLastRest=[...rest]; return rest;
 }
-
-function getSortedPlayerIndexesByStanding(){
-  return [...Array(state.n).keys()].sort((ia, ib)=>{
-    const a = state.players[ia];
-    const b = state.players[ib];
-    const da = a.plus - a.minus;
-    const db = b.plus - b.minus;
-
-    if(b.v !== a.v) return b.v - a.v;
-    if(db !== da) return db - da;
-    if(b.plus !== a.plus) return b.plus - a.plus;
-    return ia - ib;
-  });
+function getSortedPlayerIndexesByStanding(){ return [...Array(state.n).keys()].sort((ia,ib)=>{ const a=state.players[ia], b=state.players[ib]; const da=a.plus-a.minus, db=b.plus-b.minus; if(b.v!==a.v) return b.v-a.v; if(db!==da) return db-da; if(b.plus!==a.plus) return b.plus-a.plus; return ia-ib; }); }
+function buildFirstRoundLadder(n,courts){
+  ensureLadderByeMemory(); const rest=chooseBalancedLadderRestPlayers(); const active=[...Array(n).keys()].filter(i=>!rest.includes(i));
+  for(let i=active.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [active[i],active[j]]=[active[j],active[i]]; }
+  const teams=[]; for(let t=0;t<courts*2;t++) teams.push(normalizeTeam([active[2*t],active[2*t+1]]));
+  const roundCourts=[]; for(let c=0;c<courts;c++) roundCourts.push({teamA:teams[2*c], teamB:teams[2*c+1]});
+  return {rest, courts:roundCourts};
 }
+function ladderOppScore(A,B){ if(!state.ladderOpp) return 0; let s=0; for(const a of A) for(const b of B) s+=state.ladderOpp[a][b]||0; return s; }
+function ladderPartnerScore(team){ ensureLadderMemory(); const t=normalizeTeam(team); return state.ladderPartner?.[t[0]]?.[t[1]]||0; }
+function ladderTeamRepeatScore(team){ ensureLadderMemory(); return state.ladderTeams?.[teamKey(team)]||0; }
+function totalLadderScore(A,B){ A=normalizeTeam(A); B=normalizeTeam(B); return 10*ladderOppScore(A,B) + 200*(ladderPartnerScore(A)+ladderPartnerScore(B)) + 300*(ladderTeamRepeatScore(A)+ladderTeamRepeatScore(B)) + Math.random()*0.01; }
 
-function buildLadderOrderFromPreviousRound(prevRoundCourts, prevResults){
-  const ordered = [];
-
-  for(let i=0;i<prevRoundCourts.length;i++){
-    const court = prevRoundCourts[i];
-    const res = prevResults?.[i];
-
-    let winner = court.teamA;
-    let loser  = court.teamB;
-
-    if(res){
-      winner = (res.a > res.b) ? court.teamA : court.teamB;
-      loser  = (res.a > res.b) ? court.teamB : court.teamA;
-    }
-
-    for(const p of winner) if(!ordered.includes(p)) ordered.push(p);
-    for(const p of loser)  if(!ordered.includes(p)) ordered.push(p);
-  }
-
-  return ordered;
-}
-
-function buildFirstRoundLadder(n, courts){
-  ensureLadderByeMemory();
-
-  const rest = chooseBalancedLadderRestPlayers();
-  const active = [...Array(n).keys()].filter(i => !rest.includes(i));
-
-  for(let i=active.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [active[i], active[j]] = [active[j], active[i]];
-  }
-
-  const teams = [];
-  for(let t=0;t<courts*2;t++){
-    teams.push(normalizeTeam([active[2*t], active[2*t+1]]));
-  }
-
-  const roundCourts = [];
-  for(let c=0;c<courts;c++){
-    roundCourts.push({
-      teamA: teams[2*c],
-      teamB: teams[2*c+1]
-    });
-  }
-
-  return { rest, courts: roundCourts };
-}
-
-function ladderOppScore(teamA, teamB){
-  if(!state.ladderOpp) return 0;
-  let score = 0;
-  for(const a of teamA){
-    for(const b of teamB){
-      score += state.ladderOpp[a][b] || 0;
-    }
-  }
-  return score;
-}
-
-function ladderPartnerScore(team){
-  ensureLadderMemory();
-  const t = normalizeTeam(team);
-  return (state.ladderPartner?.[t[0]]?.[t[1]] || 0);
-}
-function ladderTeamRepeatScore(team){
-  ensureLadderMemory();
-  return (state.ladderTeams?.[teamKey(team)] || 0);
-}
-
-function totalLadderScore(teamA, teamB){
-  const W_OPP = 10;
-  const W_PARTNER = 200;
-  const W_TEAM = 300;
-
-  const A = normalizeTeam(teamA);
-  const B = normalizeTeam(teamB);
-
-  const opp = ladderOppScore(A, B);
-  const partners = ladderPartnerScore(A) + ladderPartnerScore(B);
-  const teams = ladderTeamRepeatScore(A) + ladderTeamRepeatScore(B);
-
-  return (W_OPP * opp) + (W_PARTNER * partners) + (W_TEAM * teams) + Math.random()*0.01;
-}
-
+/* ✅ Correction importante : vraie montée/descente pour 2, 3, 4 terrains.
+   Terrain 1 = terrain fort. Les gagnants montent d’un terrain, les perdants descendent d’un terrain. */
 function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
-  const courtsN = state.courts;
+  const courtsN = prevRoundCourts.length;
   ensureLadderByeMemory();
 
   const rest = chooseBalancedLadderRestPlayers();
   const restSet = new Set(rest);
+  const moved = Array.from({length:courtsN}, ()=>[]);
 
-  const previousOrder = buildLadderOrderFromPreviousRound(prevRoundCourts, prevResults);
-  const standingOrder = getSortedPlayerIndexesByStanding();
-
-  const orderedActive = [
-    ...previousOrder.filter(i => !restSet.has(i)),
-    ...standingOrder.filter(i => !restSet.has(i) && !previousOrder.includes(i))
-  ];
+  for(let i=0;i<courtsN;i++){
+    const court = prevRoundCourts[i];
+    const res = prevResults?.[i];
+    let winner = court.teamA;
+    let loser  = court.teamB;
+    if(res){
+      winner = (res.a > res.b) ? court.teamA : court.teamB;
+      loser  = (res.a > res.b) ? court.teamB : court.teamA;
+    }
+    moved[Math.max(0, i - 1)].push(winner);      // gagnants montent
+    moved[Math.min(courtsN - 1, i + 1)].push(loser); // perdants descendent
+  }
 
   const newCourts = [];
+  const usedPlayers = new Set();
 
   for(let c=0;c<courtsN;c++){
-    const block = orderedActive.slice(c*4, c*4 + 4);
-    if(block.length < 4) continue;
+    let teams = (moved[c] || []).map(t=>normalizeTeam(t)).filter(t => !t.some(p => restSet.has(p)));
 
-    const [a,b,cc,d] = block;
+    // Sécurité pour les cas avec byes ou anomalie : compléter avec classement si besoin.
+    if(teams.length < 2){
+      const standingOrder = getSortedPlayerIndexesByStanding().filter(i => !restSet.has(i) && !usedPlayers.has(i));
+      while(teams.length < 2 && standingOrder.length >= 2){
+        const p1 = standingOrder.shift();
+        const p2 = standingOrder.shift();
+        teams.push(normalizeTeam([p1,p2]));
+      }
+    }
+
+    if(teams.length < 2) continue;
+
+    let t1 = teams[0];
+    let t2 = teams[1];
+    const players = [t1[0], t1[1], t2[0], t2[1]];
+    const [a,b,cc,d] = players;
 
     const options = [
-      { A: normalizeTeam([a,b]),  B: normalizeTeam([cc,d])  },
-      { A: normalizeTeam([a,cc]), B: normalizeTeam([b,d])   },
-      { A: normalizeTeam([a,d]),  B: normalizeTeam([b,cc])  },
+      { A: normalizeTeam([a,b]),  B: normalizeTeam([cc,d]) },
+      { A: normalizeTeam([a,cc]), B: normalizeTeam([b,d])  },
+      { A: normalizeTeam([a,d]),  B: normalizeTeam([b,cc]) }
     ];
 
     const hardNoRepeat = (roundIndex < HARD_UNIQUE_PARTNERS_ROUNDS);
-
     let candidates = options;
-    if(hardNoRepeat){
-      candidates = options.filter(opt => !wouldRepeatTeam(opt.A) && !wouldRepeatTeam(opt.B));
-    }
+    if(hardNoRepeat) candidates = options.filter(opt => !wouldRepeatTeam(opt.A) && !wouldRepeatTeam(opt.B));
     if(candidates.length === 0) candidates = options;
 
     let best = candidates[0];
     let bestScore = totalLadderScore(best.A, best.B);
-
     for(let i=1;i<candidates.length;i++){
-      const opt = candidates[i];
-      const sc = totalLadderScore(opt.A, opt.B);
-      if(sc < bestScore){
-        bestScore = sc;
-        best = opt;
-      }
+      const sc = totalLadderScore(candidates[i].A, candidates[i].B);
+      if(sc < bestScore){ bestScore = sc; best = candidates[i]; }
     }
 
     newCourts.push({ teamA: best.A, teamB: best.B });
+    for(const p of [...best.A, ...best.B]) usedPlayers.add(p);
   }
 
   return { rest, courts: newCourts };
 }
 
-/* -------------------- Screens -------------------- */
-function showSetup(){
-  gameEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
-  setupEl.classList.remove("hidden");
-  window.scrollTo(0,0);
-}
-function showGame(){
-  setupEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
-  gameEl.classList.remove("hidden");
-  window.scrollTo(0,0);
-}
-function showFinish(){
-  gameEl.classList.add("hidden");
-  setupEl.classList.add("hidden");
-  finishEl.classList.remove("hidden");
-  window.scrollTo(0,0);
-}
+function showSetup(){ gameEl.classList.add("hidden"); finishEl.classList.add("hidden"); setupEl.classList.remove("hidden"); window.scrollTo(0,0); }
+function showGame(){ setupEl.classList.add("hidden"); finishEl.classList.add("hidden"); gameEl.classList.remove("hidden"); window.scrollTo(0,0); }
+function showFinish(){ gameEl.classList.add("hidden"); setupEl.classList.add("hidden"); finishEl.classList.remove("hidden"); window.scrollTo(0,0); }
+function goToSetup(keepProgress){ if(keepProgress) state.savedAt=now(); playerCountEl.value=String(state.n||4); createInputs(); updateCourtChoiceUI(); if(state.players.length){ for(let i=0;i<state.players.length;i++){ const inp=document.getElementById("p"+i); if(inp) inp.value=state.players[i].name; } } gameModeEl.value=state.mode; maxPointsEl.value=state.maxPoints; refreshSavesUI(); showSetup(); }
+function onScoreChange(courtIndex, side){ const sa=document.getElementById(`scoreA_${courtIndex}`), sb=document.getElementById(`scoreB_${courtIndex}`); if(!sa||!sb) return; const total=state.maxPoints; let a=+sa.value, b=+sb.value; if(side==="A"){ a=clamp(a,0,total); b=total-a; sb.value=b; } else { b=clamp(b,0,total); a=total-b; sa.value=a; } if(!state.courtScores[courtIndex]) state.courtScores[courtIndex]={a:0,b:0}; state.courtScores[courtIndex].a=a; state.courtScores[courtIndex].b=b; }
 
-function goToSetup(keepProgress){
-  if(keepProgress) state.savedAt = now();
-
-  playerCountEl.value = String(state.n || 4);
-  createInputs();
-  updateCourtChoiceUI();
-
-  if(state.players.length){
-    for(let i=0;i<state.players.length;i++){
-      const inp = document.getElementById("p"+i);
-      if(inp) inp.value = state.players[i].name;
-    }
-  }
-
-  gameModeEl.value = state.mode;
-  maxPointsEl.value = state.maxPoints;
-
-  refreshSavesUI();
-  showSetup();
-}
-
-/* -------------------- Scores -------------------- */
-function onScoreChange(courtIndex, side){
-  const sa = document.getElementById(`scoreA_${courtIndex}`);
-  const sb = document.getElementById(`scoreB_${courtIndex}`);
-  if(!sa || !sb) return;
-
-  const total = state.maxPoints;
-
-  let a = +sa.value;
-  let b = +sb.value;
-
-  if(side === "A"){
-    a = clamp(a, 0, total);
-    b = total - a;
-    sb.value = b;
-  }else{
-    b = clamp(b, 0, total);
-    a = total - b;
-    sa.value = a;
-  }
-
-  if(!state.courtScores[courtIndex])
-    state.courtScores[courtIndex] = {a:0,b:0};
-
-  state.courtScores[courtIndex].a = a;
-  state.courtScores[courtIndex].b = b;
-}
-
-/* -------------------- Start tournament -------------------- */
 function startNewTournament(){
-  state.mode = gameModeEl.value;
-  state.n = getSafeCountForStart(playerCountEl);
-
-  const maxC = maxCourtsForN(state.n);
-  state.courts = (maxC > 1) ? (+courtCountEl.value || maxC) : 1;
-
-  state.maxPoints = clamp(+maxPointsEl.value || 21, 1, 31);
-
-  state.players = [];
-  for(let i=0;i<state.n;i++){
-    const name = (document.getElementById("p"+i)?.value || ("J"+(i+1))).trim();
-    state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
-  }
-
-  state.totalRounds = null;
-  state.partnersSeen = {};
-  state.partnersFullCycleNotified = false;
-
-  state.ladderOpp = (state.mode === "ladder")
-    ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
-    : null;
-
-  state.ladderPartner = (state.mode === "ladder")
-    ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
-    : null;
-
-  state.ladderTeams = (state.mode === "ladder") ? {} : null;
-  state.ladderByeCounts = (state.mode === "ladder") ? Array(state.n).fill(0) : null;
-  state.ladderLastRest = (state.mode === "ladder") ? [] : [];
-
-  if(state.mode === "ladder"){
-    if(state.n < state.courts * 4){
-      alert("❌ Pas assez de joueurs pour ce nombre de terrains en mode King.");
-      return;
-    }
-    state.schedule = [buildFirstRoundLadder(state.n, state.courts)];
-  }else{
-    state.schedule = buildScheduleAmericano(state.n, state.courts);
-  }
-
-  state.matchIndex = 0;
-  state.validatedCourts = [];
-  state.courtScores = [];
-  state.results = [];
-  state.history = [];
-
-  recapInGame.classList.add("hidden");
-  recapInGame.innerHTML = "";
-
-  showGame();
-  renderMatch();
-  renderRanking();
-  writeAutoSave();
+  state.mode=gameModeEl.value; state.n=getSafeCountForStart(playerCountEl);
+  const maxC=maxCourtsForN(state.n); state.courts=(maxC>1)?(+courtCountEl.value||maxC):1; state.maxPoints=clamp(+maxPointsEl.value||21,1,31);
+  state.players=[]; for(let i=0;i<state.n;i++){ const name=(document.getElementById("p"+i)?.value || ("J"+(i+1))).trim(); state.players.push({name,mj:0,v:0,plus:0,minus:0}); }
+  state.totalRounds=null; state.partnersSeen={}; state.partnersFullCycleNotified=false;
+  state.ladderOpp=(state.mode==="ladder")?Array.from({length:state.n},()=>Array(state.n).fill(0)):null;
+  state.ladderPartner=(state.mode==="ladder")?Array.from({length:state.n},()=>Array(state.n).fill(0)):null;
+  state.ladderTeams=(state.mode==="ladder")?{}:null; state.ladderByeCounts=(state.mode==="ladder")?Array(state.n).fill(0):null; state.ladderLastRest=(state.mode==="ladder")?[]:[];
+  if(state.mode==="ladder"){
+    if(state.n < state.courts*4){ alert("❌ Pas assez de joueurs pour ce nombre de terrains en mode King."); return; }
+    state.schedule=[buildFirstRoundLadder(state.n,state.courts)];
+  } else state.schedule=buildScheduleAmericano(state.n,state.courts);
+  state.matchIndex=0; state.validatedCourts=[]; state.courtScores=[]; state.results=[]; state.history=[]; recapInGame.classList.add("hidden"); recapInGame.innerHTML="";
+  showGame(); renderMatch(); renderRanking(); writeAutoSave();
 }
-
-/* -------------------- Results storage -------------------- */
-function ensureRoundResults(){
-  if(!state.results[state.matchIndex])
-    state.results[state.matchIndex] = [];
-}
-
-/* -------------------- Match display -------------------- */
+function ensureRoundResults(){ if(!state.results[state.matchIndex]) state.results[state.matchIndex]=[]; }
 function renderMatch(){
-  if(state.mode === "americano" && state.matchIndex >= state.schedule.length){
-    state.schedule.push(generateNextAmericanoRound(state.n, state.courts, state.schedule));
-  }
-
-  if(state.mode === "ladder" && !state.schedule[state.matchIndex]){
-    const prev = state.schedule[state.matchIndex-1];
-    const prevRes = state.results[state.matchIndex-1];
-    state.schedule[state.matchIndex] = buildNextRoundLadder(prev.courts, prevRes, state.matchIndex);
-  }
-
-  const match = state.schedule[state.matchIndex];
-  if(!match){
-    progressText.innerHTML = `<span class="badge">Aucun match</span>`;
-    courtsDiv.innerHTML = "";
-    nextBtn.disabled = true;
-    undoBtn.disabled = state.history.length === 0;
-    return;
-  }
-
-  const totalTxt = (state.totalRounds == null) ? "∞" : state.totalRounds;
-
-  progressText.innerHTML =
-    `<span class="badge">Round ${state.matchIndex+1}/${totalTxt}</span>
-     <span class="badge">${state.mode}</span>
-     <span class="badge">${state.maxPoints} pts total</span>`;
-
-  restText.innerHTML = match.rest.length
-    ? "Repos : " + match.rest.map(i=>playerName(i)).join(", ")
-    : "";
-
-  if(state.validatedCourts.length !== match.courts.length)
-    state.validatedCourts = Array(match.courts.length).fill(false);
-
-  if(state.courtScores.length !== match.courts.length)
-    state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
-
-  courtsDiv.innerHTML = "";
-
-  match.courts.forEach((c, idx)=>{
-    const disabled = state.validatedCourts[idx];
-    const A = normalizeTeam(c.teamA);
-    const B = normalizeTeam(c.teamB);
-
-    courtsDiv.innerHTML += `
-    <div class="card">
-      <b>Terrain ${idx+1}</b><br><br>
-
-      ${playerName(A[0])} / ${playerName(A[1])}
-      vs
-      ${playerName(B[0])} / ${playerName(B[1])}
-
-      <div class="row" style="margin-top:10px;">
-        <div>
-          <select id="scoreA_${idx}" ${disabled?"disabled":""}
-            onchange="onScoreChange(${idx},'A')">
-            ${scoreOptions()}
-          </select>
-        </div>
-        <div>
-          <select id="scoreB_${idx}" ${disabled?"disabled":""}
-            onchange="onScoreChange(${idx},'B')">
-            ${scoreOptions()}
-          </select>
-        </div>
-      </div>
-
-      <button onclick="validateCourt(${idx})" ${disabled?"disabled":""}>
-        Valider
-      </button>
-
-      <div id="ladderArrows_${idx}" class="ladderArrows"></div>
-    </div>
-    `;
-  });
-
-  match.courts.forEach((_, idx)=>{
-    document.getElementById(`scoreA_${idx}`).value = state.courtScores[idx].a;
-    document.getElementById(`scoreB_${idx}`).value = state.courtScores[idx].b;
-  });
-
-  nextBtn.disabled = !state.validatedCourts.every(Boolean);
-  undoBtn.disabled = state.history.length === 0;
+  if(state.mode==="americano" && state.matchIndex>=state.schedule.length) state.schedule.push(generateNextAmericanoRound(state.n,state.courts,state.schedule));
+  if(state.mode==="ladder" && !state.schedule[state.matchIndex]){ const prev=state.schedule[state.matchIndex-1]; const prevRes=state.results[state.matchIndex-1]; state.schedule[state.matchIndex]=buildNextRoundLadder(prev.courts,prevRes,state.matchIndex); }
+  const match=state.schedule[state.matchIndex]; if(!match){ progressText.innerHTML=`<span class="badge">Aucun match</span>`; courtsDiv.innerHTML=""; nextBtn.disabled=true; undoBtn.disabled=state.history.length===0; return; }
+  progressText.innerHTML=`<span class="badge">Round ${state.matchIndex+1}/∞</span><span class="badge">${state.mode}</span><span class="badge">${state.maxPoints} pts total</span><span class="badge">${partnersProgressText()}</span>`;
+  restText.innerHTML=match.rest.length ? "Repos : "+match.rest.map(i=>playerName(i)).join(", ") : "";
+  if(state.validatedCourts.length!==match.courts.length) state.validatedCourts=Array(match.courts.length).fill(false);
+  if(state.courtScores.length!==match.courts.length) state.courtScores=Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
+  courtsDiv.innerHTML="";
+  match.courts.forEach((c,idx)=>{ const disabled=state.validatedCourts[idx]; const A=normalizeTeam(c.teamA), B=normalizeTeam(c.teamB); courtsDiv.innerHTML += `<div class="card"><b>Terrain ${idx+1}</b><br><br>${playerName(A[0])} / ${playerName(A[1])} vs ${playerName(B[0])} / ${playerName(B[1])}<div class="row" style="margin-top:10px;"><div><select id="scoreA_${idx}" ${disabled?"disabled":""} onchange="onScoreChange(${idx},'A')">${scoreOptions()}</select></div><div><select id="scoreB_${idx}" ${disabled?"disabled":""} onchange="onScoreChange(${idx},'B')">${scoreOptions()}</select></div></div><button onclick="validateCourt(${idx})" ${disabled?"disabled":""}>Valider</button><div id="ladderArrows_${idx}" class="ladderArrows"></div></div>`; });
+  match.courts.forEach((_,idx)=>{ document.getElementById(`scoreA_${idx}`).value=state.courtScores[idx].a; document.getElementById(`scoreB_${idx}`).value=state.courtScores[idx].b; });
+  nextBtn.disabled=!state.validatedCourts.every(Boolean); undoBtn.disabled=state.history.length===0;
 }
-
-/* -------------------- Validation / Undo / Next -------------------- */
-function incLadderPartnerAndTeam(team){
-  ensureLadderMemory();
-  const t = normalizeTeam(team);
-  const a = t[0], b = t[1];
-
-  state.ladderPartner[a][b] = (state.ladderPartner[a][b]||0) + 1;
-  state.ladderPartner[b][a] = (state.ladderPartner[b][a]||0) + 1;
-
-  const key = teamKey(t);
-  state.ladderTeams[key] = (state.ladderTeams[key]||0) + 1;
-}
-
+function incLadderPartnerAndTeam(team){ ensureLadderMemory(); const t=normalizeTeam(team), a=t[0], b=t[1]; state.ladderPartner[a][b]=(state.ladderPartner[a][b]||0)+1; state.ladderPartner[b][a]=(state.ladderPartner[b][a]||0)+1; state.ladderTeams[teamKey(t)]=(state.ladderTeams[teamKey(t)]||0)+1; }
 function validateCourt(courtIndex){
-  if(state.validatedCourts[courtIndex]) return;
-
-  const match = state.schedule[state.matchIndex];
-  const court = match.courts[courtIndex];
-
-  state.history.push(deepClone({
-    players: state.players,
-    matchIndex: state.matchIndex,
-    validatedCourts: state.validatedCourts,
-    courtScores: state.courtScores,
-    results: state.results,
-    schedule: state.schedule,
-    ladderOpp: state.ladderOpp,
-    ladderPartner: state.ladderPartner,
-    ladderTeams: state.ladderTeams,
-    ladderByeCounts: state.ladderByeCounts,
-    ladderLastRest: state.ladderLastRest,
-    partnersSeen: state.partnersSeen,
-    partnersFullCycleNotified: state.partnersFullCycleNotified
-  }));
-
-  const a = +document.getElementById(`scoreA_${courtIndex}`).value;
-  const b = +document.getElementById(`scoreB_${courtIndex}`).value;
-
-  state.courtScores[courtIndex] = {a,b};
-
-  if(a + b !== state.maxPoints){
-    alert(`❌ Score invalide : la somme doit faire ${state.maxPoints}.`);
-    state.history.pop();
-    return;
+  if(state.validatedCourts[courtIndex]) return; const match=state.schedule[state.matchIndex], court=match.courts[courtIndex];
+  state.history.push(deepClone({players:state.players, matchIndex:state.matchIndex, validatedCourts:state.validatedCourts, courtScores:state.courtScores, results:state.results, schedule:state.schedule, ladderOpp:state.ladderOpp, ladderPartner:state.ladderPartner, ladderTeams:state.ladderTeams, ladderByeCounts:state.ladderByeCounts, ladderLastRest:state.ladderLastRest, partnersSeen:state.partnersSeen, partnersFullCycleNotified:state.partnersFullCycleNotified}));
+  const a=+document.getElementById(`scoreA_${courtIndex}`).value, b=+document.getElementById(`scoreB_${courtIndex}`).value; state.courtScores[courtIndex]={a,b};
+  if(a+b!==state.maxPoints){ alert(`❌ Score invalide : la somme doit faire ${state.maxPoints}.`); state.history.pop(); return; }
+  if(a===b){ alert("❌ Score invalide : égalité interdite."); state.history.pop(); return; }
+  const teamA=normalizeTeam(court.teamA), teamB=normalizeTeam(court.teamB); applyResult(teamA,teamB,a,b); addPartnerPair(teamA); addPartnerPair(teamB); maybeNotifyFullPartnerCycle(); ensureRoundResults(); state.results[state.matchIndex][courtIndex]={a,b};
+  if(state.mode==="ladder"){
+    ensureLadderMemory(); const winnerTeam=(a>b)?teamA:teamB, loserTeam=(a>b)?teamB:teamA;
+    for(const x of winnerTeam) for(const y of loserTeam){ state.ladderOpp[x][y]=(state.ladderOpp[x][y]||0)+1; state.ladderOpp[y][x]=(state.ladderOpp[y][x]||0)+1; }
+    incLadderPartnerAndTeam(teamA); incLadderPartnerAndTeam(teamB);
+    const el=document.getElementById(`ladderArrows_${courtIndex}`); if(el) el.innerHTML=`<span class="up">↑</span> ${playerName(winnerTeam[0])}/${playerName(winnerTeam[1])} &nbsp;&nbsp; <span class="down">↓</span> ${playerName(loserTeam[0])}/${playerName(loserTeam[1])}`;
   }
-  if(a === b){
-    alert("❌ Score invalide : égalité interdite.");
-    state.history.pop();
-    return;
-  }
-
-  const teamA = normalizeTeam(court.teamA);
-  const teamB = normalizeTeam(court.teamB);
-
-  applyResult(teamA, teamB, a, b);
-
-  addPartnerPair(teamA);
-  addPartnerPair(teamB);
-  maybeNotifyFullPartnerCycle();
-
-  ensureRoundResults();
-  state.results[state.matchIndex][courtIndex] = {a,b};
-
-  if(state.mode === "ladder"){
-    ensureLadderMemory();
-
-    const winnerTeam = (a > b) ? teamA : teamB;
-    const loserTeam  = (a > b) ? teamB : teamA;
-
-    for(const x of winnerTeam){
-      for(const y of loserTeam){
-        state.ladderOpp[x][y] = (state.ladderOpp[x][y]||0) + 1;
-        state.ladderOpp[y][x] = (state.ladderOpp[y][x]||0) + 1;
-      }
-    }
-
-    incLadderPartnerAndTeam(teamA);
-    incLadderPartnerAndTeam(teamB);
-
-    const el = document.getElementById(`ladderArrows_${courtIndex}`);
-    if(el){
-      el.innerHTML =
-        `<span class="up">↑</span> ${playerName(winnerTeam[0])}/${playerName(winnerTeam[1])}
-         &nbsp;&nbsp;
-         <span class="down">↓</span> ${playerName(loserTeam[0])}/${playerName(loserTeam[1])}`;
-    }
-  }
-
-  state.validatedCourts[courtIndex] = true;
-
-  writeAutoSave();
-  renderRanking();
-  renderMatch();
-  renderRecapInGame();
-
-  nextBtn.disabled = !state.validatedCourts.every(Boolean);
+  state.validatedCourts[courtIndex]=true; writeAutoSave(); renderRanking(); renderMatch(); renderRecapInGame(); nextBtn.disabled=!state.validatedCourts.every(Boolean);
 }
-
-function applyResult(teamA, teamB, scoreA, scoreB){
-  for(const p of teamA){
-    state.players[p].mj++;
-    state.players[p].plus += scoreA;
-    state.players[p].minus += scoreB;
-  }
-  for(const p of teamB){
-    state.players[p].mj++;
-    state.players[p].plus += scoreB;
-    state.players[p].minus += scoreA;
-  }
-  if(scoreA > scoreB){
-    for(const p of teamA) state.players[p].v++;
-  }else{
-    for(const p of teamB) state.players[p].v++;
-  }
-}
-
-function nextMatch(){
-  if(!state.validatedCourts.every(Boolean)) return;
-
-  if(state.mode === "ladder" && !state.schedule[state.matchIndex + 1]){
-    const cur = state.schedule[state.matchIndex];
-    const curRes = state.results?.[state.matchIndex];
-    state.schedule[state.matchIndex + 1] = buildNextRoundLadder(cur.courts, curRes, state.matchIndex + 1);
-  }
-
-  state.matchIndex++;
-  state.validatedCourts = [];
-  state.courtScores = [];
-  writeAutoSave();
-
-  renderMatch();
-  renderRecapInGame();
-}
-
-function undoLast(){
-  if(!state.history.length) return;
-  const prev = state.history.pop();
-
-  state.players = prev.players;
-  state.matchIndex = prev.matchIndex;
-  state.validatedCourts = prev.validatedCourts;
-  state.courtScores = prev.courtScores || [];
-  state.results = prev.results || [];
-  state.schedule = prev.schedule || state.schedule;
-
-  state.ladderOpp = prev.ladderOpp ?? state.ladderOpp;
-  state.ladderPartner = prev.ladderPartner ?? state.ladderPartner;
-  state.ladderTeams = prev.ladderTeams ?? state.ladderTeams;
-  state.ladderByeCounts = prev.ladderByeCounts ?? state.ladderByeCounts;
-  state.ladderLastRest = prev.ladderLastRest ?? state.ladderLastRest;
-
-  state.partnersSeen = prev.partnersSeen ?? state.partnersSeen;
-  state.partnersFullCycleNotified = (prev.partnersFullCycleNotified ?? state.partnersFullCycleNotified);
-
-  writeAutoSave();
-  renderRanking();
-  renderMatch();
-  renderRecapInGame();
-}
-
-/* -------------------- Ranking -------------------- */
-function renderRanking(){
-  rankingBody.innerHTML = "";
-  const sorted = sortPlayersForRanking(state.players);
-
-  for(const p of sorted){
-    rankingBody.innerHTML += `
-      <tr>
-        <td>${p.name}</td>
-        <td>${p.mj}</td>
-        <td>${p.v}</td>
-        <td>${p.plus}</td>
-        <td>${p.minus}</td>
-        <td>${p.plus - p.minus}</td>
-      </tr>
-    `;
-  }
-}
-
-/* -------------------- Recap -------------------- */
-function formatTeam(team){
-  const t = normalizeTeam(team);
-  return `${playerName(t[0])}/${playerName(t[1])}`;
-}
-
-function renderRecap(targetEl, includeAll){
-  const maxRound = includeAll ? (state.results?.length || 0) : (state.matchIndex + 1);
-  let html = "";
-
-  for(let r=0; r<maxRound; r++){
-    const round = state.schedule[r];
-    if(!round) continue;
-
-    const resArr = state.results?.[r] || [];
-    const courts = round.courts || [];
-
-    for(let c=0;c<courts.length;c++){
-      const court = courts[c];
-      const res = resArr[c];
-      if(!res) continue;
-
-      html += `
-        <div class="recapLine">
-          <div class="recapLeft">
-            <b>R${r+1}</b> • T${c+1} —
-            ${formatTeam(court.teamA)} <b>${res.a}-${res.b}</b> ${formatTeam(court.teamB)}
-          </div>
-          <div class="recapRight">${state.mode==="ladder" ? "↑↓" : "🎾"}</div>
-        </div>
-      `;
-    }
-
-    if(round.rest && round.rest.length){
-      html += `
-        <div class="recapLine">
-          <div class="recapLeft">
-            <b>R${r+1}</b> • Bye — ${round.rest.map(i=>playerName(i)).join(", ")}
-          </div>
-          <div class="recapRight">😴</div>
-        </div>
-      `;
-    }
-  }
-
-  targetEl.innerHTML = html || `<div class="small">Pas encore de match validé.</div>`;
-}
-
-function toggleRecap(){
-  recapInGame.classList.toggle("hidden");
-  if(!recapInGame.classList.contains("hidden")){
-    renderRecapInGame();
-  }
-}
-
-function renderRecapInGame(){
-  if(recapInGame.classList.contains("hidden")) return;
-  renderRecap(recapInGame, false);
-}
-
-/* -------------------- Finish -------------------- */
-function finishNow(){
-  renderFinishTable();
-  showFinish();
-}
-
-function renderFinishTable(){
-  finishPlayerCountEl.value = String(state.n || 4);
-  updateFinishCourtUI();
-  if(finishCourtWrap.style.display !== "none"){
-    fillCourtOptions(finishCourtCountEl, state.n, state.courts || maxCourtsForN(state.n));
-  }
-  finishGameModeEl.value = state.mode || "americano";
-  finishMaxPointsEl.value = String(state.maxPoints || 21);
-
-  const sorted = sortPlayersForRanking(state.players);
-  finalRankingBody.innerHTML = "";
-  sorted.forEach((p, i)=>{
-    finalRankingBody.innerHTML += `
-      <tr>
-        <td>${i+1}</td>
-        <td>${p.name}</td>
-        <td>${p.mj}</td>
-        <td>${p.v}</td>
-        <td>${p.plus}</td>
-        <td>${p.minus}</td>
-        <td>${p.plus - p.minus}</td>
-      </tr>
-    `;
-  });
-
-  renderRecap(finalRecap, true);
-}
-
-/* -------------------- Restart -------------------- */
-function restartSamePlayers(){
-  const n = state.n;
-  const courts = state.courts;
-  const names = state.players.map(p=>p.name);
-  const mode = state.mode;
-  const maxPoints = state.maxPoints;
-
-  state.mode = mode;
-  state.n = n;
-  state.courts = courts;
-  state.maxPoints = maxPoints;
-  state.totalRounds = null;
-
-  state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
-
-  state.partnersSeen = {};
-  state.partnersFullCycleNotified = false;
-
-  state.ladderOpp = (mode === "ladder")
-    ? Array.from({length:n}, ()=>Array(n).fill(0))
-    : null;
-
-  state.ladderPartner = (mode === "ladder")
-    ? Array.from({length:n}, ()=>Array(n).fill(0))
-    : null;
-
-  state.ladderTeams = (mode === "ladder") ? {} : null;
-  state.ladderByeCounts = (mode === "ladder") ? Array(n).fill(0) : null;
-  state.ladderLastRest = (mode === "ladder") ? [] : [];
-
-  if(mode === "ladder"){
-    if(n < courts*4){
-      alert("❌ Pas assez de joueurs pour ce nombre de terrains.");
-      return;
-    }
-    state.schedule = [buildFirstRoundLadder(n, courts)];
-  }else{
-    state.schedule = buildScheduleAmericano(n, courts);
-  }
-
-  state.matchIndex = 0;
-  state.validatedCourts = [];
-  state.courtScores = [];
-  state.results = [];
-  state.history = [];
-
-  recapInGame.classList.add("hidden");
-  recapInGame.innerHTML = "";
-
-  showGame();
-  renderMatch();
-  renderRanking();
-  writeAutoSave();
-}
-
-/* -------------------- New game choose players -------------------- */
-function newGameChoosePlayers(){
-  const n = getSafeCountForStart(finishPlayerCountEl);
-
-  const max = maxCourtsForN(n);
-  const courts = (max > 1) ? (+finishCourtCountEl.value || max) : 1;
-
-  playerCountEl.value = String(n);
-  createInputs();
-  updateCourtChoiceUI();
-  if(courtWrap.style.display !== "none"){
-    fillCourtOptions(courtCountEl, n, courts);
-  }
-
-  gameModeEl.value = finishGameModeEl.value;
-  maxPointsEl.value = String(clamp(+finishMaxPointsEl.value || 21, 1, 31));
-
-  const keptActiveSaveId = state.activeSaveId || null;
-
-  state = {
-    mode: gameModeEl.value,
-    n,
-    courts,
-    maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),
-    totalRounds: null,
-
-    players: [],
-    schedule: [],
-    matchIndex: 0,
-
-    validatedCourts: [],
-    courtScores: [],
-    results: [],
-
-    history: [],
-    savedAt: null,
-
-    ladderOpp: (gameModeEl.value === "ladder") ? Array.from({length:n}, ()=>Array(n).fill(0)) : null,
-    ladderPartner: (gameModeEl.value === "ladder") ? Array.from({length:n}, ()=>Array(n).fill(0)) : null,
-    ladderTeams: (gameModeEl.value === "ladder") ? {} : null,
-    ladderByeCounts: (gameModeEl.value === "ladder") ? Array(n).fill(0) : null,
-    ladderLastRest: (gameModeEl.value === "ladder") ? [] : [],
-
-    partnersSeen: {},
-    partnersFullCycleNotified: false,
-
-    activeSaveId: keptActiveSaveId
-  };
-
-  refreshSavesUI();
-  showSetup();
-}
-
-/* -------------------- Reset all -------------------- */
-function resetAll(){
-  if(!confirm("Tout effacer (application + sauvegardes) ?")) return;
-
-  const arr = getSavesIndex();
-  for(const s of arr){
-    try{ localStorage.removeItem(SAVE_PREFIX + s.id); }catch(e){}
-  }
-  try{ localStorage.removeItem(SAVES_INDEX_KEY); }catch(e){}
-  try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
-  try{ localStorage.removeItem(ACTIVE_SAVE_KEY); }catch(e){}
-
-  location.reload();
-}
-
-/* -------------------- INIT -------------------- */
-(function init(){
-  createInputs();
-  updateCourtChoiceUI();
-  updateFinishCourtUI();
-  refreshSavesUI();
-  showSetup();
-
-  if(tryLoadAutoSave()){
-    if(confirm("Reprendre la dernière partie (auto-save) ?")){
-      refreshSavesUI();
-      showGame();
-      renderMatch();
-      renderRanking();
-      renderRecapInGame();
-      writeAutoSave();
-    }
-  }
-})();
+function applyResult(A,B,scoreA,scoreB){ for(const p of A){ state.players[p].mj++; state.players[p].plus+=scoreA; state.players[p].minus+=scoreB; } for(const p of B){ state.players[p].mj++; state.players[p].plus+=scoreB; state.players[p].minus+=scoreA; } if(scoreA>scoreB){ for(const p of A) state.players[p].v++; } else { for(const p of B) state.players[p].v++; } }
+function nextMatch(){ if(!state.validatedCourts.every(Boolean)) return; if(state.mode==="ladder" && !state.schedule[state.matchIndex+1]){ const cur=state.schedule[state.matchIndex]; const curRes=state.results?.[state.matchIndex]; state.schedule[state.matchIndex+1]=buildNextRoundLadder(cur.courts,curRes,state.matchIndex+1); } state.matchIndex++; state.validatedCourts=[]; state.courtScores=[]; writeAutoSave(); renderMatch(); renderRecapInGame(); }
+function undoLast(){ if(!state.history.length) return; const prev=state.history.pop(); state.players=prev.players; state.matchIndex=prev.matchIndex; state.validatedCourts=prev.validatedCourts; state.courtScores=prev.courtScores||[]; state.results=prev.results||[]; state.schedule=prev.schedule||state.schedule; state.ladderOpp=prev.ladderOpp??state.ladderOpp; state.ladderPartner=prev.ladderPartner??state.ladderPartner; state.ladderTeams=prev.ladderTeams??state.ladderTeams; state.ladderByeCounts=prev.ladderByeCounts??state.ladderByeCounts; state.ladderLastRest=prev.ladderLastRest??state.ladderLastRest; state.partnersSeen=prev.partnersSeen??state.partnersSeen; state.partnersFullCycleNotified=prev.partnersFullCycleNotified??state.partnersFullCycleNotified; writeAutoSave(); renderRanking(); renderMatch(); renderRecapInGame(); }
+function renderRanking(){ rankingBody.innerHTML=""; for(const p of sortPlayersForRanking(state.players)) rankingBody.innerHTML += `<tr><td>${p.name}</td><td>${p.mj}</td><td>${p.v}</td><td>${p.plus}</td><td>${p.minus}</td><td>${p.plus-p.minus}</td></tr>`; }
+function formatTeam(team){ const t=normalizeTeam(team); return `${playerName(t[0])}/${playerName(t[1])}`; }
+function renderRecap(targetEl,includeAll){ const maxRound=includeAll?(state.results?.length||0):(state.matchIndex+1); let html=""; for(let r=0;r<maxRound;r++){ const round=state.schedule[r]; if(!round) continue; const resArr=state.results?.[r]||[]; for(let c=0;c<(round.courts||[]).length;c++){ const court=round.courts[c], res=resArr[c]; if(!res) continue; html += `<div class="recapLine"><div class="recapLeft"><b>R${r+1}</b> • T${c+1} — ${formatTeam(court.teamA)} <b>${res.a}-${res.b}</b> ${formatTeam(court.teamB)}</div><div class="recapRight">${state.mode==="ladder"?"↑↓":"🎾"}</div></div>`; } if(round.rest && round.rest.length) html += `<div class="recapLine"><div class="recapLeft"><b>R${r+1}</b> • Bye — ${round.rest.map(i=>playerName(i)).join(", ")}</div><div class="recapRight">😴</div></div>`; } targetEl.innerHTML=html||`<div class="small">Pas encore de match validé.</div>`; }
+function toggleRecap(){ recapInGame.classList.toggle("hidden"); if(!recapInGame.classList.contains("hidden")) renderRecapInGame(); }
+function renderRecapInGame(){ if(recapInGame.classList.contains("hidden")) return; renderRecap(recapInGame,false); }
+function finishNow(){ renderFinishTable(); showFinish(); }
+function renderFinishTable(){ finishPlayerCountEl.value=String(state.n||4); updateFinishCourtUI(); if(finishCourtWrap.style.display!=="none") fillCourtOptions(finishCourtCountEl,state.n,state.courts||maxCourtsForN(state.n)); finishGameModeEl.value=state.mode||"americano"; finishMaxPointsEl.value=String(state.maxPoints||21); const sorted=sortPlayersForRanking(state.players); finalRankingBody.innerHTML=""; sorted.forEach((p,i)=> finalRankingBody.innerHTML += `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.mj}</td><td>${p.v}</td><td>${p.plus}</td><td>${p.minus}</td><td>${p.plus-p.minus}</td></tr>`); renderRecap(finalRecap,true); }
+function restartSamePlayers(){ const n=state.n, courts=state.courts, names=state.players.map(p=>p.name), mode=state.mode, maxPoints=state.maxPoints; state.mode=mode; state.n=n; state.courts=courts; state.maxPoints=maxPoints; state.totalRounds=null; state.players=names.map(name=>({name,mj:0,v:0,plus:0,minus:0})); state.partnersSeen={}; state.partnersFullCycleNotified=false; state.ladderOpp=(mode==="ladder")?Array.from({length:n},()=>Array(n).fill(0)):null; state.ladderPartner=(mode==="ladder")?Array.from({length:n},()=>Array(n).fill(0)):null; state.ladderTeams=(mode==="ladder")?{}:null; state.ladderByeCounts=(mode==="ladder")?Array(n).fill(0):null; state.ladderLastRest=(mode==="ladder")?[]:[]; if(mode==="ladder"){ if(n<courts*4){ alert("❌ Pas assez de joueurs pour ce nombre de terrains."); return; } state.schedule=[buildFirstRoundLadder(n,courts)]; } else state.schedule=buildScheduleAmericano(n,courts); state.matchIndex=0; state.validatedCourts=[]; state.courtScores=[]; state.results=[]; state.history=[]; recapInGame.classList.add("hidden"); recapInGame.innerHTML=""; showGame(); renderMatch(); renderRanking(); writeAutoSave(); }
+function newGameChoosePlayers(){ const n=getSafeCountForStart(finishPlayerCountEl); const max=maxCourtsForN(n); const courts=(max>1)?(+finishCourtCountEl.value||max):1; playerCountEl.value=String(n); createInputs(); updateCourtChoiceUI(); if(courtWrap.style.display!=="none") fillCourtOptions(courtCountEl,n,courts); gameModeEl.value=finishGameModeEl.value; maxPointsEl.value=String(clamp(+finishMaxPointsEl.value||21,1,31)); const keptActiveSaveId=state.activeSaveId||null; state={mode:gameModeEl.value,n,courts,maxPoints:clamp(+maxPointsEl.value||21,1,31),totalRounds:null,players:[],schedule:[],matchIndex:0,validatedCourts:[],courtScores:[],results:[],history:[],savedAt:null,ladderOpp:(gameModeEl.value==="ladder")?Array.from({length:n},()=>Array(n).fill(0)):null,ladderPartner:(gameModeEl.value==="ladder")?Array.from({length:n},()=>Array(n).fill(0)):null,ladderTeams:(gameModeEl.value==="ladder")?{}:null,ladderByeCounts:(gameModeEl.value==="ladder")?Array(n).fill(0):null,ladderLastRest:(gameModeEl.value==="ladder")?[]:[],partnersSeen:{},partnersFullCycleNotified:false,activeSaveId:keptActiveSaveId}; refreshSavesUI(); showSetup(); }
+function resetAll(){ if(!confirm("Tout effacer (application + sauvegardes) ?")) return; for(const s of getSavesIndex()){ try{ localStorage.removeItem(SAVE_PREFIX+s.id); }catch(e){} } try{ localStorage.removeItem(SAVES_INDEX_KEY); localStorage.removeItem(AUTOSAVE_KEY); localStorage.removeItem(ACTIVE_SAVE_KEY); }catch(e){} location.reload(); }
+(function init(){ createInputs(); updateCourtChoiceUI(); updateFinishCourtUI(); refreshSavesUI(); showSetup(); if(tryLoadAutoSave()){ if(confirm("Reprendre la dernière partie (auto-save) ?")){ refreshSavesUI(); showGame(); renderMatch(); renderRanking(); renderRecapInGame(); writeAutoSave(); } } })();
 </script>
-
 </body>
 </html>
