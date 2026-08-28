@@ -304,6 +304,16 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .court-card.validated::before{background:var(--lime)!important;}
 .court-status-label{font-size:11px;font-weight:900;color:var(--gold)}
 .court-status-label.done{color:#91f2db}
+.necessary-duplicate{
+  width:auto;min-height:0;margin:10px 0 0;padding:7px 10px;border-radius:999px;
+  background:rgba(255,174,66,.12);border:1px solid rgba(255,174,66,.3);
+  color:#ffd18a;font-size:12px;font-weight:850;
+}
+.necessary-duplicate:hover:not(:disabled){background:rgba(255,174,66,.18);}
+.rotation-summary{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}
+.rotation-summary span{padding:8px 11px;border-radius:999px;font-size:13px;font-weight:850;}
+.rotation-summary .unique{background:rgba(67,223,189,.12);color:#9af5df;}
+.rotation-summary .duplicate{background:rgba(255,174,66,.12);color:#ffd18a;}
 .edit-score{background:rgba(88,166,255,.13)!important;border:1px solid rgba(88,166,255,.28)!important;color:#cce5ff!important;}
 .organizer-tools{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 14px}.organizer-tools button{width:auto;min-height:42px;margin:0;padding:8px 11px;font-size:12px;}
 
@@ -358,14 +368,6 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <div class="eyebrow">Nouveau tournoi</div>
     <h1 class="screen-title">Prêts à jouer ?</h1>
     <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
-
-    <section class="step">
-      <h2 class="step-title"><span class="step-number">★</span> Votre événement</h2>
-      <div class="row">
-        <div><label for="eventName">Nom de l’événement</label><input id="eventName" placeholder="Soirée King" value="Soirée King" /></div>
-        <div><label for="clubName">Club</label><input id="clubName" placeholder="Nom du club" /></div>
-      </div>
-    </section>
 
     <section class="step">
       <h2 class="step-title"><span class="step-number">1</span> Combien sommes-nous ?</h2>
@@ -438,7 +440,6 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div class="small" id="progressText"></div>
       <div class="small" id="restText"></div>
       <div class="event-strip">
-        <div><div id="gameEventName" class="event-name"></div><div id="gameClubName" class="club-name"></div></div>
         <div id="roundState" class="round-state"></div>
       </div>
       <div id="courtStatusGrid" class="court-status-grid"></div>
@@ -552,8 +553,6 @@ const STATE_VERSION = 2;
 
 let state = {
   mode: "americano",
-  eventName: "Soirée King",
-  clubName: "",
   n: 8,
   courts: 2,
   maxPoints: 21,
@@ -595,8 +594,6 @@ const playerCountEl = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
 const maxPointsEl = document.getElementById("maxPoints");
 const gameModeEl = document.getElementById("gameMode");
-const eventNameEl = document.getElementById("eventName");
-const clubNameEl = document.getElementById("clubName");
 
 const courtWrap = document.getElementById("courtWrap");
 const courtCountEl = document.getElementById("courtCount");
@@ -612,8 +609,6 @@ const restText = document.getElementById("restText");
 const autosaveText = document.getElementById("autosaveText");
 const partnerProgressEl = document.getElementById("partnerProgress");
 const fullCycleNoticeEl = document.getElementById("fullCycleNotice");
-const gameEventNameEl = document.getElementById("gameEventName");
-const gameClubNameEl = document.getElementById("gameClubName");
 const roundStateEl = document.getElementById("roundState");
 const courtStatusGridEl = document.getElementById("courtStatusGrid");
 const roundReadyEl = document.getElementById("roundReady");
@@ -649,6 +644,20 @@ function normalizeTeam(team){
 function teamKey(team){
   const t = normalizeTeam(team);
   return `${t[0]}-${t[1]}`;
+}
+
+function isPartnerRepeat(team, partnerMatrix){
+  const t = normalizeTeam(team);
+  if(partnerMatrix) return (partnerMatrix[t[0]]?.[t[1]] || 0) > 0;
+  return (state.partnersSeen?.[teamKey(t)] || 0) > 0;
+}
+
+function necessaryDuplicateKeys(court){
+  return Array.isArray(court?.necessaryDuplicates) ? court.necessaryDuplicates : [];
+}
+
+function explainNecessaryDuplicate(){
+  alert("Toutes les combinaisons de partenaires compatibles avec les règles de ce round ont déjà été utilisées. Cette répétition est donc inévitable.");
 }
 
 function uniquePartnerRounds(n){
@@ -828,8 +837,6 @@ function normalizeLoadedState(){
   if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
   if(!Array.isArray(state.history)) state.history = [];
   if(!state.mode) state.mode = "americano";
-  if(typeof state.eventName !== "string") state.eventName = "Tournoi La Team";
-  if(typeof state.clubName !== "string") state.clubName = "";
   if(state.totalRounds === undefined) state.totalRounds = null;
   if(!state.partnersSeen || typeof state.partnersSeen !== "object") state.partnersSeen = {};
   if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
@@ -1110,6 +1117,66 @@ function sortPlayersForRanking(arr){
   });
 }
 
+// Appariement maximal dans un graphe général (algorithme des blossoms).
+// Ici, une arête relie deux joueurs qui n'ont encore jamais été partenaires.
+function maximumUnseenPartnerMatching(players, partnerMatrix){
+  const count = players.length;
+  const graph = Array.from({length:count},()=>[]);
+  for(let i=0;i<count;i++) for(let j=i+1;j<count;j++){
+    if((partnerMatrix[players[i]]?.[players[j]] || 0) === 0){
+      graph[i].push(j); graph[j].push(i);
+    }
+  }
+
+  const match=Array(count).fill(-1), parent=Array(count).fill(-1), base=Array.from({length:count},(_,i)=>i);
+  const used=Array(count).fill(false), blossom=Array(count).fill(false);
+
+  function lca(a,b){
+    const seen=Array(count).fill(false);
+    while(true){ a=base[a]; seen[a]=true; if(match[a]===-1) break; a=parent[match[a]]; }
+    while(true){ b=base[b]; if(seen[b]) return b; b=parent[match[b]]; }
+  }
+  function markPath(v,b,child){
+    while(base[v]!==b){
+      blossom[base[v]]=blossom[base[match[v]]]=true;
+      parent[v]=child; child=match[v]; v=parent[match[v]];
+    }
+  }
+  function findPath(root){
+    used.fill(false); parent.fill(-1); for(let i=0;i<count;i++) base[i]=i;
+    const queue=[root]; used[root]=true;
+    for(let q=0;q<queue.length;q++){
+      const v=queue[q];
+      for(const u of graph[v]){
+        if(base[v]===base[u] || match[v]===u) continue;
+        if(u===root || (match[u]!==-1 && parent[match[u]]!==-1)){
+          const cur=lca(v,u); blossom.fill(false); markPath(v,cur,u); markPath(u,cur,v);
+          for(let i=0;i<count;i++) if(blossom[base[i]]){
+            base[i]=cur; if(!used[i]){ used[i]=true; queue.push(i); }
+          }
+        }else if(parent[u]===-1){
+          parent[u]=v;
+          if(match[u]===-1) return u;
+          const nextMatched=match[u]; used[nextMatched]=true; queue.push(nextMatched);
+        }
+      }
+    }
+    return -1;
+  }
+
+  for(let i=0;i<count;i++) if(match[i]===-1){
+    let v=findPath(i);
+    while(v!==-1){ const pv=parent[v], nv=match[pv]; match[v]=pv; match[pv]=v; v=nv; }
+  }
+
+  const pairs=[], paired=new Set();
+  for(let i=0;i<count;i++) if(match[i]!==-1 && !paired.has(i)){
+    paired.add(i); paired.add(match[i]);
+    pairs.push(normalizeTeam([players[i],players[match[i]]]));
+  }
+  return {pairs, unmatched:players.filter((_,i)=>match[i]===-1)};
+}
+
 /* -------------------- Scheduling: Americano -------------------- */
 function buildScheduleAmericano(n, courtsChosen){
   if(n < 4) return [];
@@ -1160,11 +1227,6 @@ function generateNextAmericanoRound(n, courtsUsed, existingRounds){
     return idx.slice(0, restCount);
   }
 
-  function scorePair(a,b){
-    if(a === b) return 1e9;
-    return partner[a][b] * 100 + (Math.random()*0.01);
-  }
-
   function scoreMatch(teamA, teamB){
     let s = 0;
     for(const a of teamA) for(const b of teamB){ s += against[a][b] * 10; }
@@ -1172,42 +1234,23 @@ function generateNextAmericanoRound(n, courtsUsed, existingRounds){
   }
 
   function makeTeams(activePlayers){
-    const remaining = new Set(activePlayers);
-    const pairs = [];
+    const unseen = maximumUnseenPartnerMatching(activePlayers, partner);
+    const pairs = [...unseen.pairs];
+    const necessaryKeys = new Set();
+    const remaining = new Set(unseen.unmatched);
 
-    if(activePlayers.length === n && n % 2 === 0){
-      // Factorisation du graphe complet : sur n-1 rounds, chaque paire de
-      // partenaires apparaît exactement une fois lorsque tout le monde joue.
-      const ring = [...Array(n).keys()];
-      const rotation = existingRounds.length % (n - 1);
-      for(let r=0;r<rotation;r++){
-        ring.splice(1, 0, ring.pop());
+    // Un appariement maximal inédit laisse le minimum mathématique de joueurs
+    // à associer avec une ancienne paire. Ces répétitions sont donc nécessaires.
+    while(remaining.size){
+      const p=[...remaining][0]; remaining.delete(p);
+      let best=null, bestCount=Infinity;
+      for(const q of remaining){
+        const count=partner[p][q] || 0;
+        if(count<bestCount){ best=q; bestCount=count; }
       }
-      for(let i=0;i<n/2;i++){
-        pairs.push(normalizeTeam([ring[i], ring[n-1-i]]));
-      }
-    }else{
-      while(remaining.size > 0){
-        const arr = [...remaining];
-        const p = arr[0];
-
-        let bestQ = null;
-        let bestScore = 1e18;
-
-        for(const q of arr){
-          if(q === p) continue;
-          const sc = scorePair(p,q);
-          if(sc < bestScore){
-            bestScore = sc;
-            bestQ = q;
-          }
-        }
-
-        const q = (bestQ === null) ? arr[1] : bestQ;
-        pairs.push(normalizeTeam([p,q]));
-        remaining.delete(p);
-        remaining.delete(q);
-      }
+      remaining.delete(best);
+      const team=normalizeTeam([p,best]);
+      pairs.push(team); necessaryKeys.add(teamKey(team));
     }
 
     const pairIdx = [...Array(pairs.length).keys()];
@@ -1232,7 +1275,11 @@ function generateNextAmericanoRound(n, courtsUsed, existingRounds){
       const oIdx = (bestOpp === null) ? [...unused][0] : bestOpp;
       unused.delete(oIdx);
 
-      matches.push({teamA:pairs[pIdx], teamB:pairs[oIdx]});
+      const teamA=pairs[pIdx], teamB=pairs[oIdx];
+      matches.push({
+        teamA, teamB,
+        necessaryDuplicates:[teamA,teamB].map(teamKey).filter(key=>necessaryKeys.has(key))
+      });
     }
 
     return matches;
@@ -1248,7 +1295,8 @@ function generateNextAmericanoRound(n, courtsUsed, existingRounds){
   const matches = makeTeams(active);
   const courts = matches.slice(0, courtsUsed).map(m=>({
     teamA: normalizeTeam(m.teamA),
-    teamB: normalizeTeam(m.teamB)
+    teamB: normalizeTeam(m.teamB),
+    necessaryDuplicates:m.necessaryDuplicates
   }));
 
   return { rest, courts };
@@ -1438,13 +1486,11 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
       { A: normalizeTeam([a,d]),  B: normalizeTeam([b,cc])  },
     ];
 
-    const hardNoRepeat = (roundIndex < uniquePartnerRounds(state.n));
-
-    let candidates = options;
-    if(hardNoRepeat){
-      candidates = options.filter(opt => !wouldRepeatTeam(opt.A) && !wouldRepeatTeam(opt.B));
+    for(const option of options){
+      option.repeatCount = Number(wouldRepeatTeam(option.A)) + Number(wouldRepeatTeam(option.B));
     }
-    if(candidates.length === 0) candidates = options;
+    const minimumRepeats = Math.min(...options.map(option=>option.repeatCount));
+    const candidates = options.filter(option=>option.repeatCount===minimumRepeats);
 
     let best = candidates[0];
     let bestScore = totalLadderScore(best.A, best.B);
@@ -1458,7 +1504,11 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
       }
     }
 
-    newCourts.push({ teamA: best.A, teamB: best.B });
+    newCourts.push({
+      teamA: best.A,
+      teamB: best.B,
+      necessaryDuplicates:[best.A,best.B].filter(team=>wouldRepeatTeam(team)).map(teamKey)
+    });
   }
 
   return { rest, courts: newCourts };
@@ -1501,9 +1551,6 @@ function goToSetup(keepProgress){
   gameModeEl.value = state.mode;
   updateModeCards();
   maxPointsEl.value = state.maxPoints;
-  eventNameEl.value = state.eventName || "Tournoi La Team";
-  clubNameEl.value = state.clubName || "";
-
   refreshSavesUI();
   showSetup();
 }
@@ -1539,8 +1586,6 @@ function onScoreChange(courtIndex, side){
 /* -------------------- Start tournament -------------------- */
 function startNewTournament(){
   state.mode = gameModeEl.value;
-  state.eventName = (eventNameEl.value || "Tournoi La Team").trim();
-  state.clubName = (clubNameEl.value || "").trim();
   state.n = getSafeCountForStart(playerCountEl);
 
   const maxC = maxCourtsForN(state.n);
@@ -1644,8 +1689,6 @@ function renderMatch(){
     state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
 
   const validatedCount = state.validatedCourts.filter(Boolean).length;
-  gameEventNameEl.textContent = state.eventName || "Tournoi La Team";
-  gameClubNameEl.textContent = state.clubName || "Club non renseigné";
   roundStateEl.innerHTML = `<span>Avancement</span><strong>${validatedCount}/${match.courts.length} validés</strong>`;
   courtStatusGridEl.innerHTML = match.courts.map((_,idx)=>
     `<button class="court-status ${state.validatedCourts[idx]?"done":"waiting"}" onclick="scrollToCourt(${idx})">T${idx+1}</button>`
@@ -1662,6 +1705,10 @@ function renderMatch(){
     const disabled = state.validatedCourts[idx];
     const A = normalizeTeam(c.teamA);
     const B = normalizeTeam(c.teamB);
+    const duplicateKeys = necessaryDuplicateKeys(c);
+    const duplicateBadge = duplicateKeys.length
+      ? `<button type="button" class="necessary-duplicate" onclick="explainNecessaryDuplicate()" aria-label="Doublon nécessaire, toucher pour comprendre">🟠 Doublon nécessaire</button>`
+      : "";
     const result = state.results?.[state.matchIndex]?.[idx];
     const teamAWon = result && result.a > result.b;
     const winner = result ? (teamAWon ? A : B) : null;
@@ -1690,6 +1737,7 @@ function renderMatch(){
         <div class="versus">VS</div>
         <div class="team">${playerName(B[0])}<br>+ ${playerName(B[1])}</div>
       </div>
+      ${duplicateBadge}
       <div class="score-row">
           <select id="scoreA_${idx}" ${disabled?"disabled":""}
             onchange="onScoreChange(${idx},'A')" aria-label="Score équipe 1 terrain ${idx+1}">
@@ -1963,9 +2011,29 @@ function formatTeam(team){
   return `${playerName(t[0])}/${playerName(t[1])}`;
 }
 
+function rotationRecapStats(maxRound){
+  const uniqueTeams=new Set();
+  let necessaryDuplicates=0;
+  for(let r=0;r<maxRound;r++){
+    const round=state.schedule?.[r];
+    const results=state.results?.[r] || [];
+    for(let c=0;c<(round?.courts?.length || 0);c++){
+      if(!results[c]) continue;
+      uniqueTeams.add(teamKey(round.courts[c].teamA));
+      uniqueTeams.add(teamKey(round.courts[c].teamB));
+      necessaryDuplicates += necessaryDuplicateKeys(round.courts[c]).length;
+    }
+  }
+  return {uniqueTeams:uniqueTeams.size,necessaryDuplicates};
+}
+
 function renderRecap(targetEl, includeAll){
   const maxRound = includeAll ? (state.results?.length || 0) : (state.matchIndex + 1);
-  let html = "";
+  const rotationStats=rotationRecapStats(maxRound);
+  let html = `<div class="rotation-summary">
+    <span class="unique">🟢 ${rotationStats.uniqueTeams} équipes différentes</span>
+    <span class="duplicate">🟠 ${rotationStats.necessaryDuplicates} doublons nécessaires</span>
+  </div>`;
 
   for(let r=0; r<maxRound; r++){
     const round = state.schedule[r];
@@ -2004,7 +2072,7 @@ function renderRecap(targetEl, includeAll){
     }
   }
 
-  targetEl.innerHTML = html || `<div class="small">Pas encore de match validé.</div>`;
+  targetEl.innerHTML = rotationStats.uniqueTeams ? html : `<div class="small">Pas encore de match validé.</div>`;
 }
 
 function toggleRecap(){
@@ -2064,7 +2132,7 @@ function exportFinalResults(){
   const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${(state.eventName||"la-team").replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-classement.csv`;
+  link.download = "la-team-classement.csv";
   link.click();
   URL.revokeObjectURL(link.href);
 }
@@ -2146,8 +2214,6 @@ function newGameChoosePlayers(){
 
   state = {
     mode: gameModeEl.value,
-    eventName: (eventNameEl.value || "Tournoi La Team").trim(),
-    clubName: (clubNameEl.value || "").trim(),
     n,
     courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),

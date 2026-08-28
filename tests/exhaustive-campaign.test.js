@@ -23,7 +23,7 @@ function loadEngine(){
   vm.runInContext(source+`;globalThis.__engine={
     buildFirstRoundLadder,buildNextRoundLadder,buildScheduleAmericano,generateNextAmericanoRound,
     applyResult,incLadderPartnerAndTeam,addPartnerPair,teamKey,normalizeTeam,stateSnapshot,
-    getState:()=>state,setState:s=>{state=s},setSeed:s=>{seed=s>>>0}
+    maximumUnseenPartnerMatching,getState:()=>state,setState:s=>{state=s},setSeed:s=>{seed=s>>>0}
   }`,context);
   return context.__engine;
 }
@@ -38,6 +38,8 @@ function initialState(n,courts,mode){
     partnersSeen:{},partnersFullCycleNotified:false,activeSaveId:null};
 }
 
+let scoreSeed=987654321;
+function nextScoreRandom(){scoreSeed=(scoreSeed*1664525+1013904223)>>>0;return scoreSeed/4294967296;}
 function score(pattern,r,c,court){
   if(pattern==="a") return [15,6];
   if(pattern==="b") return [6,15];
@@ -49,7 +51,7 @@ function score(pattern,r,c,court){
     return inA?[17,4]:inB?[4,17]:((r+c)%2?[8,13]:[13,8]);
   }
   if(pattern==="circulate") return (r%2===0 ? c%2===0 : c%2!==0)?[16,5]:[5,16];
-  const a=11+Math.floor(Math.random()*10); return [a,21-a];
+  const a=11+Math.floor(nextScoreRandom()*10); return [a,21-a];
 }
 
 function playersOnRound(round){return round.courts.flatMap(c=>[...c.teamA,...c.teamB]);}
@@ -80,10 +82,11 @@ function applyLedger(ledger,A,B,a,b){
 }
 function assertRanking(state,ledger){state.players.forEach((p,i)=>assert.deepEqual({mj:p.mj,v:p.v,plus:p.plus,minus:p.minus},ledger[i],`classement J${i+1}`));}
 
-function createMetrics(n){return {partner:Array.from({length:n},()=>new Map()),opponent:Array.from({length:n},()=>new Map()),lastPartner:Array.from({length:n},()=>new Map()),gaps:[],byes:Array(n).fill(0)};}
+function createMetrics(n){return {partner:Array.from({length:n},()=>new Map()),partnerMatrix:Array.from({length:n},()=>Array(n).fill(0)),opponent:Array.from({length:n},()=>new Map()),lastPartner:Array.from({length:n},()=>new Map()),gaps:[],byes:Array(n).fill(0)};}
 function recordMatch(metrics,A,B,round){
   for(const [x,y] of [A,B]){
     metrics.partner[x].set(y,(metrics.partner[x].get(y)||0)+1); metrics.partner[y].set(x,(metrics.partner[y].get(x)||0)+1);
+    metrics.partnerMatrix[x][y]++;metrics.partnerMatrix[y][x]++;
     for(const [p,q] of [[x,y],[y,x]]){const last=metrics.lastPartner[p].get(q);if(last!==undefined)metrics.gaps.push(round-last);metrics.lastPartner[p].set(q,round);}
   }
   for(const a of A)for(const b of B){metrics.opponent[a].set(b,(metrics.opponent[a].get(b)||0)+1);metrics.opponent[b].set(a,(metrics.opponent[b].get(a)||0)+1);}
@@ -91,7 +94,65 @@ function recordMatch(metrics,A,B,round){
 
 const engine=loadEngine();
 const profiles=["random","a","b","alternate","close","blowout","dominant","circulate"];
-const aggregate={simulations:0,rounds:0,matches:0,configs:new Set(),partnerDistinct:[],opponentDistinct:[],partnerRepeats:0,opponentRepeats:0,gaps:[],maxByeSpread:0,perf:[]};
+const aggregate={simulations:0,rounds:0,matches:0,configs:new Set(),partnerDistinct:[],opponentDistinct:[],partnerRepeats:0,opponentRepeats:0,necessaryDuplicates:0,avoidableDuplicates:0,gaps:[],maxByeSpread:0,perf:[]};
+
+function bruteMaximumUnseen(players,matrix){
+  const memo=new Map();
+  function solve(mask){
+    if(mask===0) return 0;
+    if(memo.has(mask)) return memo.get(mask);
+    let first=0;while(((mask>>first)&1)===0)first++;
+    let best=solve(mask&~(1<<first));
+    for(let j=first+1;j<players.length;j++) if((mask>>j)&1){
+      if(matrix[players[first]][players[j]]===0) best=Math.max(best,1+solve(mask&~(1<<first)&~(1<<j)));
+    }
+    memo.set(mask,best);return best;
+  }
+  return solve((1<<players.length)-1);
+}
+
+// Régression : un choix glouton 0-1 laisserait 2-3 en doublon, alors que
+// l'appariement inédit 0-2 + 1-3 existe.
+{
+  const matrix=Array.from({length:4},()=>Array(4).fill(1));
+  for(const [a,b] of [[0,1],[0,2],[1,3]]) matrix[a][b]=matrix[b][a]=0;
+  assert.equal(engine.maximumUnseenPartnerMatching([0,1,2,3],matrix).pairs.length,2);
+}
+
+// Oracle indépendant par programmation dynamique sur des graphes variés.
+let graphSeed=73;
+for(let sample=0;sample<120;sample++){
+  const n=4+2*(sample%5),players=[...Array(n).keys()];
+  const matrix=Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    graphSeed=(graphSeed*1664525+1013904223)>>>0;
+    matrix[i][j]=matrix[j][i]=(graphSeed%3===0?0:1);
+  }
+  assert.equal(engine.maximumUnseenPartnerMatching(players,matrix).pairs.length,bruteMaximumUnseen(players,matrix),`appariement maximal échantillon ${sample}`);
+}
+
+function repeatKeys(court,matrix){return [court.teamA,court.teamB].filter(t=>matrix[t[0]][t[1]]>0).map(t=>engine.teamKey(t)).sort();}
+function assertDuplicateNecessity(round,mode,matrix,n,courts,r){
+  let selectedRepeats=0;
+  for(const [c,court] of round.courts.entries()){
+    const actual=repeatKeys(court,matrix);
+    assert.deepEqual([...(court.necessaryDuplicates||[])].sort(),actual,`marqueur doublon ${mode} ${n}/${courts} R${r+1} T${c+1}`);
+    selectedRepeats+=actual.length;
+    if(mode==="ladder"){
+      const [a,b,cc,d]=[...court.teamA,...court.teamB];
+      const options=[[[a,b],[cc,d]],[[a,cc],[b,d]],[[a,d],[b,cc]]];
+      const minimum=Math.min(...options.map(teams=>teams.filter(t=>matrix[t[0]][t[1]]>0).length));
+      assert.equal(actual.length,minimum,`aucun doublon King évitable ${n}/${courts} R${r+1} T${c+1}`);
+    }
+  }
+  if(mode==="americano"){
+    const active=playersOnRound(round);
+    const unseen=engine.maximumUnseenPartnerMatching(active,matrix);
+    const minimum=(active.length/2)-unseen.pairs.length;
+    assert.equal(selectedRepeats,minimum,`aucun doublon Americano évitable ${n}/${courts} R${r+1}`);
+  }
+  aggregate.necessaryDuplicates+=selectedRepeats;
+}
 
 function simulate({n,courts,mode,rounds,pattern,seed}){
   engine.setSeed(seed); const state=initialState(n,courts,mode); engine.setState(state);
@@ -104,6 +165,7 @@ function simulate({n,courts,mode,rounds,pattern,seed}){
       generationMs+=dt;maxGenerationMs=Math.max(maxGenerationMs,dt);state.schedule.push(round);
     }else round=state.schedule[r];
     validateRound(round,n,courts); round.rest.forEach(p=>{metrics.byes[p]++;});
+    assertDuplicateNecessity(round,mode,metrics.partnerMatrix,n,courts,r);
     if(previous&&mode==="ladder"){
       const expected=expectedDestinations(previous.round,previous.results,courts),actual=new Map();
       round.courts.forEach((court,i)=>[...court.teamA,...court.teamB].forEach(p=>actual.set(p,i)));
@@ -145,6 +207,7 @@ const summary={
   simulations:aggregate.simulations,rounds:aggregate.rounds,matches:aggregate.matches,configurations:aggregate.configs.size,
   partnerDiversity:{min:Math.min(...aggregate.partnerDistinct),max:Math.max(...aggregate.partnerDistinct),average:aggregate.partnerDistinct.reduce((a,b)=>a+b,0)/aggregate.partnerDistinct.length,repeats:aggregate.partnerRepeats,averageRepeatGap:aggregate.gaps.reduce((a,b)=>a+b,0)/Math.max(1,aggregate.gaps.length)},
   opponentDiversity:{min:Math.min(...aggregate.opponentDistinct),max:Math.max(...aggregate.opponentDistinct),average:aggregate.opponentDistinct.reduce((a,b)=>a+b,0)/aggregate.opponentDistinct.length,repeats:aggregate.opponentRepeats},
+  duplicates:{necessary:aggregate.necessaryDuplicates,avoidable:aggregate.avoidableDuplicates},
   byes:{maximumSpread:aggregate.maxByeSpread},performance:aggregate.perf
 };
 console.log("EXHAUSTIVE_CAMPAIGN_OK");

@@ -6,6 +6,18 @@ Date : 28 août 2026
 
 La campagne complète est validée après correction d'un défaut de performance lié à la croissance de l'historique sauvegardé. Aucun défaut fonctionnel du moteur Americano ou King / Montée-Descente n'a été observé.
 
+## Contrôle des doublons nécessaires
+
+La campagne contrôle désormais chaque répétition de partenaires avant de l'accepter :
+
+- en Americano, un appariement maximal exact recherche simultanément toutes les paires encore inédites parmi les joueurs actifs ;
+- en King, les trois compositions possibles de chaque terrain de destination sont comparées sans jamais modifier les montées et descentes ;
+- le marqueur orange est présent uniquement sur les paires déjà vues qui restent après cette recherche ;
+- un oracle indépendant par programmation dynamique valide l'algorithme sur 120 graphes de référence jusqu'à 12 joueurs ;
+- une régression ciblée reproduit le cas où un choix glouton crée un doublon alors qu'une solution entièrement inédite existe.
+
+Résultat déterministe de la campagne : **170 412 doublons nécessaires** sur les longues sessions, **0 doublon évitable** produit par le nouveau moteur. Ce total élevé agrège volontairement les 975 simulations, dont les stress King de 250 rondes bien au-delà de l'épuisement des combinaisons possibles.
+
 ## Périmètre automatique
 
 - 975 simulations indépendantes.

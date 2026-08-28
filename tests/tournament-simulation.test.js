@@ -55,6 +55,7 @@ function loadApp(sharedStorage){
     buildFirstRoundLadder, buildNextRoundLadder, buildScheduleAmericano,
     generateNextAmericanoRound, renderMatch, validateCourt, nextMatch, undoLast,
     editCourtScore, replacePlayer, restartSamePlayers,
+    renderRecap, explainNecessaryDuplicate,
     saveToSlot, loadFromSlot, writeAutoSave, tryLoadAutoSave, stateSnapshot,
     getState:()=>state, setState:s=>{state=s;}, uniquePartnerRounds, teamKey
   };`, context);
@@ -188,6 +189,14 @@ const scenarios = [
   [4,1,20],[8,2,50],[12,3,100],[16,4,20],
   [8,1,50],[12,2,50],[16,3,50]
 ];
+
+// L'écran de création ne contient plus les anciens champs événement/club.
+{
+  const html=fs.readFileSync(path.resolve(__dirname,"..","index.html"),"utf8");
+  assert.ok(!html.includes('id="eventName"'));
+  assert.ok(!html.includes('id="clubName"'));
+  assert.ok(!html.includes("Votre événement"));
+}
 const patterns = ["varied","trend","same-side","random"];
 for(const mode of ["americano","ladder"]){
   for(let i=0;i<scenarios.length;i++){
@@ -200,6 +209,20 @@ for(const mode of ["americano","ladder"]){
 for(const [rounds,pattern,corrections] of [[20,"same-side",true],[50,"trend",false],[100,"random",false]]){
   runScenario({mode:"ladder",n:32,courts:8,rounds,pattern,corrections});
   if(process.env.VERBOSE_TESTS) console.error(`fait ladder 32/8 ${rounds}`);
+}
+
+// Badge explicatif et compteur du récapitulatif après épuisement des paires.
+{
+  const {app,context}=loadApp();
+  const s=initialState(4,1,"americano");app.setState(s);s.schedule=app.buildScheduleAmericano(4,1);
+  for(let r=0;r<4;r++){
+    if(!s.schedule[r]) s.schedule.push(context.__app.generateNextAmericanoRound(4,1,s.schedule));
+    s.results[r]=[{a:15,b:6}];s.matchIndex=r;
+  }
+  const target=makeElement();app.renderRecap(target,true);
+  assert.ok(target.innerHTML.includes("doublons nécessaires"),"compteur final des doublons");
+  app.explainNecessaryDuplicate();
+  assert.ok(context.alerts.at(-1).includes("répétition est donc inévitable"),"explication simple du badge");
 }
 
 // Americano complet : zéro partenaire répété pendant le cycle théorique n-1.
