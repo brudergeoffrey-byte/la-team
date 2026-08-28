@@ -1,1 +1,52 @@
-m«ëˆ§½©buªàºg§´!4ÎQN"gT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+# Audit du moteur de tournoi
+
+## Constats avant correction
+
+- **King multi-terrains incorrect** : l'ancien algorithme concatÃ©nait gagnants puis perdants de chaque terrain et redÃ©coupait cette mÃªme liste par blocs de quatre. Les joueurs restaient donc sur leur terrain au lieu de suivre la montÃ©e/descente annoncÃ©e.
+- **Seuil partenaire figÃ©** : `HARD_UNIQUE_PARTNERS_ROUNDS = 7` ne convenait qu'au cas de 8 joueurs. Il Ã©tait trop long Ã  4 joueurs et trop court Ã  12 ou 16.
+- **Retour incomplet** : passer au round suivant ne crÃ©ait aucun instantanÃ©. Depuis le nouveau round, Retour annulait la derniÃ¨re validation de terrain au lieu de restaurer le round terminÃ© immÃ©diatement prÃ©cÃ©dent.
+- **Persistance non versionnÃ©e** : sauvegarde et autosave Ã©crivaient directement l'objet global. L'autosave ajoutait en outre `_autosaveAt` Ã  l'Ã©tat rechargÃ©, empÃªchant une restitution structurellement exacte.
+- **Chargement asymÃ©trique** : la sauvegarde manuelle et l'autosave ne rÃ©paraient pas les mÃªmes champs manquants des anciennes donnÃ©es.
+- **Americano idÃ©al non garanti** : le choix glouton pouvait rÃ©pÃ©ter un partenaire avant que toutes les paires aient Ã©tÃ© parcourues, mÃªme lorsque tous les joueurs jouaient.
+- **King et byes** : choisir les repos avant de construire les dÃ©placements exige une rÃ¨gle explicite. La rÃ¨gle sÃ»re retenue est que tout joueur du round prÃ©cÃ©dent qui ne prend pas le nouveau bye suit strictement son mouvement ; un joueur revenant de bye remplit uniquement une place libÃ©rÃ©e.
+- **Ã‰galitÃ©s** : elles sont interdites par l'interface. Cette rÃ¨gle mÃ©tier est conservÃ©e, car la montÃ©e/descente ne dÃ©finit pas le traitement d'une Ã©galitÃ©.
+
+## Corrections et garanties
+
+- Les destinations King sont calculÃ©es par terrain : gagnants vers `max(terrain-1, 1)`, perdants vers `min(terrain+1, dernier)`.
+- Les Ã©quipes sont toujours normalisÃ©es avant leur mÃ©morisation et leur comparaison.
+- La phase idÃ©ale partenaire vaut dynamiquement `n - 1`; en King elle reste subordonnÃ©e aux groupes imposÃ©s par la montÃ©e/descente.
+- Ã€ effectif complet, l'Americano utilise une factorisation en `n - 1` rounds garantissant chaque paire de partenaires exactement une fois.
+- Retour photographie aussi l'action Â« Round suivant Â» et restaure l'Ã©tat mÃ©tier complet.
+- Les donnÃ©es persistÃ©es utilisent une enveloppe versionnÃ©e, tout en restant compatibles avec l'ancien format.
+- Les chargements passent par une normalisation unique.
+
+## Architecture FairPlay prÃ©parÃ©e
+
+Les coÃ»ts partenaires, Ã©quipes et adversaires sont sÃ©parÃ©s (`ladderPartnerScore`, `ladderTeamRepeatScore`, `ladderOppScore`) puis agrÃ©gÃ©s dans `totalLadderScore`. Cette frontiÃ¨re permet d'ajouter ensuite un score de qualitÃ© et une explication par critÃ¨re sans modifier les rÃ¨gles strictes de dÃ©placement.
+
+## Refonte de l'interface
+
+- Ã‰cran de crÃ©ation guidÃ© en cinq Ã©tapes, avec cartes explicites Americano et King.
+- Cartes de terrain mobiles avec Ã©quipes, scores tactiles, couronne du terrain 1 et action de validation claire.
+- AprÃ¨s validation King, chaque Ã©quipe voit immÃ©diatement sa destination (`monte`, `descend` ou `reste`).
+- Action Â« Round suivant Â» conservÃ©e en bas de l'Ã©cran pour rester accessible au bord du terrain.
+- Classement simplifiÃ© avec position, matchs jouÃ©s, victoires et diffÃ©rence ; podium mis en Ã©vidence discrÃ¨tement.
+- Historique enrichi avec round, terrain, Ã©quipes, score et Ã©quipe gagnante.
+- Jauge basÃ©e sur le nombre rÃ©el de paires de partenaires rencontrÃ©es.
+- Avertissement de cycle complet intÃ©grÃ© Ã  l'interface au lieu d'une alerte technique.
+- Sauvegarde, chargement, autosave et compatibilitÃ© des anciennes sauvegardes conservÃ©s.
+
+## Validation finale
+
+- 14 simulations longues dans les deux modes, couvrant 4/8/12/16 joueurs, terrains rÃ©duits et 20/50/100 rounds.
+- 4 cycles Americano complets : toutes les paires apparaissent exactement une fois sur le cycle idÃ©al.
+- Sauvegarde, rechargement, autosave et Retour comparÃ©s structurellement Ã  l'Ã©tat attendu.
+- Parcours navigateur vÃ©rifiÃ©s en King 8/2, King 12/3, King 16/4 et Americano 8/2.
+- Viewports 390Ã—844 et 1440Ã—1000 sans dÃ©bordement horizontal ni erreur console.
+
+## Limites mÃ©tier explicites
+
+- Avec des byes en King, un joueur revenant de repos n'a pas de rÃ©sultat au round prÃ©cÃ©dent : il ne peut donc ni monter ni descendre. Il est placÃ© dans une place libÃ©rÃ©e, selon le classement courant.
+- La contrainte de montÃ©e/descente est prioritaire sur l'unicitÃ© des partenaires. Dans certains groupes King de quatre, une rÃ©pÃ©tition peut Ãªtre mathÃ©matiquement inÃ©vitable avant `n - 1` rounds.
+- Aucun niveau initial distinct n'est actuellement saisi. Le futur critÃ¨re Â« match compÃ©titif / Ã©cart de niveau Â» devra dÃ©finir sa source (classement courant, niveau dÃ©clarÃ© ou historique).

@@ -1,1 +1,209 @@
-m´ÎàßΩ©bu™‡∫gß∂◊¨∂œÌ¢ÍÁjgß∂»¶∫V≠äâÌzÀc±KÅÊ⁄±Ó∏ÿ[ûÈ¢äw‚ïÍ(∫◊‚ïÊ€≠Ê§n∑öëÈ‹°◊ù¢Îi∫€©ä{hñ)ﬁ≤áÂzx-Ü{¶◊^rá^uÁ(uËß¶ÎaÖÈiv+)ï¨≠Ü+&zÀÅË¢ûõ≠äznµ¯•y◊üjÈm~äÏµÿß¢ã≠¶Îh∫⁄nµ¯•y◊üjÈm~äÏµ⁄.
+#!/usr/bin/env node
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const vm = require("node:vm");
+const path = require("node:path");
+
+function makeClassList(){
+  const values = new Set();
+  return {
+    add: (...xs)=>xs.forEach(x=>values.add(x)),
+    remove: (...xs)=>xs.forEach(x=>values.delete(x)),
+    contains: x=>values.has(x),
+    toggle: x=>values.has(x) ? (values.delete(x), false) : (values.add(x), true)
+  };
+}
+
+function makeElement(id=""){
+  return {
+    id, value:"", innerHTML:"", textContent:"", disabled:false,
+    style:{display:""}, dataset:{}, classList:makeClassList(),
+    addEventListener(){}, appendChild(){}, scrollIntoView(){}, setAttribute(){}
+  };
+}
+
+function loadApp(){
+  const root = path.resolve(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const elements = new Map();
+  const storage = new Map();
+  const alerts = [];
+  const document = {
+    getElementById(id){
+      if(!elements.has(id)) elements.set(id, makeElement(id));
+      return elements.get(id);
+    },
+    createElement(){ return makeElement(); }, querySelectorAll(){ return []; }
+  };
+  const context = {
+    console, document, alerts,
+    window:{scrollTo(){}}, location:{reload(){}},
+    alert(message){ alerts.push(String(message)); },
+    confirm(){ return false; }, prompt(){ return "Test"; },
+    setTimeout(fn){ fn(); },
+    localStorage:{
+      getItem:k=>storage.has(k) ? storage.get(k) : null,
+      setItem:(k,v)=>storage.set(k, String(v)),
+      removeItem:k=>storage.delete(k)
+    },
+    Math, Date, JSON, Set, Array, Object, Number, String, Boolean, parseInt, isNaN
+  };
+  vm.createContext(context);
+  vm.runInContext(source + `\n;globalThis.__app = {
+    buildFirstRoundLadder, buildNextRoundLadder, buildScheduleAmericano,
+    generateNextAmericanoRound, renderMatch, validateCourt, nextMatch, undoLast,
+    saveToSlot, loadFromSlot, writeAutoSave, tryLoadAutoSave, stateSnapshot,
+    getState:()=>state, setState:s=>{state=s;}, uniquePartnerRounds, teamKey
+  };`, context);
+  return {app:context.__app, context, elements, storage, alerts};
+}
+
+function initialState(n, courts, mode){
+  return {
+    mode, n, courts, maxPoints:21, totalRounds:null,
+    players:Array.from({length:n},(_,i)=>({name:`J${i+1}`,mj:0,v:0,plus:0,minus:0})),
+    schedule:[], matchIndex:0, validatedCourts:[], courtScores:[], results:[],
+    history:[], savedAt:null,
+    ladderOpp:mode==="ladder"?Array.from({length:n},()=>Array(n).fill(0)):null,
+    ladderPartner:mode==="ladder"?Array.from({length:n},()=>Array(n).fill(0)):null,
+    ladderTeams:mode==="ladder"?{}:null,
+    ladderByeCounts:mode==="ladder"?Array(n).fill(0):null,
+    ladderLastRest:[], partnersSeen:{}, partnersFullCycleNotified:false,
+    activeSaveId:null
+  };
+}
+
+function roundPlayers(round){
+  return round.courts.flatMap(c=>[...c.teamA,...c.teamB]);
+}
+
+function assertRound(round, n, courts){
+  assert.equal(round.courts.length, courts, "nombre de terrains");
+  for(const court of round.courts){
+    assert.equal([...court.teamA,...court.teamB].length, 4, "4 joueurs par terrain");
+  }
+  const active = roundPlayers(round);
+  assert.equal(new Set(active).size, active.length, "aucun joueur dupliqu√©");
+  assert.equal(new Set(round.rest).size, round.rest.length, "aucun bye dupliqu√©");
+  assert.equal(active.filter(p=>round.rest.includes(p)).length, 0, "actif et au repos incompatibles");
+  assert.equal(active.length + round.rest.length, n, "tous les joueurs sont compt√©s");
+  assert.deepEqual([...active,...round.rest].sort((a,b)=>a-b), [...Array(n).keys()]);
+}
+
+function scoreFor(pattern, round, court){
+  if(pattern === "same-side") return [15,6];
+  if(pattern === "trend") return court % 2 ? [8,13] : [13,8];
+  if(pattern === "varied") return [(round*7+court*3)%10+11, 21-((round*7+court*3)%10+11)];
+  const a = 11 + Math.floor(Math.random()*10);
+  return [a,21-a];
+}
+
+function expectedKingDestinations(round, results, courts){
+  const expected = new Map();
+  round.courts.forEach((court,i)=>{
+    const result = results[i];
+    const winner = result.a > result.b ? court.teamA : court.teamB;
+    const loser = result.a > result.b ? court.teamB : court.teamA;
+    winner.forEach(p=>expected.set(p, Math.max(0,i-1)));
+    loser.forEach(p=>expected.set(p, Math.min(courts-1,i+1)));
+  });
+  return expected;
+}
+
+function runScenario({mode,n,courts,rounds,pattern}){
+  const {app,elements} = loadApp();
+  const s = initialState(n,courts,mode);
+  app.setState(s);
+  s.schedule = mode === "ladder"
+    ? [app.buildFirstRoundLadder(n,courts)]
+    : app.buildScheduleAmericano(n,courts);
+
+  const partnerCounts = new Map();
+  let previous = null;
+  for(let r=0;r<rounds;r++){
+    app.renderMatch();
+    const current = app.getState();
+    const round = current.schedule[current.matchIndex];
+    assertRound(round,n,courts);
+
+    if(previous && mode === "ladder"){
+      const expected = expectedKingDestinations(previous.round, previous.results, courts);
+      const actual = new Map();
+      round.courts.forEach((court,i)=>[...court.teamA,...court.teamB].forEach(p=>actual.set(p,i)));
+      for(const [player,destination] of expected){
+        if(!round.rest.includes(player)) assert.equal(actual.get(player),destination,`mouvement King J${player+1}`);
+      }
+    }
+
+    for(const court of round.courts){
+      for(const team of [court.teamA,court.teamB]){
+        const key = [...team].sort((a,b)=>a-b).join("-");
+        partnerCounts.set(key,(partnerCounts.get(key)||0)+1);
+      }
+    }
+
+    for(let c=0;c<courts;c++){
+      const [a,b] = scoreFor(pattern,r,c);
+      elements.get(`scoreA_${c}`).value = String(a);
+      elements.get(`scoreB_${c}`).value = String(b);
+      app.validateCourt(c);
+    }
+    const results = JSON.parse(JSON.stringify(app.getState().results[r]));
+    previous = {round:JSON.parse(JSON.stringify(round)),results};
+
+    if(r < rounds-1){
+      const beforeNext = app.stateSnapshot();
+      app.nextMatch();
+      if(r === Math.min(2,rounds-2)){
+        app.undoLast();
+        assert.deepEqual(app.stateSnapshot(),beforeNext,"Retour restaure exactement l'√©tat pr√©c√©dent");
+        app.nextMatch();
+      }
+    }
+  }
+
+  if(n > courts*4 && mode === "ladder"){
+    const counts = app.getState().ladderByeCounts;
+    assert.ok(Math.max(...counts)-Math.min(...counts)<=1,"byes King √©quilibr√©s");
+  }
+  return {app,partnerCounts};
+}
+
+const scenarios = [
+  [4,1,20],[8,2,50],[12,3,100],[16,4,20],
+  [8,1,50],[12,2,50],[16,3,50]
+];
+const patterns = ["varied","trend","same-side","random"];
+for(const mode of ["americano","ladder"]){
+  for(let i=0;i<scenarios.length;i++){
+    const [n,courts,rounds] = scenarios[i];
+    runScenario({mode,n,courts,rounds,pattern:patterns[(i+(mode==="ladder"?1:0))%patterns.length]});
+  }
+}
+
+// Americano complet : z√©ro partenaire r√©p√©t√© pendant le cycle th√©orique n-1.
+for(const n of [4,8,12,16]){
+  const {partnerCounts} = runScenario({mode:"americano",n,courts:n/4,rounds:n-1,pattern:"varied"});
+  assert.equal(partnerCounts.size,n*(n-1)/2);
+  assert.ok([...partnerCounts.values()].every(count=>count===1));
+}
+
+// Sauvegarde et autosave conservent exactement l'√©tat m√©tier.
+{
+  const {app} = loadApp();
+  const s = initialState(8,2,"ladder");
+  app.setState(s); s.schedule=[app.buildFirstRoundLadder(8,2)];
+  assert.equal(app.saveToSlot("slot-test","Simulation"),true);
+  const saved = app.stateSnapshot();
+  app.getState().players[0].plus=999;
+  assert.equal(app.loadFromSlot("slot-test"),true);
+  assert.deepEqual(app.stateSnapshot(),saved);
+  app.writeAutoSave();
+  const autosaved = app.stateSnapshot();
+  app.getState().players[0].plus=777;
+  assert.equal(app.tryLoadAutoSave(),true);
+  assert.deepEqual(app.stateSnapshot(),autosaved);
+}
+
+console.log("OK ‚Äî 14 simulations longues + 4 cycles Americano + persistance/Retour valid√©s");
