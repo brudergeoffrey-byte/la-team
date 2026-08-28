@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#071d24" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="La Team" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./icons/icon-180.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
 <title>La Team</title>
 
 <style>
@@ -314,6 +322,11 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .rotation-summary span{padding:8px 11px;border-radius:999px;font-size:13px;font-weight:850;}
 .rotation-summary .unique{background:rgba(67,223,189,.12);color:#9af5df;}
 .rotation-summary .duplicate{background:rgba(255,174,66,.12);color:#ffd18a;}
+.pwa-status{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;margin:-8px 2px 12px;}
+.pwa-pill{width:auto;min-height:0;margin:0;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800;}
+.pwa-offline{background:rgba(255,174,66,.12);border:1px solid rgba(255,174,66,.28);color:#ffd18a;}
+.pwa-update{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);color:#cce5ff;}
+.pwa-install{background:rgba(184,243,74,.13);border:1px solid rgba(184,243,74,.28);color:#eaffc4;}
 .edit-score{background:rgba(88,166,255,.13)!important;border:1px solid rgba(88,166,255,.28)!important;color:#cce5ff!important;}
 .organizer-tools{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 14px}.organizer-tools button{width:auto;min-height:42px;margin:0;padding:8px 11px;font-size:12px;}
 
@@ -361,6 +374,11 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
       <button class="danger" onclick="resetAll()">🧹 Effacer</button>
     </div>
+  </div>
+  <div id="pwaStatus" class="pwa-status" aria-live="polite">
+    <span id="offlineStatus" class="pwa-pill pwa-offline hidden">Hors connexion</span>
+    <span id="updateStatus" class="pwa-pill pwa-update hidden">Nouvelle version disponible — elle sera installée au prochain redémarrage.</span>
+    <button id="installPwaBtn" type="button" class="pwa-pill pwa-install hidden" onclick="installPwa()">Installer La Team</button>
   </div>
 
   <!-- SETUP -->
@@ -625,6 +643,9 @@ const finishMaxPointsEl = document.getElementById("finishMaxPoints");
 const saveSelect = document.getElementById("saveSelect");
 const saveHint = document.getElementById("saveHint");
 const saveCountBadge = document.getElementById("saveCountBadge");
+const offlineStatusEl = document.getElementById("offlineStatus");
+const updateStatusEl = document.getElementById("updateStatus");
+const installPwaBtn = document.getElementById("installPwaBtn");
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -2261,6 +2282,77 @@ function resetAll(){
   location.reload();
 }
 
+/* -------------------- PWA / installation -------------------- */
+let deferredInstallPrompt = null;
+
+function isStandalonePwa(){
+  const displayStandalone = typeof window.matchMedia === "function"
+    && window.matchMedia("(display-mode: standalone)").matches;
+  const iosStandalone = typeof navigator !== "undefined" && navigator.standalone === true;
+  return displayStandalone || iosStandalone;
+}
+
+function updateNetworkStatus(){
+  if(!offlineStatusEl || typeof navigator === "undefined") return;
+  offlineStatusEl.classList.toggle("hidden", navigator.onLine !== false);
+}
+
+function showPwaUpdateNotice(){
+  updateStatusEl?.classList.remove("hidden");
+}
+
+async function installPwa(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    if(choice?.outcome === "accepted") installPwaBtn?.classList.add("hidden");
+    return;
+  }
+
+  alert("Sur iPhone ou iPad : Partager → Sur l’écran d’accueil → Ajouter");
+  try{ localStorage.setItem("la-team-install-help-seen", "1"); }catch(e){}
+  installPwaBtn?.classList.add("hidden");
+}
+
+function setupPwa(){
+  updateNetworkStatus();
+  if(typeof window.addEventListener === "function"){
+    window.addEventListener("offline", updateNetworkStatus);
+    window.addEventListener("online", updateNetworkStatus);
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      if(!isStandalonePwa()) installPwaBtn?.classList.remove("hidden");
+    });
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      installPwaBtn?.classList.add("hidden");
+    });
+  }
+
+  if(typeof navigator !== "undefined" && !isStandalonePwa()){
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent || "");
+    let helpSeen = false;
+    try{ helpSeen = localStorage.getItem("la-team-install-help-seen") === "1"; }catch(e){}
+    if(isIos && !helpSeen) installPwaBtn?.classList.remove("hidden");
+  }
+
+  if(typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("./service-worker.js", {scope:"./", updateViaCache:"none"})
+    .then(registration => {
+      if(registration.waiting && navigator.serviceWorker.controller) showPwaUpdateNotice();
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        worker?.addEventListener("statechange", () => {
+          if(worker.state === "installed" && navigator.serviceWorker.controller) showPwaUpdateNotice();
+        });
+      });
+      window.addEventListener?.("online", () => registration.update().catch(()=>{}));
+    })
+    .catch(()=>{});
+}
+
 /* -------------------- INIT -------------------- */
 (function init(){
   createInputs();
@@ -2269,6 +2361,7 @@ function resetAll(){
   updateModeCards();
   refreshSavesUI();
   showSetup();
+  setupPwa();
 
   if(tryLoadAutoSave()){
     if(confirm("Reprendre la dernière partie (auto-save) ?")){

@@ -1,0 +1,33 @@
+{
+  "id": "/la-team/",
+  "name": "La Team — Tournois de padel",
+  "short_name": "La Team",
+  "description": "Organisez vos tournois de padel Americano et King, même hors connexion.",
+  "lang": "fr",
+  "start_url": "/la-team/",
+  "scope": "/la-team/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#071d24",
+  "theme_color": "#071d24",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
