@@ -289,6 +289,23 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .meter-track{height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px;}
 .meter-fill{height:100%;background:linear-gradient(90deg,var(--aqua),var(--lime));border-radius:inherit;transition:width .35s ease;}
 .cycle-notice{padding:13px 15px;margin:10px 0;border:1px solid rgba(184,243,74,.3);border-radius:16px;background:rgba(184,243,74,.1);color:#eaffc4;font-size:13px;font-weight:700;}
+.event-strip{display:flex;justify-content:space-between;gap:12px;align-items:end;margin:6px 0 12px;}
+.event-name{font-size:16px;font-weight:900}.club-name{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.round-state{font-size:13px;color:var(--ink-soft);text-align:right}.round-state strong{display:block;color:var(--ink);font-size:18px}
+.court-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0 14px;}
+.court-status{
+  min-height:42px;margin:0;padding:8px 7px;border-radius:11px;border:1px solid var(--line);
+  background:rgba(4,24,29,.55);color:var(--ink-soft);font-size:11px;font-weight:850;
+}
+.court-status.done{background:rgba(67,223,189,.14);border-color:rgba(67,223,189,.35);color:#9af5df;}
+.court-status.waiting::after{content:" ⏳"}.court-status.done::after{content:" ✓"}
+.round-ready{padding:13px 15px;margin:10px 0;border-radius:15px;background:linear-gradient(120deg,rgba(184,243,74,.16),rgba(67,223,189,.12));border:1px solid rgba(184,243,74,.3);font-size:13px;font-weight:800;}
+.court-card.validated{border-color:rgba(67,223,189,.38);background:linear-gradient(145deg,rgba(21,72,75,.98),rgba(12,46,52,.98));}
+.court-card.validated::before{background:var(--lime)!important;}
+.court-status-label{font-size:11px;font-weight:900;color:var(--gold)}
+.court-status-label.done{color:#91f2db}
+.edit-score{background:rgba(88,166,255,.13)!important;border:1px solid rgba(88,166,255,.28)!important;color:#cce5ff!important;}
+.organizer-tools{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 14px}.organizer-tools button{width:auto;min-height:42px;margin:0;padding:8px 11px;font-size:12px;}
 
 #game>.card:last-child{margin-top:18px;}
 table{overflow:hidden;border-radius:14px;}
@@ -312,7 +329,12 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   .team{font-size:15px;}
   th,td{padding:9px 5px;font-size:12px;}
   .hide-mobile{display:none;}
+  .court-status-grid{grid-template-columns:repeat(4,minmax(0,1fr));position:sticky;top:69px;z-index:11;padding:7px;margin-inline:-2px;background:rgba(7,29,36,.92);border-radius:15px;backdrop-filter:blur(14px);}
+  .court-status{font-size:10px;padding:7px 3px;min-height:38px;}
+  .event-strip{align-items:start}.round-state strong{font-size:16px}
 }
+
+@media (min-width:900px){#courts{grid-template-columns:repeat(4,minmax(0,1fr));}.court-card{padding:14px!important}.team{font-size:14px}.score-row select{min-height:50px;font-size:21px}}
 
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
 </style>
@@ -336,6 +358,14 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <div class="eyebrow">Nouveau tournoi</div>
     <h1 class="screen-title">Prêts à jouer ?</h1>
     <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
+
+    <section class="step">
+      <h2 class="step-title"><span class="step-number">★</span> Votre événement</h2>
+      <div class="row">
+        <div><label for="eventName">Nom de l’événement</label><input id="eventName" placeholder="Soirée King" value="Soirée King" /></div>
+        <div><label for="clubName">Club</label><input id="clubName" placeholder="Nom du club" /></div>
+      </div>
+    </section>
 
     <section class="step">
       <h2 class="step-title"><span class="step-number">1</span> Combien sommes-nous ?</h2>
@@ -407,6 +437,15 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <h2>Matchs</h2>
       <div class="small" id="progressText"></div>
       <div class="small" id="restText"></div>
+      <div class="event-strip">
+        <div><div id="gameEventName" class="event-name"></div><div id="gameClubName" class="club-name"></div></div>
+        <div id="roundState" class="round-state"></div>
+      </div>
+      <div id="courtStatusGrid" class="court-status-grid"></div>
+      <div id="roundReady" class="round-ready hidden"></div>
+      <div class="organizer-tools">
+        <button class="secondary" onclick="replacePlayer()">⇄ Remplacer un joueur</button>
+      </div>
       <div id="partnerProgress" class="rotation-meter"></div>
       <div id="fullCycleNotice" class="cycle-notice hidden"></div>
 
@@ -474,6 +513,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <hr class="sep">
 
       <button onclick="restartSamePlayers()">🔁 Rejouer (mêmes joueurs)</button>
+      <button class="secondary" onclick="exportFinalResults()">⇩ Exporter le classement (.csv)</button>
 
       <hr class="sep">
 
@@ -512,6 +552,8 @@ const STATE_VERSION = 2;
 
 let state = {
   mode: "americano",
+  eventName: "Soirée King",
+  clubName: "",
   n: 8,
   courts: 2,
   maxPoints: 21,
@@ -553,6 +595,8 @@ const playerCountEl = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
 const maxPointsEl = document.getElementById("maxPoints");
 const gameModeEl = document.getElementById("gameMode");
+const eventNameEl = document.getElementById("eventName");
+const clubNameEl = document.getElementById("clubName");
 
 const courtWrap = document.getElementById("courtWrap");
 const courtCountEl = document.getElementById("courtCount");
@@ -568,6 +612,11 @@ const restText = document.getElementById("restText");
 const autosaveText = document.getElementById("autosaveText");
 const partnerProgressEl = document.getElementById("partnerProgress");
 const fullCycleNoticeEl = document.getElementById("fullCycleNotice");
+const gameEventNameEl = document.getElementById("gameEventName");
+const gameClubNameEl = document.getElementById("gameClubName");
+const roundStateEl = document.getElementById("roundState");
+const courtStatusGridEl = document.getElementById("courtStatusGrid");
+const roundReadyEl = document.getElementById("roundReady");
 
 const recapInGame = document.getElementById("recapInGame");
 const finalRecap = document.getElementById("finalRecap");
@@ -607,9 +656,8 @@ function uniquePartnerRounds(n){
 }
 
 function stateSnapshot(){
-  const snapshot = deepClone(state);
-  delete snapshot.history;
-  return snapshot;
+  const { history, ...snapshotData } = state;
+  return deepClone(snapshotData);
 }
 
 function pushHistory(){
@@ -769,6 +817,8 @@ function normalizeLoadedState(){
   if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
   if(!Array.isArray(state.history)) state.history = [];
   if(!state.mode) state.mode = "americano";
+  if(typeof state.eventName !== "string") state.eventName = "Tournoi La Team";
+  if(typeof state.clubName !== "string") state.clubName = "";
   if(state.totalRounds === undefined) state.totalRounds = null;
   if(!state.partnersSeen || typeof state.partnersSeen !== "object") state.partnersSeen = {};
   if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
@@ -1440,6 +1490,8 @@ function goToSetup(keepProgress){
   gameModeEl.value = state.mode;
   updateModeCards();
   maxPointsEl.value = state.maxPoints;
+  eventNameEl.value = state.eventName || "Tournoi La Team";
+  clubNameEl.value = state.clubName || "";
 
   refreshSavesUI();
   showSetup();
@@ -1476,6 +1528,8 @@ function onScoreChange(courtIndex, side){
 /* -------------------- Start tournament -------------------- */
 function startNewTournament(){
   state.mode = gameModeEl.value;
+  state.eventName = (eventNameEl.value || "Tournoi La Team").trim();
+  state.clubName = (clubNameEl.value || "").trim();
   state.n = getSafeCountForStart(playerCountEl);
 
   const maxC = maxCourtsForN(state.n);
@@ -1564,6 +1618,7 @@ function renderMatch(){
        <span class="badge">${state.mode === "ladder" ? "King · Montée-Descente" : "Americano"}</span>
        <span class="badge">${state.maxPoints} points</span>
        <span class="badge">${state.courts} terrain${state.courts>1?"s":""}</span>
+       <span class="badge">${state.n} joueurs</span>
      </span>`;
 
   restText.innerHTML = match.rest.length
@@ -1576,6 +1631,19 @@ function renderMatch(){
 
   if(state.courtScores.length !== match.courts.length)
     state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
+
+  const validatedCount = state.validatedCourts.filter(Boolean).length;
+  gameEventNameEl.textContent = state.eventName || "Tournoi La Team";
+  gameClubNameEl.textContent = state.clubName || "Club non renseigné";
+  roundStateEl.innerHTML = `<span>Avancement</span><strong>${validatedCount}/${match.courts.length} validés</strong>`;
+  courtStatusGridEl.innerHTML = match.courts.map((_,idx)=>
+    `<button class="court-status ${state.validatedCourts[idx]?"done":"waiting"}" onclick="scrollToCourt(${idx})">T${idx+1}</button>`
+  ).join("");
+  const roundComplete = validatedCount === match.courts.length;
+  roundReadyEl.classList.toggle("hidden", !roundComplete);
+  roundReadyEl.textContent = roundComplete
+    ? `${validatedCount}/${match.courts.length} terrains validés · ${state.n} joueurs prêts · Round suivant disponible`
+    : "";
 
   courtsDiv.innerHTML = "";
 
@@ -1600,9 +1668,10 @@ function renderMatch(){
     }
 
     courtsDiv.innerHTML += `
-    <div class="card">
+    <div class="card court-card ${disabled?"validated":""}" id="court_${idx}">
       <div class="court-head">
         <span class="court-label">TERRAIN ${idx+1}</span>
+        <span class="court-status-label ${disabled?"done":""}">${disabled?"✓ VALIDÉ":"EN ATTENTE"}</span>
         ${state.mode==="ladder" && idx===0 ? `<span class="court-crown" title="Terrain le plus haut">👑</span>` : ""}
       </div>
       <div class="matchup">
@@ -1622,9 +1691,9 @@ function renderMatch(){
           </select>
       </div>
 
-      <button class="validate-button" onclick="validateCourt(${idx})" ${disabled?"disabled":""}>
-        ${disabled ? "✓ Score validé" : "Valider le score"}
-      </button>
+      ${disabled
+        ? `<button class="validate-button edit-score" onclick="editCourtScore(${idx})">✎ Corriger le score</button>`
+        : `<button class="validate-button" onclick="validateCourt(${idx})">Valider le score</button>`}
       ${movement}
     </div>
     `;
@@ -1637,6 +1706,10 @@ function renderMatch(){
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
+}
+
+function scrollToCourt(courtIndex){
+  document.getElementById(`court_${courtIndex}`)?.scrollIntoView({behavior:"smooth", block:"center"});
 }
 
 /* -------------------- Validation / Undo / Next -------------------- */
@@ -1739,6 +1812,88 @@ function applyResult(teamA, teamB, scoreA, scoreB){
   }else{
     for(const p of teamB) state.players[p].v++;
   }
+}
+
+function reverseResult(teamA, teamB, scoreA, scoreB){
+  for(const p of teamA){
+    state.players[p].mj--;
+    state.players[p].plus -= scoreA;
+    state.players[p].minus -= scoreB;
+  }
+  for(const p of teamB){
+    state.players[p].mj--;
+    state.players[p].plus -= scoreB;
+    state.players[p].minus -= scoreA;
+  }
+  const winner = scoreA > scoreB ? teamA : teamB;
+  for(const p of winner) state.players[p].v--;
+}
+
+function rebuildPartnersSeen(){
+  state.partnersSeen = {};
+  for(let r=0;r<(state.results?.length||0);r++){
+    const round = state.schedule[r];
+    if(!round) continue;
+    for(let c=0;c<(round.courts?.length||0);c++){
+      if(!state.results?.[r]?.[c]) continue;
+      addPartnerPair(round.courts[c].teamA);
+      addPartnerPair(round.courts[c].teamB);
+    }
+  }
+}
+
+function editCourtScore(courtIndex){
+  if(!state.validatedCourts[courtIndex]) return;
+  const match = state.schedule[state.matchIndex];
+  const court = match.courts[courtIndex];
+  const result = state.results?.[state.matchIndex]?.[courtIndex];
+  if(!result) return;
+
+  pushHistory();
+  const teamA = normalizeTeam(court.teamA);
+  const teamB = normalizeTeam(court.teamB);
+  reverseResult(teamA, teamB, result.a, result.b);
+
+  if(state.mode === "ladder"){
+    const winner = result.a > result.b ? teamA : teamB;
+    const loser = result.a > result.b ? teamB : teamA;
+    for(const x of winner) for(const y of loser){
+      state.ladderOpp[x][y] = Math.max(0,(state.ladderOpp[x][y]||0)-1);
+      state.ladderOpp[y][x] = Math.max(0,(state.ladderOpp[y][x]||0)-1);
+    }
+    for(const team of [teamA,teamB]){
+      const [a,b] = normalizeTeam(team);
+      state.ladderPartner[a][b] = Math.max(0,(state.ladderPartner[a][b]||0)-1);
+      state.ladderPartner[b][a] = Math.max(0,(state.ladderPartner[b][a]||0)-1);
+      const key = teamKey(team);
+      state.ladderTeams[key] = Math.max(0,(state.ladderTeams[key]||0)-1);
+      if(state.ladderTeams[key] === 0) delete state.ladderTeams[key];
+    }
+  }
+
+  delete state.results[state.matchIndex][courtIndex];
+  state.validatedCourts[courtIndex] = false;
+  rebuildPartnersSeen();
+  writeAutoSave();
+  renderRanking();
+  renderMatch();
+  renderRecapInGame();
+}
+
+function replacePlayer(){
+  if(!state.players.length) return;
+  const current = (prompt("Nom du joueur à remplacer :", "") || "").trim();
+  if(!current) return;
+  const index = state.players.findIndex(p=>p.name.toLocaleLowerCase() === current.toLocaleLowerCase());
+  if(index < 0){ alert("Joueur introuvable."); return; }
+  const replacement = (prompt(`Remplacer ${state.players[index].name} par :`, "") || "").trim();
+  if(!replacement) return;
+  pushHistory();
+  state.players[index].name = replacement;
+  writeAutoSave();
+  renderMatch();
+  renderRanking();
+  renderRecapInGame();
 }
 
 function nextMatch(){
@@ -1887,6 +2042,22 @@ function renderFinishTable(){
   renderRecap(finalRecap, true);
 }
 
+function exportFinalResults(){
+  const sorted = sortPlayersForRanking(state.players);
+  const escapeCsv = value => `"${String(value).replace(/"/g,'""')}"`;
+  const rows = [
+    ["Position","Joueur","Matchs","Victoires","Points +","Points -","Différence"],
+    ...sorted.map((p,i)=>[i+1,p.name,p.mj,p.v,p.plus,p.minus,p.plus-p.minus])
+  ];
+  const csv = "\uFEFF" + rows.map(row=>row.map(escapeCsv).join(";")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${(state.eventName||"la-team").replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-classement.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 /* -------------------- Restart -------------------- */
 function restartSamePlayers(){
   const n = state.n;
@@ -1964,6 +2135,8 @@ function newGameChoosePlayers(){
 
   state = {
     mode: gameModeEl.value,
+    eventName: (eventNameEl.value || "Tournoi La Team").trim(),
+    clubName: (clubNameEl.value || "").trim(),
     n,
     courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),

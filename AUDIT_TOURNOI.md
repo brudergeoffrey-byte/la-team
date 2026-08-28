@@ -45,6 +45,27 @@ Les coûts partenaires, équipes et adversaires sont séparés (`ladderPartnerSc
 - Parcours navigateur vérifiés en King 8/2, King 12/3, King 16/4 et Americano 8/2.
 - Viewports 390×844 et 1440×1000 sans débordement horizontal ni erreur console.
 
+## La Team Club V1 — 32 joueurs / 8 terrains
+
+- Tableau de bord organisateur avec nom d’événement, club, nombre de joueurs, terrains et avancement du round.
+- Résumé compact T1–T8 toujours lisible : chaque terrain indique immédiatement `en attente` ou `validé` et permet de rejoindre sa carte.
+- Résumé de fin de round (`8/8 terrains validés · 32 joueurs prêts`) et action Round suivant activée uniquement lorsque tout est complet.
+- Correction d’un score validé : l’ancien résultat est d’abord retiré du classement et des mémoires partenaires/adversaires, puis le terrain est rouvert et doit être revalidé.
+- Remplacement sûr d’un joueur par changement de nom : sa place, ses matchs et son historique restent attachés au même identifiant interne.
+- Export CSV local du classement final, sans backend.
+- Performance de Retour corrigée : l'ancien `stateSnapshot` clonait l'historique complet avant de le supprimer. L'historique est désormais exclu avant clonage, ce qui évite une croissance très coûteuse sur les longues soirées.
+
+### Couverture Club
+
+- King 32 joueurs / 8 terrains : sessions de 20, 50 et 100 rounds.
+- Profils de scores : même côté gagnant, alternance et aléatoire.
+- Destination attendue vérifiée pour chaque joueur à chaque round, de T1 à T8.
+- Correction de score vérifiée avec annulation puis réapplication exacte des statistiques.
+- Interface vérifiée à 375×812 (iPhone), 390×844, 820×1180 (tablette) et 1440×1000 (desktop).
+- Grille des terrains : 1 colonne sur téléphone, 2 sur tablette, 4 sur desktop ; aucun débordement horizontal.
+
+Les statuts « absent » et « arrivée tardive » ne sont pas activés dans cette version : modifier l'effectif actif au milieu d'un round King exige une règle métier sur la conservation des destinations. Le remplacement de nom couvre le cas sûr sans altérer le moteur.
+
 ## Limites métier explicites
 
 - Avec des byes en King, un joueur revenant de repos n'a pas de résultat au round précédent : il ne peut donc ni monter ni descendre. Il est placé dans une place libérée, selon le classement courant.
