@@ -655,6 +655,8 @@ function uniquePartnerRounds(n){
   return Math.max(0, Number(n) - 1);
 }
 
+const HISTORY_LIMIT = 20;
+
 function stateSnapshot(){
   const { history, ...snapshotData } = state;
   return deepClone(snapshotData);
@@ -662,6 +664,15 @@ function stateSnapshot(){
 
 function pushHistory(){
   state.history.push(stateSnapshot());
+  if(state.history.length > HISTORY_LIMIT){
+    state.history.splice(0, state.history.length - HISTORY_LIMIT);
+  }
+}
+
+function stateForPersistence(){
+  const snapshot = stateSnapshot();
+  snapshot.history = deepClone(state.history.slice(-HISTORY_LIMIT));
+  return snapshot;
 }
 
 function restoreSnapshot(snapshot, history){
@@ -798,7 +809,7 @@ function saveToSlot(id, name){
   try{
     state.savedAt = now();
     state.activeSaveId = id;
-    const payload = { version: STATE_VERSION, savedAt: state.savedAt, state: deepClone(state) };
+    const payload = { version: STATE_VERSION, savedAt: state.savedAt, state: stateForPersistence() };
     localStorage.setItem(SAVE_PREFIX + id, JSON.stringify(payload));
     upsertSaveMeta(buildMetaFromState(name, id));
 
@@ -873,7 +884,7 @@ function writeAutoSave(){
   try{
     if(!canSaveCurrent()) return;
     const autosaveAt = now();
-    const payload = { version: STATE_VERSION, savedAt: autosaveAt, state: deepClone(state) };
+    const payload = { version: STATE_VERSION, savedAt: autosaveAt, state: stateForPersistence() };
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
     autosaveText.textContent = `🟢 Auto-save : ${fmtDate(autosaveAt)}`;
   }catch(e){}

@@ -22,13 +22,14 @@ function makeElement(id=""){
   };
 }
 
-function loadApp(){
+function loadApp(sharedStorage){
   const root = path.resolve(__dirname, "..");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const elements = new Map();
-  const storage = new Map();
+  const storage = sharedStorage || new Map();
   const alerts = [];
+  const prompts = [];
   const document = {
     getElementById(id){
       if(!elements.has(id)) elements.set(id, makeElement(id));
@@ -40,7 +41,7 @@ function loadApp(){
     console, document, alerts,
     window:{scrollTo(){}}, location:{reload(){}},
     alert(message){ alerts.push(String(message)); },
-    confirm(){ return false; }, prompt(){ return "Test"; },
+    confirm(){ return false; }, prompt(){ return prompts.shift() || ""; },
     setTimeout(fn){ fn(); },
     localStorage:{
       getItem:k=>storage.has(k) ? storage.get(k) : null,
@@ -53,11 +54,11 @@ function loadApp(){
   vm.runInContext(source + `\n;globalThis.__app = {
     buildFirstRoundLadder, buildNextRoundLadder, buildScheduleAmericano,
     generateNextAmericanoRound, renderMatch, validateCourt, nextMatch, undoLast,
-    editCourtScore,
+    editCourtScore, replacePlayer, restartSamePlayers,
     saveToSlot, loadFromSlot, writeAutoSave, tryLoadAutoSave, stateSnapshot,
     getState:()=>state, setState:s=>{state=s;}, uniquePartnerRounds, teamKey
   };`, context);
-  return {app:context.__app, context, elements, storage, alerts};
+  return {app:context.__app, context, elements, storage, alerts, prompts};
 }
 
 function initialState(n, courts, mode){
@@ -167,6 +168,7 @@ function runScenario({mode,n,courts,rounds,pattern,corrections=false}){
     if(r < rounds-1){
       const beforeNext = app.stateSnapshot();
       app.nextMatch();
+      assert.ok(app.getState().history.length<=20,"historique borné pour garder l'application fluide");
       if(r === Math.min(2,rounds-2)){
         app.undoLast();
         assert.deepEqual(app.stateSnapshot(),beforeNext,"Retour restaure exactement l'état précédent");
@@ -191,11 +193,13 @@ for(const mode of ["americano","ladder"]){
   for(let i=0;i<scenarios.length;i++){
     const [n,courts,rounds] = scenarios[i];
     runScenario({mode,n,courts,rounds,pattern:patterns[(i+(mode==="ladder"?1:0))%patterns.length]});
+    if(process.env.VERBOSE_TESTS) console.error(`fait ${mode} ${n}/${courts} ${rounds}`);
   }
 }
 
 for(const [rounds,pattern,corrections] of [[20,"same-side",true],[50,"trend",false],[100,"random",false]]){
   runScenario({mode:"ladder",n:32,courts:8,rounds,pattern,corrections});
+  if(process.env.VERBOSE_TESTS) console.error(`fait ladder 32/8 ${rounds}`);
 }
 
 // Americano complet : zéro partenaire répété pendant le cycle théorique n-1.
@@ -220,6 +224,34 @@ for(const n of [4,8,12,16]){
   app.getState().players[0].plus=777;
   assert.equal(app.tryLoadAutoSave(),true);
   assert.deepEqual(app.stateSnapshot(),autosaved);
+}
+
+// Actions organisateur : remplacement, fermeture/reprise et nouveau tournoi.
+{
+  const sharedStorage = new Map();
+  const first = loadApp(sharedStorage);
+  const s = initialState(12,3,"ladder");
+  first.app.setState(s); s.schedule=[first.app.buildFirstRoundLadder(12,3)];
+
+  first.prompts.push("J1","Remplaçant 1");
+  first.app.replacePlayer();
+  assert.equal(first.app.getState().players[0].name,"Remplaçant 1","joueur renommé");
+  assert.equal(first.app.getState().history.length,1,"remplacement annulable");
+  const renamed = first.app.stateSnapshot();
+
+  // Nouvelle instance = fermeture puis réouverture de l'application.
+  const reopened = loadApp(sharedStorage);
+  assert.equal(reopened.app.tryLoadAutoSave(),true,"autosave retrouvé après réouverture");
+  reopened.app.renderMatch();
+  assert.deepEqual(reopened.app.stateSnapshot(),renamed,"reprise exacte après fermeture");
+
+  reopened.app.restartSamePlayers();
+  const restarted = reopened.app.getState();
+  assert.equal(restarted.players[0].name,"Remplaçant 1","noms conservés au redémarrage");
+  assert.ok(restarted.players.every(p=>p.mj===0&&p.v===0&&p.plus===0&&p.minus===0),"statistiques remises à zéro");
+  assert.equal(restarted.matchIndex,0);
+  assert.equal(restarted.history.length,0);
+  assertRound(restarted.schedule[0],12,3);
 }
 
 console.log("OK — 17 simulations longues (dont King 32/8) + 4 cycles Americano + correction/persistance/Retour validés");
