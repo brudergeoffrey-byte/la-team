@@ -1,4 +1,4 @@
-const CACHE_VERSION = "la-team-shell-v8";
+const CACHE_VERSION = "la-team-shell-v9";
 const APP_SHELL = [
   "./",
   "./index.html",

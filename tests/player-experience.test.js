@@ -29,6 +29,7 @@ for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Co
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
 for(const expected of ["Mis à jour à","Retour au tournoi","Mode de fin de match","Durée du round","Activer les alertes"]){assert.ok(html.includes(expected),`expérience temps réel : ${expected}`);}
+assert.match(html,/select\{[\s\S]*appearance:none;[\s\S]*background-image:url\([\s\S]*background-position:right 14px center/,"chevron visible et aligné sur les sélecteurs");
 assert.match(html,/function cancelViewerIdentityChange\(\)/,"retour depuis Changer de joueur");
 assert.match(html,/organizerUnlocked=true; openOrganizerMode\(\)/,"PIN ouvre directement le tournoi");
 assert.ok(html.includes('placeholder="K7F2"'),"exemple de code court");
