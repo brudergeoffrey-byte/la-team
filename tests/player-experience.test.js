@@ -23,9 +23,12 @@ assert.deepEqual(player.teamDestination(snapshot.currentRound.courts[0],[0,1]),{
 assert.equal(snapshot.currentRound.courts[0].necessaryDuplicate,true);
 
 const html=fs.readFileSync(path.resolve(__dirname,"../index.html"),"utf8");
-for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match"]){
+for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match","⌂ Accueil","▦ QR","Reprendre le tournoi →","SUIVRE LE TOURNOI"]){
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
+assert.match(html,/function returnOrganizerHome\(\)[\s\S]*writeAutoSave\(\)[\s\S]*showHomeMode\(\)/,"Accueil conserve l’autosave");
+assert.match(html,/async function openSharePanel\(\)[\s\S]*state\.sharedTournament\?\.code[\s\S]*enableTournamentSharing\(\)/,"QR active directement le partage si nécessaire");
+assert.ok(html.includes("active.sharedTournament?.code"),"accueil indique le partage actif");
 assert.ok(html.indexOf('id="home"')<html.indexOf('id="setup"'));
 assert.match(html,/if\(viewerCode\)[\s\S]*showViewerMode\(\)/);
 assert.ok(html.includes("localStorage.setItem(viewerIdentityKey(),viewerPlayerSelectEl.value)"));

@@ -223,6 +223,15 @@ h1,h2{letter-spacing:-.035em;text-align:left;}
 .brand .dot{background:var(--lime);box-shadow:0 0 0 6px rgba(184,243,74,.13);}
 .topbar .actions{gap:6px;}
 .topbar .actions button{font-size:13px;padding:9px 11px;min-height:42px;}
+.topbar .danger-zone{margin-left:8px;padding-left:8px;border-left:1px solid var(--line);}
+.share-modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:14px;background:rgba(2,15,20,.82);backdrop-filter:blur(10px);}
+.share-modal .share-panel{width:min(520px,100%);max-height:calc(100vh - 28px);overflow:auto;margin:0;padding:clamp(18px,5vw,28px);}
+.share-modal .share-qr{width:min(420px,100%);max-width:none;min-height:0;aspect-ratio:1;padding:12px;}
+.share-modal .share-code-label{text-align:center;margin:8px 0 0;color:var(--ink-soft);}
+.active-tournament{margin:14px 0;padding:14px;border-radius:16px;background:rgba(184,243,74,.1);border:1px solid rgba(184,243,74,.32);}
+.active-tournament strong{display:block;color:var(--lime);font-size:17px;}
+.active-tournament .small{margin-top:4px;}
+.entry-actions{display:grid;gap:8px;margin-top:auto;}
 
 .card{
   background:linear-gradient(145deg,rgba(21,57,66,.96),rgba(12,40,48,.96));
@@ -383,10 +392,24 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   <div class="topbar">
     <div class="brand"><span class="dot"></span> La Team</div>
     <div class="actions">
+      <button class="secondary" onclick="returnOrganizerHome()">⌂ Accueil</button>
+      <button id="topQrBtn" class="secondary hidden" onclick="openSharePanel()">▦ QR</button>
       <button class="secondary" onclick="manualSaveAs()">💾 Sauver</button>
-      <button class="secondary" onclick="openLoadDialog()">📂 Charger</button>
-      <button class="secondary" onclick="goToSetup(true)">⚙️ Menu</button>
-      <button class="danger" onclick="resetAll()">🧹 Effacer</button>
+      <button class="secondary" onclick="goToSetup(true)">⚙️ Paramètres</button>
+      <span class="danger-zone"><button class="danger" onclick="resetAll()">🧹 Effacer</button></span>
+    </div>
+  </div>
+  <div id="shareModal" class="share-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shareTitle" onclick="if(event.target===this) closeSharePanel()">
+    <div id="sharePanel" class="card share-panel">
+      <div class="eyebrow" id="shareTitle">SUIVRE LE TOURNOI</div>
+      <div id="shareQr" class="share-qr"><span class="small" style="color:#123;">Préparation du QR code…</span></div>
+      <p class="share-code-label">Code tournoi :</p>
+      <div id="shareCode" class="share-code">—</div>
+      <p class="share-url" id="shareUrl"></p>
+      <p class="small" style="text-align:center;">Scannez pour voir votre terrain, votre partenaire et vos adversaires en direct.</p>
+      <div id="shareStatus" class="small" style="text-align:center;"></div>
+      <button id="enableShareBtn" class="hidden" onclick="enableTournamentSharing()">Réessayer</button>
+      <button class="secondary" onclick="closeSharePanel()">Fermer</button>
     </div>
   </div>
   <div id="pwaStatus" class="pwa-status" aria-live="polite">
@@ -401,7 +424,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <h1 class="home-title">Comment voulez-vous jouer ?</h1>
     <p class="home-subtitle">Organisez le tournoi ou rejoignez vos partenaires en quelques secondes.</p>
     <div class="entry-grid">
-      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2>Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><button onclick="openOrganizerMode()">Organiser un tournoi →</button></article>
+      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2 id="organizerCardTitle">Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><div id="activeTournamentInfo" class="active-tournament hidden"></div><div class="entry-actions"><button id="organizerPrimaryBtn" onclick="openOrganizerMode()">Organiser un tournoi →</button><button id="newTournamentBtn" class="secondary hidden" onclick="startFreshOrganizerMode()">Créer un nouveau tournoi</button></div></article>
       <article class="entry-card player"><div class="entry-icon">📱</div><h2>Rejoindre un tournoi en direct</h2><ul><li>Voir ton terrain</li><li>Ton partenaire et tes adversaires</li><li>Suivre les résultats et les mouvements</li></ul><button onclick="openJoinMode()">Rejoindre un tournoi →</button></article>
     </div>
   </div>
@@ -518,16 +541,6 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div class="organizer-tools">
         <button class="secondary" onclick="replacePlayer()">⇄ Remplacer un joueur</button>
         <button class="secondary" onclick="openSharePanel()">📱 Joueurs / QR</button>
-      </div>
-      <div id="sharePanel" class="card share-panel hidden">
-        <div class="eyebrow">SUIVRE LE TOURNOI</div>
-        <div id="shareQr" class="share-qr"><span class="small" style="color:#123;">Activez le partage pour générer le QR code.</span></div>
-        <div id="shareCode" class="share-code">—</div>
-        <p class="share-url" id="shareUrl"></p>
-        <p class="small" style="text-align:center;">Scannez pour voir votre terrain et votre prochain match.</p>
-        <div id="shareStatus" class="small" style="text-align:center;"></div>
-        <button id="enableShareBtn" onclick="enableTournamentSharing()">Activer le partage</button>
-        <button class="secondary" onclick="closeSharePanel()">Fermer</button>
       </div>
       <div id="partnerProgress" class="rotation-meter"></div>
       <div id="fullCycleNotice" class="cycle-notice hidden"></div>
@@ -723,7 +736,9 @@ const viewerPlayerSelectEl = document.getElementById("viewerPlayerSelect");
 const viewerOfflineEl = document.getElementById("viewerOffline");
 const viewerErrorEl = document.getElementById("viewerError");
 const sharePanelEl = document.getElementById("sharePanel");
+const shareModalEl = document.getElementById("shareModal");
 const shareStatusEl = document.getElementById("shareStatus");
+const topQrBtnEl = document.getElementById("topQrBtn");
 const homeEl = document.getElementById("home");
 const joinEl = document.getElementById("join");
 const joinCodeEl = document.getElementById("joinCode");
@@ -1624,13 +1639,14 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
 }
 
 /* -------------------- Screens -------------------- */
-let organizerEntryInitialized=false;
 function hideAllMainScreens(){
   homeEl.classList.add("hidden"); joinEl.classList.add("hidden"); viewerEl.classList.add("hidden");
   setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
 }
 function showHomeMode(){
+  if(canSaveCurrent()) writeAutoSave();
   hideAllMainScreens(); homeEl.classList.remove("hidden");
+  renderOrganizerHomeCard();
   document.querySelector?.(".topbar")?.classList.add("hidden"); window.scrollTo(0,0);
 }
 function openJoinMode(){
@@ -1652,29 +1668,66 @@ function leavePlayerMode(){
   const url=new URL("./",location.href); url.search=""; url.hash=""; location.assign(url.toString());
 }
 function openOrganizerMode(){
-  showSetup();
-  if(organizerEntryInitialized) return;
-  organizerEntryInitialized=true;
-  if(tryLoadAutoSave() && confirm("Reprendre la dernière partie (auto-save) ?")){
+  const active=getActiveTournamentState();
+  if(active){
+    if(active!==state) tryLoadAutoSave();
     refreshSavesUI(); showGame(); renderMatch(); renderRanking(); renderRecapInGame(); writeAutoSave();
+    return;
   }
+  showSetup();
+}
+function startFreshOrganizerMode(){
+  if(getActiveTournamentState() && !confirm("Créer un nouveau tournoi ? La partie actuelle sera remplacée au lancement du nouveau tournoi.")) return;
+  showSetup();
+}
+function returnOrganizerHome(){
+  if(canSaveCurrent()) writeAutoSave();
+  closeSharePanel();
+  showHomeMode();
+}
+function getActiveTournamentState(){
+  if(canSaveCurrent() && state.tournamentStatus==="live") return state;
+  try{
+    const raw=localStorage.getItem(AUTOSAVE_KEY);
+    const saved=raw ? unpackStoredState(JSON.parse(raw)) : null;
+    return saved && saved.tournamentStatus!=="finished" && Array.isArray(saved.players) && saved.players.length && Array.isArray(saved.schedule) && saved.schedule.length ? saved : null;
+  }catch(error){ return null; }
+}
+function renderOrganizerHomeCard(){
+  const active=getActiveTournamentState();
+  const info=document.getElementById("activeTournamentInfo");
+  const primary=document.getElementById("organizerPrimaryBtn");
+  const fresh=document.getElementById("newTournamentBtn");
+  if(!active){
+    document.getElementById("organizerCardTitle").textContent="Créer et gérer un tournoi";
+    info.classList.add("hidden"); primary.textContent="Organiser un tournoi →"; fresh.classList.add("hidden"); return;
+  }
+  document.getElementById("organizerCardTitle").textContent="🎾 Organisateur";
+  info.innerHTML=`<strong>Tournoi en cours — Round ${(active.matchIndex||0)+1}</strong>${active.sharedTournament?.code?'<div class="small">🟢 Partagé avec les joueurs</div>':''}`;
+  info.classList.remove("hidden"); primary.textContent="Reprendre le tournoi →"; fresh.classList.remove("hidden");
+}
+function updateOrganizerToolbar(){
+  topQrBtnEl.classList.toggle("hidden",!canSaveCurrent());
 }
 function showSetup(){
   hideAllMainScreens();
   setupEl.classList.remove("hidden");
   document.querySelector?.(".topbar")?.classList.remove("hidden");
+  updateOrganizerToolbar();
   window.scrollTo(0,0);
 }
 function showGame(){
   hideAllMainScreens();
   gameEl.classList.remove("hidden");
   document.querySelector?.(".topbar")?.classList.remove("hidden");
+  updateOrganizerToolbar();
   window.scrollTo(0,0);
 }
 function showFinish(){
   hideAllMainScreens();
   finishEl.classList.remove("hidden");
   document.querySelector?.(".topbar")?.classList.remove("hidden");
+  updateOrganizerToolbar();
   window.scrollTo(0,0);
 }
 
@@ -2418,12 +2471,14 @@ function escapePublic(value){
   return String(value ?? "").replace(/[&<>"']/g, char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
 }
 
-function openSharePanel(){
-  sharePanelEl.classList.remove("hidden");
-  renderSharePanel();
-  sharePanelEl.scrollIntoView?.({behavior:"smooth",block:"center"});
+async function openSharePanel(){
+  if(!canSaveCurrent()) return;
+  shareModalEl.classList.remove("hidden");
+  document.body.style.overflow="hidden";
+  if(state.sharedTournament?.code) renderSharePanel();
+  else await enableTournamentSharing();
 }
-function closeSharePanel(){ sharePanelEl.classList.add("hidden"); }
+function closeSharePanel(){ shareModalEl.classList.add("hidden"); document.body.style.overflow=""; }
 
 function renderSharePanel(){
   const sharing=state.sharedTournament;
@@ -2446,7 +2501,7 @@ async function enableTournamentSharing(){
   try{
     await window.LaTeamCloud.createSharedTournament();
     writeAutoSave(); renderSharePanel();
-  }catch(error){ shareStatusEl.textContent=`Impossible d’activer le partage : ${error.message}`; }
+  }catch(error){ shareStatusEl.textContent="Impossible de préparer le QR pour le moment. Vérifiez la connexion puis réessayez."; button.classList.remove("hidden"); }
   finally{ button.disabled=false; }
 }
 

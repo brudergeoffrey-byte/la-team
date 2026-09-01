@@ -48,6 +48,10 @@ function harness(url="https://brudergeoffrey-byte.github.io/la-team/"){
   assert.match(share.code,/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/);
   assert.equal(h.documents.size,1,"création distante unique");
   assert.equal(h.getAuthCalls(),1,"authentification anonyme organisateur");
+  const reopenedShare=await h.context.LaTeamCloud.createSharedTournament();
+  assert.equal(reopenedShare.code,share.code,"réouverture du QR : même code");
+  assert.equal(h.documents.size,1,"réouverture du QR : aucun nouveau tournoi");
+  const revisionAfterReopen=h.documents.get(share.code).revision;
   const published=h.documents.get(share.code);
   assert.equal(published.ownerUid,"owner-1");
   assert.equal(published.schedule,undefined,"moteur non publié");
@@ -55,7 +59,7 @@ function harness(url="https://brudergeoffrey-byte.github.io/la-team/"){
   state.results=[[{a:15,b:6},{a:8,b:13}]];
   state.validatedCourts=[true,true];
   await h.context.LaTeamCloud.publishNow();
-  assert.equal(h.documents.get(share.code).revision,2,"score synchronisé automatiquement");
+  assert.equal(h.documents.get(share.code).revision,revisionAfterReopen+1,"score synchronisé automatiquement");
 
   h.navigator.onLine=false;
   state.matchIndex=0; state.players[0].name="Remplaçant";
@@ -73,5 +77,5 @@ function harness(url="https://brudergeoffrey-byte.github.io/la-team/"){
   assert.equal(viewer.getAuthCalls(),0,"Viewer ne reçoit aucune identité organisateur");
   assert.equal(viewer.context.LaTeamCloud.viewerUrl(share.code),`https://brudergeoffrey-byte.github.io/la-team/?t=${share.code}`,"QR contient uniquement l’URL Viewer");
 
-  console.log("FIREBASE_CLIENT_OK — création, scores, correction, coupure/reprise et Viewer lecture seule validés");
+  console.log("FIREBASE_CLIENT_OK — QR stable, scores, correction, coupure/reprise et Viewer lecture seule validés");
 })().catch(error=>{console.error(error);process.exitCode=1;});
