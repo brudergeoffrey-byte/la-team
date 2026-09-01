@@ -347,6 +347,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .court-card.validated::before{background:var(--lime)!important;}
 .court-status-label{font-size:11px;font-weight:900;color:var(--gold)}
 .court-status-label.done{color:#91f2db}
+.court-time-left{display:inline-flex;align-items:center;gap:4px;color:var(--gold);font-size:12px;font-weight:950;font-variant-numeric:tabular-nums}.court-time-left.warning{color:var(--gold)}.court-time-left.ended{color:var(--red)}
 .necessary-duplicate{
   width:auto;min-height:0;margin:10px 0 0;padding:7px 10px;border-radius:999px;
   background:rgba(255,174,66,.12);border:1px solid rgba(255,174,66,.3);
@@ -908,6 +909,7 @@ function updateTimerDisplays(){
     if(phase==="ended"&&state.timerSoundEnabled){try{if(localStorage.getItem(alertKey)!=="1"){localStorage.setItem(alertKey,"1");organizerMustSound=true;}}catch(error){organizerMustSound=true;}}
     document.getElementById("organizerCourtTimers").innerHTML=`<div class="court-timer ${phase}"><div class="court-timer-head"><span>Round ${state.matchIndex+1}</span><span>${phase==="idle"?"Pas démarré":phase==="ended"?"Terminé":"En cours"}</span></div><div class="court-timer-value">${window.LaTeamRoundTimer.label(timer)}</div><div class="court-timer-actions">${phase==="idle"?'<button onclick="startOrganizerRoundTimer()">Démarrer</button>':'<button class="secondary timer-reset" onclick="resetOrganizerRoundTimer()">Réinitialiser</button>'}</div></div>`;
     if(cockpitClock){cockpitClock.textContent=phase==="ended"?"00:00 · TEMPS TERMINÉ":window.LaTeamRoundTimer.label(timer);cockpitClock.className=`cockpit-clock ${phase}`;}
+    document.querySelectorAll("[data-court-time]").forEach(element=>{element.textContent=phase==="idle"?"⏱ Pas démarré":phase==="ended"?"⏱ TEMPS TERMINÉ":`⏱ ${window.LaTeamRoundTimer.label(timer)}`;element.className=`court-time-left ${phase}`;});
     if(organizerMustSound)playTimerSignal(state.timerSoundVolume);
   }else if(cockpitClock){cockpitClock.textContent="MODE POINTS";cockpitClock.className="cockpit-clock";}
   const viewerTimer=document.getElementById("viewerTimer"),playerId=Number(localStorage.getItem(viewerIdentityKey?.()||"")),match=viewerSnapshot?window.LaTeamSharing.playerMatch(viewerSnapshot,playerId):null;
@@ -2239,7 +2241,7 @@ function renderMatch(){
     <div class="card court-card ${disabled?"validated":""}" id="court_${idx}">
       <div class="court-head">
         <span class="court-label">TERRAIN ${idx+1}</span>
-        <span class="court-status-label ${disabled?"done":""}">${disabled?"✓ VALIDÉ":"EN ATTENTE"}</span>
+        <span class="court-status-label ${disabled?"done":""}">${disabled?"✓ VALIDÉ":state.endMode==="time"?`<span data-court-time="${idx}" class="court-time-left">⏱ Pas démarré</span>`:"EN ATTENTE"}</span>
         ${state.mode==="ladder" && idx===0 ? `<span class="court-crown" title="Terrain le plus haut">👑</span>` : ""}
       </div>
       <div class="matchup">

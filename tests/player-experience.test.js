@@ -34,6 +34,7 @@ for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Co
 for(const expected of ["Mis à jour à","Retour au tournoi","Mode de fin de match","Durée du round","Activer les alertes"]){assert.ok(html.includes(expected),`expérience temps réel : ${expected}`);}
 for(const expected of ["Démarrer le chrono","Réinitialiser le chrono","CHRONO DU ROUND","organizerCourtTimers"]){assert.ok(html.includes(expected),`chrono global : ${expected}`);}
 for(const expected of ["roundCockpit","cockpitClock","Score attendu : Terrain","MOUVEMENTS DU PROCHAIN ROUND","viewerPersonalClock","Prochain round en préparation","NOUVEAU MATCH"]){assert.ok(html.includes(expected),`cockpit et assistant Joueur : ${expected}`);}
+for(const expected of ["data-court-time","court-time-left","⏱ TEMPS TERMINÉ"]){assert.ok(html.includes(expected),`temps restant par match : ${expected}`);}
 assert.match(html,/round-cockpit\{position:sticky/,'cockpit Organisateur visible pendant le défilement');
 assert.match(html,/courtStatusGrid[\s\S]*scrollToCourt/,'accès direct depuis le cockpit vers chaque terrain');
 const viewerTimerMarkup=html.slice(html.indexOf('id="viewerTimer"'),html.indexOf('id="viewerProgress"'));
