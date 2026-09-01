@@ -1906,7 +1906,7 @@ async function submitOrganizerAuth(){
     if(organizerAuthMode==="create")await window.LaTeamCloud.createOrganizerAccount({email,password,clubName:document.getElementById("authClubName").value});
     else await window.LaTeamCloud.signInOrganizer(email,password);
     await refreshOrganizerWorkspace();organizerUnlocked=true;await openOrganizerMode();
-  }catch(error){errorEl.textContent=error.message;}finally{button.disabled=false;}
+  }catch(error){errorEl.textContent=window.LaTeamCloud?.friendlyError?.(error)?.message||"Impossible de terminer cette opération.";}finally{button.disabled=false;}
 }
 async function forgotOrganizerPassword(){
   const email=document.getElementById("authEmail").value,errorEl=document.getElementById("authError");
@@ -1960,11 +1960,17 @@ function getActiveTournamentState(){
     return saved && saved.tournamentStatus!=="finished" && Array.isArray(saved.players) && saved.players.length && Array.isArray(saved.schedule) && saved.schedule.length ? saved : null;
   }catch(error){ return null; }
 }
+function getOrganizerActiveTournamentState(){
+  if(!organizerAccountUser)return null;
+  const active=getActiveTournamentState();
+  if(active?.sharedTournament?.ownerUid&&active.sharedTournament.ownerUid!==organizerAccountUser.uid&&!active.clubId)return null;
+  return active;
+}
 function renderOrganizerHomeCard(){
   // Un autosave local peut provenir de l'ancienne identité anonyme. Il reste
   // conservé pour la migration, mais ne doit être présenté comme un tournoi
   // administrable qu'après authentification de l'organisateur.
-  const active=organizerAccountUser ? getActiveTournamentState() : null;
+  const active=getOrganizerActiveTournamentState();
   const info=document.getElementById("activeTournamentInfo");
   const primary=document.getElementById("organizerPrimaryBtn");
   const fresh=document.getElementById("newTournamentBtn");

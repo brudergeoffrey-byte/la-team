@@ -29,13 +29,19 @@ assert.equal(tournament.clubId,clubId);assert.equal(tournament.publicCode,"K7F2"
 const client=fs.readFileSync(path.resolve(__dirname,"../firebase-client.js"),"utf8");
 const html=fs.readFileSync(path.resolve(__dirname,"../index.html"),"utf8");
 assert.match(client,/linkWithCredential\(credential\)/,"migration anonyme liée sans changement d’UID");
+assert.match(client,/getIdToken\?\.\(true\)/,"jeton actualisé avant les règles Firestore");
+assert.match(client,/where\("memberUids","array-contains",user\.uid\)\.limit\(1\)/,"création de club idempotente après une reprise");
+assert.match(client,/legacy-owner-mismatch/,"un ancien autosave d’une autre identité ne fait pas échouer le compte");
+assert.match(client,/friendlyError:authError/,"les erreurs Auth et Firestore sont traduites sans détail sensible");
 assert.match(client,/signInWithEmailAndPassword/);
 assert.match(client,/sendPasswordResetEmail/);
 assert.match(client,/setPersistence/);
 assert.match(client,/loadClubTournament/);
 assert.match(client,/savePrivateTournament/);
 assert.match(html,/Se connecter/);assert.match(html,/Créer un compte/);assert.match(html,/Mot de passe oublié/);assert.match(html,/logoutOrganizer/);
-assert.match(html,/const active=organizerAccountUser \? getActiveTournamentState\(\) : null/,
+assert.match(html,/const active=getOrganizerActiveTournamentState\(\)/,
   "un tournoi local n'est affiché comme actif qu'après authentification de l'organisateur");
+assert.match(html,/function getOrganizerActiveTournamentState\(\)[\s\S]*ownerUid!==organizerAccountUser\.uid[\s\S]*return null/,
+  "un autosave appartenant à une ancienne identité reste masqué après connexion");
 assert.ok(!client.includes("signInWithPopup"),"Google Sign-In non activé");
 console.log("ORGANIZER_ACCOUNTS_OK — compte, liaison UID, récupération et rôles validés");

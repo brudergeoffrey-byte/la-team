@@ -212,12 +212,20 @@
 
   function authError(error){
     const messages={
-      "auth/email-already-in-use":"Cette adresse e-mail est déjà utilisée.",
+      "auth/email-already-in-use":"Cette adresse e-mail est déjà utilisée. Essayez de vous connecter.",
+      "auth/credential-already-in-use":"Cette adresse est déjà liée à un compte. Essayez de vous connecter.",
       "auth/invalid-credential":"E-mail ou mot de passe incorrect.",
       "auth/invalid-email":"Adresse e-mail invalide.",
       "auth/weak-password":"Choisissez un mot de passe d’au moins 8 caractères.",
+      "auth/password-does-not-meet-requirements":"Ce mot de passe ne respecte pas les règles de sécurité. Utilisez au moins 8 caractères.",
+      "auth/operation-not-allowed":"La création de compte est momentanément indisponible. Réessayez plus tard.",
+      "auth/requires-recent-login":"Votre session a expiré. Reconnectez-vous puis réessayez.",
+      "auth/user-token-expired":"Votre session a expiré. Reconnectez-vous puis réessayez.",
       "auth/too-many-requests":"Trop de tentatives. Réessayez plus tard.",
-      "auth/network-request-failed":"Connexion indisponible. Réessayez lorsque le réseau revient."
+      "auth/network-request-failed":"Connexion indisponible. Réessayez lorsque le réseau revient.",
+      "permission-denied":"Le compte est créé, mais Firebase a refusé la création du club. Reconnectez-vous puis réessayez.",
+      "unauthenticated":"Votre session a expiré. Reconnectez-vous puis réessayez.",
+      "unavailable":"Firebase est temporairement indisponible. Réessayez dans un instant."
     };
     return Object.assign(new Error(messages[error?.code]||"Impossible de terminer cette opération."),{code:error?.code||"auth/error"});
   }
@@ -238,6 +246,13 @@
       if(wasAnonymous)user=(await user.linkWithCredential(credential)).user;
       else if(!user)user=(await auth.createUserWithEmailAndPassword(root.LaTeamAccounts.normalizeEmail(email),password)).user;
       else if(root.LaTeamAccounts.normalizeEmail(user.email)!==root.LaTeamAccounts.normalizeEmail(email))throw new Error("Un autre compte Organisateur est déjà connecté.");
+      await user.getIdToken?.(true);
+      const existingQuery=await db.collection("clubs").where("memberUids","array-contains",user.uid).limit(1).get();
+      if(!existingQuery.empty){
+        const existingDoc=existingQuery.docs[0],existingClub={id:existingDoc.id,...existingDoc.data()};
+        const migration=await migrateLegacyTournament(existingClub.id,user.uid).catch(error=>({migrated:false,reason:error?.code||"migration-failed"}));
+        return {user,club:existingClub,member:null,migratedFromAnonymous:wasAnonymous,migration};
+      }
       const clubId=root.LaTeamAccounts.randomId(clubName),timestamp=Date.now();
       const club=root.LaTeamAccounts.clubDocument({clubId,name:clubName,ownerUid:user.uid,now:timestamp});
       const member=root.LaTeamAccounts.memberDocument({uid:user.uid,role:"owner",email:user.email,now:timestamp});
@@ -247,8 +262,8 @@
       batch.set(db.collection("clubs").doc(clubId),club);
       batch.set(db.collection("clubs").doc(clubId).collection("members").doc(user.uid),member);
       await batch.commit();
-      await migrateLegacyTournament(clubId,user.uid);
-      return {user,club,member,migratedFromAnonymous:wasAnonymous};
+      const migration=await migrateLegacyTournament(clubId,user.uid).catch(error=>({migrated:false,reason:error?.code||"migration-failed"}));
+      return {user,club,member,migratedFromAnonymous:wasAnonymous,migration};
     }catch(error){throw authError(error);}
   }
 
@@ -293,7 +308,7 @@
   }
   async function migrateLegacyTournament(clubId,uid){
     const state=api?.getState?.();if(!state?.players?.length)return false;
-    if(state.sharedTournament?.ownerUid&&state.sharedTournament.ownerUid!==uid)throw new Error("Le tournoi local appartient à une autre identité.");
+    if(state.sharedTournament?.ownerUid&&state.sharedTournament.ownerUid!==uid)return {migrated:false,reason:"legacy-owner-mismatch"};
     await savePrivateTournament(state,clubId);return true;
   }
 
@@ -308,5 +323,5 @@
   }
 
   root.LaTeamCloud={init,viewerUrl,createSharedTournament,schedulePublish,publishNow,flushPending,subscribeViewer,subscribeCourtTimers,bindViewerPlayer,startCourtTimer,resetCourtTimer,viewerCodeFromLocation,
-    observeOrganizerAuth,createOrganizerAccount,signInOrganizer,signOutOrganizer,sendPasswordReset,listOrganizerClubs,listClubTournaments,loadClubTournament,savePrivateTournament,schedulePrivateSave,migrateLegacyTournament};
+    observeOrganizerAuth,createOrganizerAccount,signInOrganizer,signOutOrganizer,sendPasswordReset,listOrganizerClubs,listClubTournaments,loadClubTournament,savePrivateTournament,schedulePrivateSave,migrateLegacyTournament,friendlyError:authError};
 })(typeof window!=="undefined"?window:globalThis);
