@@ -58,7 +58,9 @@ assert.match(rules,/hasTimedPublicShape/);
 assert.match(rules,/hasCourtTimerPublicShape/);
 assert.match(rules,/hasClubPublicShape/);
 assert.match(rules,/match \/viewerSessions\/\{uid\}[\s\S]*allow update, delete: if false/,"liaison joueur immuable côté serveur");
-assert.match(rules,/match \/courtTimers\/\{timerId\}[\s\S]*viewerOwnsCourt[\s\S]*allow create:[\s\S]*allow update:/,"écriture chrono isolée par terrain");
+assert.match(rules,/match \/courtTimers\/\{timerId\}[\s\S]*allow create, update, delete: if false/,"ancien chrono par terrain fermé en écriture");
+assert.match(rules,/match \/roundTimer\/\{timerId\}[\s\S]*activeRoundViewer[\s\S]*roundStartedAt == request\.time[\s\S]*allow create:[\s\S]*allow update:/,"démarrage global minimal et horodaté par le serveur");
+assert.match(rules,/resource\.data\.state == 'running'[\s\S]*validIdle\(request\.resource\.data\)/,"réinitialisation réservée à l’Organisateur");
 assert.match(rules,/allow delete: if false/,"suppression de chrono refusée");
 const viewerMarkup=html.slice(html.indexOf('id="viewer"'),html.indexOf('<!-- SETUP -->'));
 for(const forbiddenAction of ["validateCourt","editCourtScore","nextMatch","replacePlayer","finishNow"]){

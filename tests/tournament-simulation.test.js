@@ -76,7 +76,7 @@ function initialState(n, courts, mode){
     ladderByeCounts:mode==="ladder"?Array(n).fill(0):null,
     ladderLastRest:[], partnersSeen:{}, partnersFullCycleNotified:false,
     activeSaveId:null, tournamentStatus:"live", sharedTournament:null,
-    endMode:"points", roundDurationMinutes:10, roundEndsAt:null, courtTimers:{},
+    endMode:"points", roundDurationMinutes:10, roundEndsAt:null, courtTimers:{}, roundTimer:null,
     timerSoundEnabled:true, timerSoundVolume:"normal", timerTournamentId:"test-tournament"
   };
 }

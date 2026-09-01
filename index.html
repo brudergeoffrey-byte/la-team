@@ -223,6 +223,11 @@ h1,h2{letter-spacing:-.035em;text-align:left;}
 .brand .dot{background:var(--lime);box-shadow:0 0 0 6px rgba(184,243,74,.13);}
 .topbar .actions{gap:6px;}
 .topbar .actions button{font-size:13px;padding:9px 11px;min-height:42px;}
+.topbar-context{display:flex;align-items:center;gap:12px;min-width:0;}
+.mode-label{display:inline-flex;align-items:center;gap:6px;width:max-content;color:var(--lime);font-size:11px;font-weight:950;letter-spacing:.11em;text-transform:uppercase;line-height:1;padding:7px 9px;border:1px solid rgba(184,243,74,.34);border-radius:999px;background:rgba(184,243,74,.09);}
+.mode-label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px rgba(184,243,74,.12);flex:none;}
+.topbar #topHomeBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.topbar #topHomeBtn .home-icon{display:inline-block;color:var(--lime);font-size:25px;font-weight:950;line-height:.75;transform:translateY(-1px);}
 .topbar #topQrBtn{background:var(--lime);border-color:var(--lime);color:var(--lime-dark);font-weight:950;box-shadow:0 0 0 3px rgba(184,243,74,.14);}
 .topbar .danger-zone{margin-left:8px;padding-left:8px;border-left:1px solid var(--line);}
 .share-modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:14px;background:rgba(2,15,20,.82);backdrop-filter:blur(10px);}
@@ -382,7 +387,8 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
 @media (max-width:620px){
   .container{padding:8px 10px 110px;}
-  .topbar{align-items:center}.brand{font-size:18px}.topbar .actions button{font-size:0;width:42px;padding:8px}.topbar .actions button::first-letter{font-size:17px;}
+  .topbar{align-items:center}.brand{font-size:18px}.topbar-context{gap:7px}.topbar .mode-label{font-size:9px;padding:6px 7px;letter-spacing:.08em}.topbar .actions button{font-size:0;width:42px;padding:8px}.topbar .actions button::first-letter{font-size:17px;}
+  .topbar #topHomeBtn .home-icon{font-size:27px}.topbar #topHomeBtn .home-text{display:none}.topbar #topHomeBtn{width:46px;min-width:46px;padding:7px;}
   .topbar .actions #topQrBtn{width:auto;min-width:68px;padding-inline:12px;font-size:13px;white-space:nowrap;}
   .card{padding:16px;border-radius:19px;}
   #players{grid-template-columns:1fr;}
@@ -410,9 +416,9 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <div class="container">
 
   <div class="topbar">
-    <div class="brand"><span class="dot"></span> La Team</div>
+    <div class="topbar-context"><div class="brand"><span class="dot"></span> La Team</div><div class="mode-label">Mode Organisateur</div></div>
     <div class="actions">
-      <button class="secondary" onclick="returnOrganizerHome()">⌂ Accueil</button>
+      <button id="topHomeBtn" class="secondary" onclick="returnOrganizerHome()" aria-label="Accueil"><span class="home-icon" aria-hidden="true">⌂</span><span class="home-text">Accueil</span></button>
       <button id="topQrBtn" class="secondary hidden" onclick="openSharePanel()">▦ QR</button>
       <button class="secondary" onclick="manualSaveAs()">💾 Sauver</button>
       <button class="secondary" onclick="goToSetup(true)">⚙️ Paramètres</button>
@@ -501,10 +507,11 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <button onclick="confirmViewerIdentity()">Voir mon match →</button>
     </div>
     <div id="viewerContent" class="hidden">
+      <div class="mode-label">Mode Joueur</div>
       <div class="viewer-head"><div class="eyebrow">TOURNOI EN DIRECT</div><button class="secondary" onclick="changeViewerIdentity()">Changer de joueur</button></div>
       <div id="viewerUpdatedAt" class="viewer-sync"></div>
       <div class="viewer-section-title eyebrow">Ton match</div><div id="viewerMyMatch" class="card viewer-hero"></div>
-      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">CHRONO DU TERRAIN</div><div id="viewerTimerClock" class="timer-clock">Pas démarré</div></div><div class="viewer-timer-actions"><button id="viewerTimerStartBtn" onclick="startViewerCourtTimer()">Démarrer le chrono</button><button id="viewerTimerResetBtn" class="secondary timer-reset hidden" onclick="resetViewerCourtTimer()">Réinitialiser le chrono</button><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div></div>
+      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">CHRONO DU ROUND</div><div id="viewerTimerClock" class="timer-clock">Pas démarré</div></div><div class="viewer-timer-actions"><button id="viewerTimerStartBtn" onclick="startViewerCourtTimer()">Démarrer le chrono</button><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div></div>
       <div class="card"><h2 class="viewer-section-title">Round en direct</h2><div id="viewerProgress" class="viewer-progress"></div><div id="viewerCourts"></div></div>
       <details class="card viewer-details"><summary>Classement</summary><div id="viewerRanking"></div></details>
       <details class="card viewer-details"><summary>Rounds précédents</summary><div id="viewerResults"></div></details>
@@ -716,6 +723,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="./organizer-lock.js"></script>
 <script src="./tournament-timer.js"></script>
 <script src="./court-timers.js"></script>
+<script src="./round-timer.js"></script>
 <script src="./vendor/qrcode.min.js"></script>
 <script src="./firebase-client.js"></script>
 <script>
@@ -730,6 +738,7 @@ let state = {
   roundDurationMinutes: 10,
   roundEndsAt: null,
   courtTimers: {},
+  roundTimer: null,
   timerSoundEnabled: true,
   timerSoundVolume: "normal",
   timerTournamentId: null,
@@ -845,7 +854,7 @@ let viewerChangingIdentity = false;
 let timerInterval = null;
 let audioContext = null;
 let viewerAlertsEnabled = false;
-let viewerCourtTimers = {};
+let viewerRoundTimer = null;
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -870,38 +879,35 @@ function playTimerSignal(volume="normal"){
   gain.gain.value=volume==="loud"?.22:.11; osc.frequency.value=740; osc.type="sine";
   osc.connect(gain);gain.connect(context.destination);osc.start();gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.65);osc.stop(context.currentTime+.68);return true;
 }
-function timerAlertKey(kind,code,timer){return `la-team-timer-alert-v2:${kind}:${window.LaTeamCourtTimers.alertKey(code||"local",timer)}`;}
+function timerAlertKey(kind,code,timer){return `la-team-round-alert-v1:${kind}:${window.LaTeamRoundTimer.alertKey(code||"local",timer)}`;}
 function alertOnce(kind,code,timer,volume){
   const key=timerAlertKey(kind,code,timer);try{if(localStorage.getItem(key)==="1")return false;localStorage.setItem(key,"1");}catch(error){}
   const played=playTimerSignal(volume);if(kind==="viewer"&&navigator.vibrate)navigator.vibrate([180,80,180]);return played;
 }
 function timerRender(target,clock,status,timer){
   if(!target){return;}
-  target.classList.remove("warning","ended");const phase=window.LaTeamCourtTimers.phase(timer);
+  target.classList.remove("warning","ended");const phase=window.LaTeamRoundTimer.phase(timer);
   target.classList.toggle("warning",phase==="warning");target.classList.toggle("ended",phase==="ended");
-  clock.textContent=window.LaTeamCourtTimers.label(timer);
+  clock.textContent=window.LaTeamRoundTimer.label(timer);
   status.textContent=phase==="idle"?"PAS DÉMARRÉ":phase==="ended"?"TERMINÉ":phase==="warning"?"FIN IMMINENTE":"TEMPS RESTANT";
 }
-function currentTimer(map,round,court,duration){return window.LaTeamCourtTimers.normalize(map?.[window.LaTeamCourtTimers.timerId(round,court)],round,court,duration);}
+function currentRoundTimer(timer,round,duration){return window.LaTeamRoundTimer.normalize(timer,round,duration);}
 function updateTimerDisplays(){
   const organizerTimer=document.getElementById("organizerTimer");
   organizerTimer?.classList.toggle("hidden",state.endMode!=="time"||!canSaveCurrent());
   if(state.endMode==="time"&&canSaveCurrent()){
-    const rows=[];let organizerMustSound=false;
-    for(let court=1;court<=state.courts;court++){
-      const timer=currentTimer(state.courtTimers,state.matchIndex+1,court,state.roundDurationMinutes),phase=window.LaTeamCourtTimers.phase(timer);
-      const alertKey=timerAlertKey("organizer",state.sharedTournament?.code||state.timerTournamentId,timer);
-      if(phase==="ended"&&state.timerSoundEnabled){try{if(localStorage.getItem(alertKey)!=="1"){localStorage.setItem(alertKey,"1");organizerMustSound=true;}}catch(error){organizerMustSound=true;}}
-      rows.push(`<div class="court-timer ${phase}"><div class="court-timer-head"><span>T${court}</span><span>${phase==="idle"?"Pas démarré":phase==="ended"?"Terminé":"En cours"}</span></div><div class="court-timer-value">${window.LaTeamCourtTimers.label(timer)}</div><div class="court-timer-actions">${phase==="idle"?`<button onclick="startOrganizerCourtTimer(${court})">Démarrer</button>`:`<button class="secondary timer-reset" onclick="resetOrganizerCourtTimer(${court})">Réinitialiser</button>`}</div></div>`);
-    }
-    document.getElementById("organizerCourtTimers").innerHTML=rows.join("");if(organizerMustSound)playTimerSignal(state.timerSoundVolume);
+    const timer=currentRoundTimer(state.roundTimer,state.matchIndex+1,state.roundDurationMinutes),phase=window.LaTeamRoundTimer.phase(timer);
+    const alertKey=timerAlertKey("organizer",state.sharedTournament?.code||state.timerTournamentId,timer);let organizerMustSound=false;
+    if(phase==="ended"&&state.timerSoundEnabled){try{if(localStorage.getItem(alertKey)!=="1"){localStorage.setItem(alertKey,"1");organizerMustSound=true;}}catch(error){organizerMustSound=true;}}
+    document.getElementById("organizerCourtTimers").innerHTML=`<div class="court-timer ${phase}"><div class="court-timer-head"><span>Round ${state.matchIndex+1}</span><span>${phase==="idle"?"Pas démarré":phase==="ended"?"Terminé":"En cours"}</span></div><div class="court-timer-value">${window.LaTeamRoundTimer.label(timer)}</div><div class="court-timer-actions">${phase==="idle"?'<button onclick="startOrganizerRoundTimer()">Démarrer</button>':'<button class="secondary timer-reset" onclick="resetOrganizerRoundTimer()">Réinitialiser</button>'}</div></div>`;
+    if(organizerMustSound)playTimerSignal(state.timerSoundVolume);
   }
   const viewerTimer=document.getElementById("viewerTimer"),playerId=Number(localStorage.getItem(viewerIdentityKey?.()||"")),match=viewerSnapshot?window.LaTeamSharing.playerMatch(viewerSnapshot,playerId):null;
   viewerTimer?.classList.toggle("hidden",viewerSnapshot?.endMode!=="time"||!match||match.rest);
   if(viewerSnapshot?.endMode==="time"&&match&&!match.rest){
-    const timer=currentTimer(viewerCourtTimers,viewerSnapshot.roundNumber,match.court,viewerSnapshot.roundDurationMinutes),phase=window.LaTeamCourtTimers.phase(timer);
+    const timer=currentRoundTimer(viewerRoundTimer,viewerSnapshot.roundNumber,viewerSnapshot.roundDurationMinutes),phase=window.LaTeamRoundTimer.phase(timer);
     timerRender(viewerTimer,document.getElementById("viewerTimerClock"),document.querySelector("#viewerTimer .timer-status"),timer);
-    document.getElementById("viewerTimerStartBtn").classList.toggle("hidden",phase!=="idle");document.getElementById("viewerTimerResetBtn").classList.toggle("hidden",phase==="idle");
+    document.getElementById("viewerTimerStartBtn").classList.toggle("hidden",phase!=="idle");
     if(phase==="ended"&&viewerAlertsEnabled)alertOnce("viewer",viewerSnapshot.code,timer,"normal");
   }
 }
@@ -911,19 +917,18 @@ function enableViewerAlerts(){
   if(!ensureAudioContext()){viewerAlertsEnabled=false;document.getElementById("viewerAlertsBtn").textContent="Alertes indisponibles";return;}
   viewerAlertsEnabled=true;try{localStorage.setItem("la-team-viewer-alerts-v1","1");}catch(error){}document.getElementById("viewerAlertsBtn").textContent="🔔 Alertes activées";updateTimerDisplays();
 }
-async function startOrganizerCourtTimer(court){await changeCourtTimer("start",court,null);}
-async function resetOrganizerCourtTimer(court){if(!confirm(`Réinitialiser le chrono du Terrain ${court} ?\n\nLe score et le tournoi ne seront pas modifiés.`))return;await changeCourtTimer("reset",court,null);}
-async function startViewerCourtTimer(){const playerId=Number(localStorage.getItem(viewerIdentityKey())),match=window.LaTeamSharing.playerMatch(viewerSnapshot,playerId);if(match&&!match.rest)await changeCourtTimer("start",match.court,playerId);}
-async function resetViewerCourtTimer(){const playerId=Number(localStorage.getItem(viewerIdentityKey())),match=window.LaTeamSharing.playerMatch(viewerSnapshot,playerId);if(!match||match.rest)return;if(!confirm("Confirmer la réinitialisation du chrono ?\n\nLe chrono reviendra à « Pas démarré ». Le score ne sera pas modifié."))return;await changeCourtTimer("reset",match.court,playerId);}
-async function changeCourtTimer(action,court,playerId){
+async function startOrganizerRoundTimer(){await changeRoundTimer("start",null);}
+async function resetOrganizerRoundTimer(){if(!confirm("Réinitialiser le chrono du round ?\n\nLe score et le tournoi ne seront pas modifiés."))return;await changeRoundTimer("reset",null);}
+async function startViewerCourtTimer(){const playerId=Number(localStorage.getItem(viewerIdentityKey())),match=window.LaTeamSharing.playerMatch(viewerSnapshot,playerId);if(match&&!match.rest)await changeRoundTimer("start",playerId);}
+async function changeRoundTimer(action,playerId){
   const snapshot=playerId===null?null:viewerSnapshot,code=playerId===null?state.sharedTournament?.code:snapshot?.code,roundNumber=playerId===null?state.matchIndex+1:snapshot.roundNumber,durationMinutes=playerId===null?state.roundDurationMinutes:snapshot.roundDurationMinutes;
   if(!code){
     if(playerId!==null)return alert("Le tournoi n’est pas encore partagé.");
-    const id=window.LaTeamCourtTimers.timerId(roundNumber,court);state.courtTimers[id]=action==="start"?window.LaTeamCourtTimers.start(state.courtTimers[id],{roundNumber,courtNumber:court,durationMinutes,startedBy:"organizer"}).timer:window.LaTeamCourtTimers.reset(state.courtTimers[id],{});writeAutoSave();updateTimerDisplays();return;
+    const startedAt=Date.now();state.roundTimer=action==="start"?{state:"running",roundNumber,durationMinutes,roundStartedAt:startedAt,startedBy:"organizer",viewerStartConsumed:false,generation:Number(state.roundTimer?.generation||0)+1,updatedAt:startedAt}:window.LaTeamRoundTimer.idle(roundNumber,durationMinutes,Number(state.roundTimer?.generation||0)+1,Boolean(state.roundTimer?.viewerStartConsumed));writeAutoSave();updateTimerDisplays();return;
   }
   try{
-    const timer=action==="start"?await window.LaTeamCloud.startCourtTimer({code,roundNumber,courtNumber:court,durationMinutes,playerId}):await window.LaTeamCloud.resetCourtTimer({code,roundNumber,courtNumber:court,playerId});
-    if(playerId===null&&timer){state.courtTimers[window.LaTeamCourtTimers.timerId(roundNumber,court)]=timer;writeAutoSave();}else if(timer)viewerCourtTimers[window.LaTeamCourtTimers.timerId(roundNumber,court)]=timer;updateTimerDisplays();
+    const timer=action==="start"?await window.LaTeamCloud.startRoundTimer({code,playerId}):await window.LaTeamCloud.resetRoundTimer({code});
+    if(playerId===null&&timer){state.roundTimer=timer;writeAutoSave();}else if(timer)viewerRoundTimer=timer;updateTimerDisplays();
   }catch(error){alert(error?.message||"Impossible de modifier ce chrono pour le moment.");}
 }
 function fmtDate(ts){
@@ -1138,6 +1143,7 @@ function normalizeLoadedState(){
   state.roundDurationMinutes=window.LaTeamTimer.normalizeDuration(state.roundDurationMinutes||10);
   state.roundEndsAt=null;
   if(!state.courtTimers||typeof state.courtTimers!=="object")state.courtTimers={};
+  if(!state.roundTimer||typeof state.roundTimer!=="object")state.roundTimer=null;
   if(state.timerSoundEnabled===undefined) state.timerSoundEnabled=true;
   if(!["normal","loud"].includes(state.timerSoundVolume)) state.timerSoundVolume="normal";
   if(!state.timerTournamentId) state.timerTournamentId=`legacy-${state.savedAt||state.matchIndex||0}`;
@@ -2075,7 +2081,7 @@ function startNewTournament(){
   state.maxPoints = clamp(+maxPointsEl.value || 21, 1, 31);
   state.endMode=endModeEl.value;
   state.roundDurationMinutes=selectedTimerMinutes();
-  state.roundEndsAt=null;state.courtTimers={};
+  state.roundEndsAt=null;state.courtTimers={};state.roundTimer=null;
   state.timerSoundEnabled=timerSoundEnabledEl.checked;
   state.timerSoundVolume=timerSoundVolumeEl.value;
   state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
@@ -2471,11 +2477,11 @@ function nextMatch(){
 
 function undoLast(){
   if(!state.history.length) return;
-  const liveCourtTimers={...(state.courtTimers||{})};
+  const liveRoundTimer=state.roundTimer;
   const prev = state.history.pop();
   const remainingHistory = state.history;
   restoreSnapshot(prev, remainingHistory);
-  state.courtTimers={...(state.courtTimers||{}),...liveCourtTimers};
+  state.roundTimer=liveRoundTimer||state.roundTimer;
 
   writeAutoSave();
   renderRanking();
@@ -2648,7 +2654,7 @@ function restartSamePlayers(){
   state.n = n;
   state.courts = courts;
   state.maxPoints = maxPoints;
-  state.endMode=endMode;state.roundDurationMinutes=roundDurationMinutes;state.roundEndsAt=null;state.courtTimers={};
+  state.endMode=endMode;state.roundDurationMinutes=roundDurationMinutes;state.roundEndsAt=null;state.courtTimers={};state.roundTimer=null;
   state.timerSoundEnabled=timerSoundEnabled;state.timerSoundVolume=timerSoundVolume;state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
   state.totalRounds = null;
   state.tournamentStatus = "live";
@@ -2721,7 +2727,7 @@ function newGameChoosePlayers(){
     n,
     courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),
-    endMode:"points",roundDurationMinutes:10,roundEndsAt:null,courtTimers:{},timerSoundEnabled:true,timerSoundVolume:"normal",timerTournamentId:null,
+    endMode:"points",roundDurationMinutes:10,roundEndsAt:null,courtTimers:{},roundTimer:null,timerSoundEnabled:true,timerSoundVolume:"normal",timerTournamentId:null,
     totalRounds: null,
 
     players: [],
@@ -2815,9 +2821,9 @@ function onShareStatus(info){
   else if(info.state==="syncing") shareStatusEl.textContent="Synchronisation…";
   else if(info.state==="pending") shareStatusEl.textContent="🟠 Hors connexion — mise à jour en attente";
 }
-function onCourtTimers(timers){
-  if(viewerSnapshot){viewerCourtTimers=timers||{};renderViewer();}
-  else{state.courtTimers={...(state.courtTimers||{}),...(timers||{})};if(canSaveCurrent())writeAutoSave();}
+function onRoundTimer(timer){
+  if(viewerSnapshot){viewerRoundTimer=timer||null;renderViewer();}
+  else{state.roundTimer=timer||null;if(canSaveCurrent())writeAutoSave();}
   updateTimerDisplays();
 }
 
@@ -2992,7 +2998,7 @@ function setupPwa(){
     getState:()=>state,
     onShareStatus,
     onViewerSnapshot,
-    onCourtTimers,
+    onRoundTimer,
     onViewerError,
     onConnectionChange:online=>updateViewerConnection(online,viewerSnapshot?.updatedAt),
     onPrivateSync:info=>{if(info.state==="synced"&&autosaveText)autosaveText.textContent=`🟢 Sauvegardé sur le club · ${fmtDate(Date.now())}`;}

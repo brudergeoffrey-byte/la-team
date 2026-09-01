@@ -28,11 +28,17 @@ const html=fs.readFileSync(path.resolve(__dirname,"../index.html"),"utf8");
 assert.match(html,/id="organizerAuth"/);
 assert.match(html,/Connectez-vous pour créer, reprendre et synchroniser les tournois de votre club/);
 assert.match(html,/id="viewer"[\s\S]*Qui êtes-vous \?/m,"Viewer sans formulaire de compte classique");
-for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match","⌂ Accueil","▦ QR","Reprendre le tournoi →","SUIVRE LE TOURNOI"]){
+for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match","Accueil","▦ QR","Reprendre le tournoi →","SUIVRE LE TOURNOI"]){
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
 for(const expected of ["Mis à jour à","Retour au tournoi","Mode de fin de match","Durée du round","Activer les alertes"]){assert.ok(html.includes(expected),`expérience temps réel : ${expected}`);}
-for(const expected of ["Démarrer le chrono","Réinitialiser le chrono","Confirmer la réinitialisation","organizerCourtTimers"]){assert.ok(html.includes(expected),`chrono par terrain : ${expected}`);}
+for(const expected of ["Démarrer le chrono","Réinitialiser le chrono","CHRONO DU ROUND","organizerCourtTimers"]){assert.ok(html.includes(expected),`chrono global : ${expected}`);}
+const viewerTimerMarkup=html.slice(html.indexOf('id="viewerTimer"'),html.indexOf('id="viewerProgress"'));
+assert.equal(viewerTimerMarkup.includes("Réinitialiser le chrono"),false,"aucune réinitialisation dans le Viewer");
+assert.match(html,/topbar-context[\s\S]*Mode Organisateur/,"mode Organisateur visible en haut");
+assert.match(html,/id="viewerContent"[\s\S]*mode-label">Mode Joueur/,"mode Joueur visible en haut");
+assert.match(html,/id="topHomeBtn"[\s\S]*home-icon[\s\S]*⌂/,"icône Accueil dédiée");
+assert.match(html,/\.topbar #topHomeBtn \.home-icon\{[^}]*font-size:25px/,"icône maison agrandie et contrastée");
 assert.match(html,/select\{[\s\S]*-webkit-appearance:none!important;appearance:none!important[\s\S]*stroke='%23d9ff79'[\s\S]*stroke-width='3\.2'[\s\S]*background-position:right 16px center!important/,"chevron iOS personnalisé, clair et aligné sur les sélecteurs");
 assert.match(html,/function cancelViewerIdentityChange\(\)/,"retour depuis Changer de joueur");
 assert.match(html,/organizerUnlocked=true; openOrganizerMode\(\)/,"PIN ouvre directement le tournoi");

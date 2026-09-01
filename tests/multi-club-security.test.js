@@ -32,5 +32,5 @@ assert.match(rules,/request\.resource\.data\.role == 'owner'[\s\S]*getAfter/,"ow
 assert.match(rules,/clubAdmin\(clubId\) && !clubOwner\(clubId\)[\s\S]*request\.resource\.data\.role == 'organizer'/,"admin limité au rôle organizer");
 assert.match(rules,/allow get: if isValidCode\(code\)/,"Viewer lit la projection exacte");
 assert.match(rules,/allow list: if false/,"Viewer ne liste pas les tournois publics");
-assert.match(rules,/viewerOwnsCourt/);assert.match(rules,/allow update, delete: if false/);
+assert.match(rules,/activeRoundViewer/);assert.match(rules,/roundStartedAt == request\.time/);assert.match(rules,/allow update, delete: if false/);
 console.log("MULTI_CLUB_SECURITY_OK — isolation A/B, rôles, non-membre, anti-escalade et Viewer validés");

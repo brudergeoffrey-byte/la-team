@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+const assert=require("node:assert/strict"),timer=require("../round-timer.js");
+const startedAt=1700000000000,running={state:"running",roundNumber:3,durationMinutes:10,roundStartedAt:{seconds:startedAt/1000,nanoseconds:0},startedBy:2,viewerStartConsumed:true,generation:4};
+assert.equal(timer.timestampMs(running.roundStartedAt),startedAt);assert.equal(timer.endsAt(running),startedAt+600000);assert.equal(timer.label(running,startedAt),"10:00");assert.equal(timer.label(running,startedAt+599001),"00:01");assert.equal(timer.label(running,startedAt+600000),"00:00");assert.equal(timer.label(running,startedAt+900000),"00:00");assert.equal(timer.phase(running,startedAt+600000),"ended");assert.equal(timer.alertKey("K7F2",running),"K7F2:3:4");assert.equal(timer.remainingMs(running,startedAt+120000),480000,"hors connexion");assert.equal(timer.remainingMs(running,startedAt+300000),300000,"arrivée tardive");assert.equal(timer.normalize(running,4,10).state,"idle","nouveau round");
+console.log("ROUND_TIMER_OK — référence absolue, hors connexion, arrivée tardive, fin et alerte unique validés");

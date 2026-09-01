@@ -2,7 +2,7 @@
 const fs=require("node:fs");
 const path=require("node:path");
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require("@firebase/rules-unit-testing");
-const {doc,setDoc,getDoc,updateDoc,writeBatch}=require("firebase/firestore");
+const {doc,setDoc,getDoc,updateDoc,writeBatch,serverTimestamp}=require("firebase/firestore");
 
 const projectId="demo-la-team";
 const rules=fs.readFileSync(path.resolve(__dirname,"../firestore.rules"),"utf8");
@@ -51,14 +51,28 @@ const publicTournament={schemaVersion:4,code:"K7F2",clubId:"clubA",ownerUid:"own
   await assertSucceeds(batch.commit());
 
   const viewer=dbFor("viewer1",""),session={playerId:0,createdAt:now};
+  const viewer2=dbFor("viewer2","");
   await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),"tournaments/K7F2")));
   await assertSucceeds(setDoc(doc(viewer,"tournaments/K7F2/viewerSessions/viewer1"),session));
-  const timer={state:"running",roundNumber:1,courtNumber:1,durationMinutes:10,startedAt:now,endsAt:now+600000,startedBy:0,generation:1,updatedAt:now};
-  await assertSucceeds(setDoc(doc(viewer,"tournaments/K7F2/courtTimers/1"),timer));
-  await assertFails(setDoc(doc(viewer,"tournaments/K7F2/courtTimers/2"),{...timer,courtNumber:2}));
+  await assertSucceeds(setDoc(doc(viewer2,"tournaments/K7F2/viewerSessions/viewer2"),{playerId:1,createdAt:now}));
+  await assertSucceeds(setDoc(doc(dbFor("ownerA"),"tournaments/K7F2/roundTimer/current"),{state:"idle",roundNumber:1,durationMinutes:10,roundStartedAt:null,startedBy:null,viewerStartConsumed:false,generation:0,updatedAt:serverTimestamp()}));
+  const timer={state:"running",roundNumber:1,durationMinutes:10,roundStartedAt:serverTimestamp(),startedBy:0,viewerStartConsumed:true,generation:1,updatedAt:serverTimestamp()};
+  const simultaneous=await Promise.allSettled([
+    setDoc(doc(viewer,"tournaments/K7F2/roundTimer/current"),timer),
+    setDoc(doc(viewer2,"tournaments/K7F2/roundTimer/current"),{...timer,startedBy:1})
+  ]);
+  if(simultaneous.filter(result=>result.status==="fulfilled").length!==1)throw new Error("Le démarrage concurrent doit avoir exactement un gagnant");
+  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/roundTimer/current"),{generation:2,roundStartedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/roundTimer/current"),{state:"idle",roundStartedAt:null,startedBy:null,generation:2,updatedAt:serverTimestamp()}));
+  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/roundTimer/current"),{durationMinutes:20,generation:2,roundStartedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(viewer,"tournaments/K7F2/courtTimers/1"),{legacy:true}));
+  const ownerTimer={state:"idle",roundNumber:1,durationMinutes:10,roundStartedAt:null,startedBy:null,viewerStartConsumed:true,generation:2,updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(dbFor("ownerA"),"tournaments/K7F2/roundTimer/current"),ownerTimer));
+  await assertFails(setDoc(doc(viewer,"tournaments/K7F2/roundTimer/current"),{...timer,generation:3}));
+  await assertSucceeds(setDoc(doc(dbFor("ownerA"),"tournaments/K7F2/roundTimer/current"),{...timer,startedBy:"organizer",generation:3}));
   await assertFails(updateDoc(doc(viewer,"tournaments/K7F2"),{revision:2,roundNumber:2}));
   await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/viewerSessions/viewer1"),{playerId:2}));
 
   await env.cleanup();
-  console.log("FIRESTORE_EMULATOR_OK — rôles, isolation multi-clubs, récupération et Viewer réellement appliqués");
+  console.log("FIRESTORE_EMULATOR_OK — rôles, isolation multi-clubs, chrono global et Viewer lecture seule appliqués");
 })().catch(error=>{console.error(error);process.exitCode=1;});
