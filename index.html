@@ -339,6 +339,9 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 }
 .court-status.done{background:rgba(67,223,189,.14);border-color:rgba(67,223,189,.35);color:#9af5df;}
 .court-status.waiting::after{content:" ⏳"}.court-status.done::after{content:" ✓"}
+.round-cockpit{position:sticky;top:69px;z-index:12;padding:14px;margin:10px 0 14px;border:1px solid rgba(184,243,74,.28);border-radius:18px;background:rgba(7,29,36,.95);box-shadow:0 15px 38px rgba(0,0,0,.3);backdrop-filter:blur(18px)}
+.cockpit-head{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}.cockpit-round{color:var(--lime);font-size:13px;font-weight:950;letter-spacing:.13em}.cockpit-progress{font-size:14px;font-weight:850;color:var(--ink-soft);margin-top:3px}.cockpit-clock{font-size:clamp(34px,9vw,54px);font-weight:950;font-variant-numeric:tabular-nums;letter-spacing:.04em;line-height:1;text-align:right}.cockpit-clock.warning{color:var(--gold)}.cockpit-clock.ended{color:var(--red);font-size:clamp(24px,7vw,40px)}
+.cockpit-alert{margin:9px 0 0;padding:9px 11px;border-radius:11px;background:rgba(255,200,90,.1);color:#ffe0a3;font-weight:850;font-size:13px}.cockpit-alert.ready{background:rgba(184,243,74,.12);color:#eaffc4}.movement-overview{margin:10px 0 14px;padding:13px;border:1px solid var(--line);border-radius:15px;background:rgba(4,24,29,.5)}.movement-overview-title{color:var(--lime);font-size:11px;font-weight:950;letter-spacing:.12em;margin-bottom:8px}.movement-flow{display:flex;gap:5px;align-items:center;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}.movement-flow span{flex:0 0 auto;padding:7px 9px;border-radius:9px;background:rgba(67,223,189,.1);font-size:12px;font-weight:900}.movement-flow b{color:var(--ink-soft)}
 .round-ready{padding:13px 15px;margin:10px 0;border-radius:15px;background:linear-gradient(120deg,rgba(184,243,74,.16),rgba(67,223,189,.12));border:1px solid rgba(184,243,74,.3);font-size:13px;font-weight:800;}
 .court-card.validated{border-color:rgba(67,223,189,.38);background:linear-gradient(145deg,rgba(21,72,75,.98),rgba(12,46,52,.98));}
 .court-card.validated::before{background:var(--lime)!important;}
@@ -369,6 +372,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .viewer-kicker{color:var(--lime);font-size:13px;font-weight:950;letter-spacing:.15em;}.viewer-court{font-size:clamp(38px,13vw,72px);line-height:1;font-weight:950;letter-spacing:-.05em;margin:8px 0 18px;}
 .viewer-matchup{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center;font-size:clamp(17px,5vw,25px);font-weight:900;}
 .viewer-movement{margin-top:16px;padding:12px;border-radius:14px;background:rgba(184,243,74,.12);color:#eaffc4;font-weight:850;text-align:center;}
+.viewer-personal-timer{margin:18px 0 0;text-align:center}.viewer-personal-clock{font-size:clamp(42px,16vw,72px);font-weight:950;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.04em}.viewer-personal-clock.warning{color:var(--gold)}.viewer-personal-clock.ended{color:var(--red)}.viewer-preparing{margin-top:16px;padding:14px;border-radius:14px;background:rgba(67,223,189,.1);color:#bff8e9;text-align:center;font-weight:850}
 .viewer-offline{padding:9px 12px;border-radius:12px;background:rgba(255,174,66,.12);color:#ffd18a;font-size:12px;text-align:center;}.viewer-new{animation:viewerPulse 1.4s ease-out;}
 @keyframes viewerPulse{0%{box-shadow:0 0 0 0 rgba(184,243,74,.65)}100%{box-shadow:0 0 0 24px rgba(184,243,74,0)}}
 .home-shell{max-width:820px;margin:5vh auto 0;text-align:center}.home-title{font-size:clamp(38px,9vw,72px);letter-spacing:-.055em;margin-bottom:8px}.home-subtitle{color:var(--ink-soft);font-size:16px;margin:0 auto 28px;max-width:560px}
@@ -400,7 +404,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   .team{font-size:15px;}
   th,td{padding:9px 5px;font-size:12px;}
   .hide-mobile{display:none;}
-  .court-status-grid{grid-template-columns:repeat(4,minmax(0,1fr));position:sticky;top:69px;z-index:11;padding:7px;margin-inline:-2px;background:rgba(7,29,36,.92);border-radius:15px;backdrop-filter:blur(14px);}
+  .round-cockpit{top:65px;padding:11px;margin-inline:-2px}.cockpit-head{gap:8px}.cockpit-progress{font-size:12px}.cockpit-alert{font-size:12px}.court-status-grid{grid-template-columns:repeat(4,minmax(0,1fr));padding:7px 0 0;margin:0;background:transparent;}
   .court-status{font-size:10px;padding:7px 3px;min-height:38px;}
   .event-strip{align-items:start}.round-state strong{font-size:16px}
   .home-shell{margin-top:2vh}.entry-grid{grid-template-columns:1fr}.entry-card{min-height:260px;padding:20px}.entry-card h2{font-size:22px}.viewer-shell{margin-top:4px}.viewer-hero{padding:18px}.viewer-court{font-size:clamp(42px,15vw,64px);margin-bottom:14px}.viewer-matchup{font-size:clamp(16px,4.8vw,21px)}
@@ -606,12 +610,14 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <h2>Matchs</h2>
       <div class="small" id="progressText"></div>
       <div class="small" id="restText"></div>
-      <div class="event-strip">
-        <div id="roundState" class="round-state"></div>
+      <div id="roundCockpit" class="round-cockpit">
+        <div class="cockpit-head"><div><div id="cockpitRound" class="cockpit-round"></div><div id="roundState" class="cockpit-progress"></div></div><div id="cockpitClock" class="cockpit-clock"></div></div>
+        <div id="cockpitAlert" class="cockpit-alert"></div>
+        <div id="courtStatusGrid" class="court-status-grid"></div>
       </div>
       <div id="organizerTimer" class="hidden"><div id="organizerCourtTimers" class="court-timers"></div><button id="organizerSoundBtn" class="secondary" onclick="toggleOrganizerTimerSound()">🔔 Son activé</button></div>
-      <div id="courtStatusGrid" class="court-status-grid"></div>
       <div id="roundReady" class="round-ready hidden"></div>
+      <div id="movementOverview" class="movement-overview hidden"></div>
       <div class="organizer-tools">
         <button class="secondary" onclick="replacePlayer()">⇄ Remplacer un joueur</button>
         <button class="secondary" onclick="openSharePanel()">📱 Joueurs / QR</button>
@@ -894,19 +900,22 @@ function timerRender(target,clock,status,timer){
 function currentRoundTimer(timer,round,duration){return window.LaTeamRoundTimer.normalize(timer,round,duration);}
 function updateTimerDisplays(){
   const organizerTimer=document.getElementById("organizerTimer");
+  const cockpitClock=document.getElementById("cockpitClock");
   organizerTimer?.classList.toggle("hidden",state.endMode!=="time"||!canSaveCurrent());
   if(state.endMode==="time"&&canSaveCurrent()){
     const timer=currentRoundTimer(state.roundTimer,state.matchIndex+1,state.roundDurationMinutes),phase=window.LaTeamRoundTimer.phase(timer);
     const alertKey=timerAlertKey("organizer",state.sharedTournament?.code||state.timerTournamentId,timer);let organizerMustSound=false;
     if(phase==="ended"&&state.timerSoundEnabled){try{if(localStorage.getItem(alertKey)!=="1"){localStorage.setItem(alertKey,"1");organizerMustSound=true;}}catch(error){organizerMustSound=true;}}
     document.getElementById("organizerCourtTimers").innerHTML=`<div class="court-timer ${phase}"><div class="court-timer-head"><span>Round ${state.matchIndex+1}</span><span>${phase==="idle"?"Pas démarré":phase==="ended"?"Terminé":"En cours"}</span></div><div class="court-timer-value">${window.LaTeamRoundTimer.label(timer)}</div><div class="court-timer-actions">${phase==="idle"?'<button onclick="startOrganizerRoundTimer()">Démarrer</button>':'<button class="secondary timer-reset" onclick="resetOrganizerRoundTimer()">Réinitialiser</button>'}</div></div>`;
+    if(cockpitClock){cockpitClock.textContent=phase==="ended"?"00:00 · TEMPS TERMINÉ":window.LaTeamRoundTimer.label(timer);cockpitClock.className=`cockpit-clock ${phase}`;}
     if(organizerMustSound)playTimerSignal(state.timerSoundVolume);
-  }
+  }else if(cockpitClock){cockpitClock.textContent="MODE POINTS";cockpitClock.className="cockpit-clock";}
   const viewerTimer=document.getElementById("viewerTimer"),playerId=Number(localStorage.getItem(viewerIdentityKey?.()||"")),match=viewerSnapshot?window.LaTeamSharing.playerMatch(viewerSnapshot,playerId):null;
   viewerTimer?.classList.toggle("hidden",viewerSnapshot?.endMode!=="time"||!match||match.rest);
   if(viewerSnapshot?.endMode==="time"&&match&&!match.rest){
     const timer=currentRoundTimer(viewerRoundTimer,viewerSnapshot.roundNumber,viewerSnapshot.roundDurationMinutes),phase=window.LaTeamRoundTimer.phase(timer);
     timerRender(viewerTimer,document.getElementById("viewerTimerClock"),document.querySelector("#viewerTimer .timer-status"),timer);
+    const personalClock=document.getElementById("viewerPersonalClock");if(personalClock){personalClock.textContent=phase==="ended"?"00:00":window.LaTeamRoundTimer.label(timer);personalClock.className=`viewer-personal-clock ${phase}`;}
     document.getElementById("viewerTimerStartBtn").classList.toggle("hidden",phase!=="idle");
     if(phase==="ended"&&viewerAlertsEnabled)alertOnce("viewer",viewerSnapshot.code,timer,"normal");
   }
@@ -2185,11 +2194,16 @@ function renderMatch(){
     state.courtScores = Array(match.courts.length).fill(null).map(()=>state.endMode==="time"?({a:0,b:0}):({a:0,b:state.maxPoints}));
 
   const validatedCount = state.validatedCourts.filter(Boolean).length;
-  roundStateEl.innerHTML = `<span>Avancement</span><strong>${validatedCount}/${match.courts.length} validés</strong>`;
+  document.getElementById("cockpitRound").textContent=`ROUND ${state.matchIndex+1}`;
+  roundStateEl.textContent = `${validatedCount}/${match.courts.length} terrains validés`;
   courtStatusGridEl.innerHTML = match.courts.map((_,idx)=>
     `<button class="court-status ${state.validatedCourts[idx]?"done":"waiting"}" onclick="scrollToCourt(${idx})">T${idx+1}</button>`
   ).join("");
   const roundComplete = validatedCount === match.courts.length;
+  const missingCourts=state.validatedCourts.map((done,index)=>done?null:index+1).filter(Boolean);
+  const cockpitAlert=document.getElementById("cockpitAlert");
+  cockpitAlert.classList.toggle("ready",roundComplete);
+  cockpitAlert.textContent=roundComplete?`${validatedCount}/${match.courts.length} ✓ — Round suivant prêt`:missingCourts.length===1?`⚠ Score attendu : Terrain ${missingCourts[0]}`:`Scores attendus : ${missingCourts.map(number=>`T${number}`).join(" · ")}`;
   roundReadyEl.classList.toggle("hidden", !roundComplete);
   roundReadyEl.textContent = roundComplete
     ? `${validatedCount}/${match.courts.length} terrains validés · ${state.n} joueurs prêts · Round suivant disponible`
@@ -2260,6 +2274,9 @@ function renderMatch(){
   });
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
+  const movementOverview=document.getElementById("movementOverview");
+  movementOverview.classList.toggle("hidden",!roundComplete||state.mode!=="ladder");
+  if(roundComplete&&state.mode==="ladder")movementOverview.innerHTML=`<div class="movement-overview-title">MOUVEMENTS DU PROCHAIN ROUND</div><div class="movement-flow">${match.courts.map((_,idx)=>`<span>T${idx+1}</span>${idx<match.courts.length-1?'<b>↔</b>':''}`).join("")}</div>`;
   undoBtn.disabled = state.history.length === 0;
   document.getElementById("organizerSoundBtn").textContent=state.timerSoundEnabled?"🔔 Son activé":"🔕 Son désactivé";
   updateTimerDisplays();
@@ -2891,11 +2908,12 @@ function renderViewer(){
     const ownIsA=court?.teamA.includes(playerId);
     const ownScore=match.score ? (ownIsA?match.score.a:match.score.b) : null;
     const opponentScore=match.score ? (ownIsA?match.score.b:match.score.a) : null;
-    my.innerHTML=`${isNewRound?'<div class="viewer-movement">NOUVEAU MATCH</div>':''}<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div>
+    my.innerHTML=`${isNewRound?'<div class="viewer-movement">🎾 NOUVEAU MATCH</div>':''}<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div>
       <div class="viewer-court">TERRAIN ${match.court}</div>
       <div class="viewer-matchup"><div>${escapePublic(viewerName(snapshot,match.player))}<br>${escapePublic(viewerName(snapshot,match.partner))}</div><div>VS</div><div>${match.opponents.map(id=>escapePublic(viewerName(snapshot,id))).join("<br>")}</div></div>
-      ${match.score?`<div class="viewer-finished">MATCH TERMINÉ ✓</div><div class="viewer-score-final">${ownScore} — ${opponentScore}</div>`:""}
-      ${destination?`<div class="viewer-movement">${destination}</div>`:""}`;
+      ${snapshot.endMode==="time"?'<div class="viewer-personal-timer"><div class="timer-status">TEMPS RESTANT</div><div id="viewerPersonalClock" class="viewer-personal-clock">Pas démarré</div></div>':''}
+      ${match.score?`<div class="viewer-finished">✓ MATCH TERMINÉ</div><div class="viewer-score-final">${ownScore} — ${opponentScore}</div><div class="viewer-preparing">Prochain round en préparation…</div>`:""}
+      ${destination?`<div class="viewer-movement">${destination}</div>`:snapshot.mode==="ladder"&&!match.score?`<div class="viewer-movement">${match.court===1?"Si victoire → reste T1 👑":`Si victoire → T${match.court-1} ↑`}<br>${match.court===snapshot.currentRound.courts.length?`Si défaite → reste T${match.court}`:`Si défaite → T${match.court+1} ↓`}</div>`:""}`;
   }
   if(isNewRound){ my.classList.remove("viewer-new"); void my.offsetWidth; my.classList.add("viewer-new"); }
   viewerLastRound=snapshot.roundNumber;
@@ -2910,6 +2928,7 @@ function renderViewer(){
   }).join("");
   document.getElementById("viewerRanking").innerHTML=`<table><thead><tr><th>#</th><th>Joueur</th><th>MJ</th><th>V</th><th>Diff</th></tr></thead><tbody>${snapshot.ranking.map(row=>`<tr><td>${row.position}</td><td>${escapePublic(row.name)}</td><td>${row.matches}</td><td>${row.wins}</td><td>${row.diff>=0?"+":""}${row.diff}</td></tr>`).join("")}</tbody></table>`;
   document.getElementById("viewerResults").innerHTML=snapshot.previousResults.slice(-32).reverse().map(row=>`<div class="recapLine"><b>R${row.round} · T${row.court}</b><br>${row.teamA.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")} <b>${row.a}—${row.b}</b> ${row.teamB.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")}</div>`).join("") || '<div class="small">Aucun résultat validé.</div>';
+  updateTimerDisplays();
 }
 
 function updateViewerConnection(online,updatedAt){
