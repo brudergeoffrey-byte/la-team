@@ -223,6 +223,7 @@ h1,h2{letter-spacing:-.035em;text-align:left;}
 .brand .dot{background:var(--lime);box-shadow:0 0 0 6px rgba(184,243,74,.13);}
 .topbar .actions{gap:6px;}
 .topbar .actions button{font-size:13px;padding:9px 11px;min-height:42px;}
+.topbar #topQrBtn{background:var(--lime);border-color:var(--lime);color:var(--lime-dark);font-weight:950;box-shadow:0 0 0 3px rgba(184,243,74,.14);}
 .topbar .danger-zone{margin-left:8px;padding-left:8px;border-left:1px solid var(--line);}
 .share-modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:14px;background:rgba(2,15,20,.82);backdrop-filter:blur(10px);}
 .share-modal .share-panel{width:min(520px,100%);max-height:calc(100vh - 28px);overflow:auto;margin:0;padding:clamp(18px,5vw,28px);}
@@ -364,6 +365,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 @media (max-width:620px){
   .container{padding:8px 10px 110px;}
   .topbar{align-items:center}.brand{font-size:18px}.topbar .actions button{font-size:0;width:42px;padding:8px}.topbar .actions button::first-letter{font-size:17px;}
+  .topbar .actions #topQrBtn{width:auto;min-width:68px;padding-inline:12px;font-size:13px;white-space:nowrap;}
   .card{padding:16px;border-radius:19px;}
   #players{grid-template-columns:1fr;}
   .mode-grid{grid-template-columns:1fr;}

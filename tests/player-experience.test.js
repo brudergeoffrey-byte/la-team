@@ -29,6 +29,7 @@ for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Co
 assert.match(html,/function returnOrganizerHome\(\)[\s\S]*writeAutoSave\(\)[\s\S]*showHomeMode\(\)/,"Accueil conserve l’autosave");
 assert.match(html,/async function openSharePanel\(\)[\s\S]*state\.sharedTournament\?\.code[\s\S]*enableTournamentSharing\(\)/,"QR active directement le partage si nécessaire");
 assert.ok(html.includes("active.sharedTournament?.code"),"accueil indique le partage actif");
+assert.ok(html.includes(".topbar .actions #topQrBtn{width:auto;min-width:68px"),"libellé QR toujours visible sur mobile");
 assert.ok(html.indexOf('id="home"')<html.indexOf('id="setup"'));
 assert.match(html,/if\(viewerCode\)[\s\S]*showViewerMode\(\)/);
 assert.ok(html.includes("localStorage.setItem(viewerIdentityKey(),viewerPlayerSelectEl.value)"));
