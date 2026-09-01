@@ -1,10 +1,11 @@
-const CACHE_VERSION = "la-team-shell-v2";
+const CACHE_VERSION = "la-team-shell-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./offline.html",
   "./firebase-sharing.js",
+  "./player-experience.js",
   "./firebase-client.js",
   "./vendor/qrcode.min.js",
   "./vendor/qrcode-LICENSE.txt",

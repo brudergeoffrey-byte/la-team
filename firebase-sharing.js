@@ -38,6 +38,7 @@
       number:courtIndex+1,
       teamA,
       teamB,
+      necessaryDuplicate:Array.isArray(court.necessaryDuplicates) && court.necessaryDuplicates.length>0,
       validated:Boolean(result),
       score:result ? {a:Number(result.a),b:Number(result.b)} : null,
       destinations:{}

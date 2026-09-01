@@ -339,6 +339,9 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .viewer-movement{margin-top:16px;padding:12px;border-radius:14px;background:rgba(184,243,74,.12);color:#eaffc4;font-weight:850;text-align:center;}
 .viewer-offline{padding:9px 12px;border-radius:12px;background:rgba(255,174,66,.12);color:#ffd18a;font-size:12px;text-align:center;}.viewer-new{animation:viewerPulse 1.4s ease-out;}
 @keyframes viewerPulse{0%{box-shadow:0 0 0 0 rgba(184,243,74,.65)}100%{box-shadow:0 0 0 24px rgba(184,243,74,0)}}
+.home-shell{max-width:820px;margin:5vh auto 0;text-align:center}.home-title{font-size:clamp(38px,9vw,72px);letter-spacing:-.055em;margin-bottom:8px}.home-subtitle{color:var(--ink-soft);font-size:16px;margin:0 auto 28px;max-width:560px}
+.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left}.entry-card{display:flex;flex-direction:column;min-height:330px;padding:24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(150deg,rgba(22,66,69,.96),rgba(8,35,42,.98));box-shadow:var(--shadow)}
+.entry-card.player{border-color:rgba(184,243,74,.35)}.entry-icon{font-size:38px}.entry-card h2{text-align:left;font-size:25px;margin:16px 0 12px}.entry-card ul{padding-left:20px;margin:0 0 22px;color:var(--ink-soft);line-height:1.75}.entry-card button{margin-top:auto;min-height:54px}.join-shell{max-width:520px;margin:8vh auto 0}.back-link{width:auto;background:transparent;color:var(--ink-soft);padding:8px 0;margin:0 0 12px;text-align:left}.join-code{text-transform:uppercase;letter-spacing:.16em;text-align:center;font-size:25px;font-weight:900}.form-error{min-height:22px;color:#ffb2b2;font-size:13px;margin-top:8px}.viewer-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.viewer-head button{width:auto;margin:0;padding:8px 11px;font-size:12px}.viewer-section-title{text-align:left;margin:0 0 12px}.viewer-progress{color:var(--ink-soft);font-size:13px;font-weight:800;margin:-5px 0 12px}.viewer-live-court{padding:11px 12px;margin:8px 0;border:1px solid var(--line);border-radius:14px;background:rgba(4,24,29,.45)}.viewer-live-court.done{border-color:rgba(67,223,189,.3)}.viewer-live-top{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-soft)}.viewer-live-match{font-size:14px;font-weight:850;line-height:1.45;margin-top:5px}.viewer-live-move{font-size:12px;color:#bff8e9;margin-top:5px}.viewer-score-final{font-size:clamp(22px,7vw,34px);font-weight:950;text-align:center;margin:14px 0 4px}.viewer-finished{color:#9af5df;text-align:center;font-size:13px;font-weight:950;letter-spacing:.1em}.viewer-details summary{cursor:pointer;font-size:18px;font-weight:900;padding:4px 0 12px}.viewer-details[open] summary{color:var(--lime)}
 
 #game>.card:last-child{margin-top:18px;}
 table{overflow:hidden;border-radius:14px;}
@@ -365,6 +368,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   .court-status-grid{grid-template-columns:repeat(4,minmax(0,1fr));position:sticky;top:69px;z-index:11;padding:7px;margin-inline:-2px;background:rgba(7,29,36,.92);border-radius:15px;backdrop-filter:blur(14px);}
   .court-status{font-size:10px;padding:7px 3px;min-height:38px;}
   .event-strip{align-items:start}.round-state strong{font-size:16px}
+  .home-shell{margin-top:2vh}.entry-grid{grid-template-columns:1fr}.entry-card{min-height:260px;padding:20px}.entry-card h2{font-size:22px}.viewer-shell{margin-top:4px}.viewer-hero{padding:18px}.viewer-court{font-size:clamp(42px,15vw,64px);margin-bottom:14px}.viewer-matchup{font-size:clamp(16px,4.8vw,21px)}
 }
 
 @media (min-width:900px){#courts{grid-template-columns:repeat(4,minmax(0,1fr));}.court-card{padding:14px!important}.team{font-size:14px}.score-row select{min-height:50px;font-size:21px}}
@@ -391,27 +395,47 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <button id="installPwaBtn" type="button" class="pwa-pill pwa-install hidden" onclick="installPwa()">Installer La Team</button>
   </div>
 
-  <!-- VIEWER STRICTEMENT EN LECTURE SEULE -->
+  <!-- ACCUEIL -->
+  <div id="home" class="home-shell hidden">
+    <div class="eyebrow">LA TEAM · PADEL EN DIRECT</div>
+    <h1 class="home-title">Comment voulez-vous jouer ?</h1>
+    <p class="home-subtitle">Organisez le tournoi ou rejoignez vos partenaires en quelques secondes.</p>
+    <div class="entry-grid">
+      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2>Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><button onclick="openOrganizerMode()">Organiser un tournoi →</button></article>
+      <article class="entry-card player"><div class="entry-icon">📱</div><h2>Rejoindre un tournoi en direct</h2><ul><li>Voir ton terrain</li><li>Ton partenaire et tes adversaires</li><li>Suivre les résultats et les mouvements</li></ul><button onclick="openJoinMode()">Rejoindre un tournoi →</button></article>
+    </div>
+  </div>
+
+  <!-- REJOINDRE -->
+  <div id="join" class="join-shell hidden">
+    <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
+    <div class="card"><div class="eyebrow">MODE JOUEUR</div><h1 class="screen-title">Rejoindre le direct</h1><p class="screen-intro">Demandez le code à l’organisateur ou scannez son QR code.</p><label for="joinCode">Code du tournoi</label><input id="joinCode" class="join-code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="16" placeholder="K7F4P2AB" onkeydown="if(event.key==='Enter') joinTournament()" /><div id="joinError" class="form-error" role="alert"></div><button onclick="joinTournament()">REJOINDRE →</button></div>
+  </div>
+
+  <!-- MODE JOUEUR STRICTEMENT EN LECTURE SEULE -->
   <div id="viewer" class="viewer-shell hidden">
     <div id="viewerOffline" class="viewer-offline hidden"></div>
     <div id="viewerIdentity" class="card hidden">
-      <div class="eyebrow">Suivre le tournoi</div>
+      <button id="viewerIdentityHome" class="back-link hidden" onclick="leavePlayerMode()">← Retour à l’accueil</button>
+      <div class="eyebrow">MODE JOUEUR</div>
       <h1 class="screen-title">Qui êtes-vous ?</h1>
       <label for="viewerPlayerSelect">Je suis :</label>
       <select id="viewerPlayerSelect"></select>
       <button onclick="confirmViewerIdentity()">Voir mon match →</button>
     </div>
     <div id="viewerContent" class="hidden">
-      <div id="viewerMyMatch" class="card viewer-hero"></div>
-      <div class="card"><h2>Tous les terrains</h2><div id="viewerCourts"></div></div>
-      <div class="card"><h2>Classement</h2><div id="viewerRanking"></div></div>
-      <div class="card"><h2>Résultats précédents</h2><div id="viewerResults"></div></div>
+      <div class="viewer-head"><div class="eyebrow">TOURNOI EN DIRECT</div><button class="secondary" onclick="changeViewerIdentity()">Changer de joueur</button></div>
+      <div class="viewer-section-title eyebrow">Ton match</div><div id="viewerMyMatch" class="card viewer-hero"></div>
+      <div class="card"><h2 class="viewer-section-title">Round en direct</h2><div id="viewerProgress" class="viewer-progress"></div><div id="viewerCourts"></div></div>
+      <details class="card viewer-details"><summary>Classement</summary><div id="viewerRanking"></div></details>
+      <details class="card viewer-details"><summary>Rounds précédents</summary><div id="viewerResults"></div></details>
     </div>
     <div id="viewerError" class="card hidden"></div>
   </div>
 
   <!-- SETUP -->
   <div id="setup" class="card">
+    <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
     <div class="eyebrow">Nouveau tournoi</div>
     <h1 class="screen-title">Prêts à jouer ?</h1>
     <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
@@ -607,6 +631,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 </div>
 
 <script src="./firebase-sharing.js"></script>
+<script src="./player-experience.js"></script>
 <script src="./vendor/qrcode.min.js"></script>
 <script src="./firebase-client.js"></script>
 <script>
@@ -699,6 +724,10 @@ const viewerOfflineEl = document.getElementById("viewerOffline");
 const viewerErrorEl = document.getElementById("viewerError");
 const sharePanelEl = document.getElementById("sharePanel");
 const shareStatusEl = document.getElementById("shareStatus");
+const homeEl = document.getElementById("home");
+const joinEl = document.getElementById("join");
+const joinCodeEl = document.getElementById("joinCode");
+const joinErrorEl = document.getElementById("joinError");
 
 let viewerSnapshot = null;
 let viewerLastRound = null;
@@ -1595,22 +1624,57 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
 }
 
 /* -------------------- Screens -------------------- */
+let organizerEntryInitialized=false;
+function hideAllMainScreens(){
+  homeEl.classList.add("hidden"); joinEl.classList.add("hidden"); viewerEl.classList.add("hidden");
+  setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
+}
+function showHomeMode(){
+  hideAllMainScreens(); homeEl.classList.remove("hidden");
+  document.querySelector?.(".topbar")?.classList.add("hidden"); window.scrollTo(0,0);
+}
+function openJoinMode(){
+  hideAllMainScreens(); joinEl.classList.remove("hidden");
+  document.querySelector?.(".topbar")?.classList.add("hidden"); joinErrorEl.textContent=""; joinCodeEl.value="";
+  window.scrollTo(0,0); setTimeout(()=>joinCodeEl.focus(),0);
+}
+function joinTournament(){
+  const code=window.LaTeamPlayer.normalizeTournamentCode(joinCodeEl.value);
+  joinCodeEl.value=code;
+  if(!window.LaTeamPlayer.isValidTournamentCode(code)){
+    joinErrorEl.textContent="Vérifiez le code : il doit contenir 8 caractères."; return;
+  }
+  try{ sessionStorage.setItem("la-team-player-from-home","1"); }catch(error){}
+  location.assign(window.LaTeamPlayer.tournamentUrl(location.href,code));
+}
+function leavePlayerMode(){
+  try{ sessionStorage.removeItem("la-team-player-from-home"); }catch(error){}
+  const url=new URL("./",location.href); url.search=""; url.hash=""; location.assign(url.toString());
+}
+function openOrganizerMode(){
+  showSetup();
+  if(organizerEntryInitialized) return;
+  organizerEntryInitialized=true;
+  if(tryLoadAutoSave() && confirm("Reprendre la dernière partie (auto-save) ?")){
+    refreshSavesUI(); showGame(); renderMatch(); renderRanking(); renderRecapInGame(); writeAutoSave();
+  }
+}
 function showSetup(){
-  gameEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
+  hideAllMainScreens();
   setupEl.classList.remove("hidden");
+  document.querySelector?.(".topbar")?.classList.remove("hidden");
   window.scrollTo(0,0);
 }
 function showGame(){
-  setupEl.classList.add("hidden");
-  finishEl.classList.add("hidden");
+  hideAllMainScreens();
   gameEl.classList.remove("hidden");
+  document.querySelector?.(".topbar")?.classList.remove("hidden");
   window.scrollTo(0,0);
 }
 function showFinish(){
-  gameEl.classList.add("hidden");
-  setupEl.classList.add("hidden");
+  hideAllMainScreens();
   finishEl.classList.remove("hidden");
+  document.querySelector?.(".topbar")?.classList.remove("hidden");
   window.scrollTo(0,0);
 }
 
@@ -2372,7 +2436,7 @@ function renderSharePanel(){
   if(typeof qrcode === "function"){
     const qr=qrcode(0,"M"); qr.addData(url); qr.make();
     qrBox.innerHTML=qr.createSvgTag(8,2);
-    qrBox.setAttribute("aria-label",`QR code Viewer ${url}`);
+    qrBox.setAttribute("aria-label",`QR code Joueur ${url}`);
   }else qrBox.innerHTML=`<span class="small" style="color:#123;">${escapePublic(url)}</span>`;
 }
 
@@ -2397,7 +2461,7 @@ function viewerName(snapshot,id){ return snapshot.players.find(player=>player.id
 function viewerIdentityKey(){ return `la-team-viewer-player-v1:${viewerSnapshot?.code||""}`; }
 
 function showViewerMode(){
-  setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
+  hideAllMainScreens();
   document.querySelector?.(".topbar")?.classList.add("hidden");
   viewerEl.classList.remove("hidden");
 }
@@ -2406,6 +2470,8 @@ function onViewerSnapshot(snapshot,metadata){
   showViewerMode(); viewerErrorEl.classList.add("hidden"); viewerSnapshot=snapshot;
   const stored=localStorage.getItem(viewerIdentityKey());
   viewerPlayerSelectEl.innerHTML=snapshot.players.map(player=>`<option value="${player.id}">${escapePublic(player.name)}</option>`).join("");
+  let joinedFromHome=false; try{ joinedFromHome=sessionStorage.getItem("la-team-player-from-home")==="1"; }catch(error){}
+  document.getElementById("viewerIdentityHome").classList.toggle("hidden",!joinedFromHome);
   if(stored!==null && snapshot.players.some(player=>String(player.id)===stored)){
     viewerPlayerSelectEl.value=stored; viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
   }else{
@@ -2420,6 +2486,19 @@ function confirmViewerIdentity(){
   viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
 }
 
+function changeViewerIdentity(){
+  if(!viewerSnapshot) return;
+  localStorage.removeItem(viewerIdentityKey());
+  viewerContentEl.classList.add("hidden"); viewerIdentityEl.classList.remove("hidden");
+  viewerPlayerSelectEl.focus(); window.scrollTo(0,0);
+}
+
+function viewerMovementLabel(destination){
+  if(!destination) return "";
+  if(destination.stays) return `${destination.outcome==="win"&&destination.court===1?"👑 ":"→ "}${destination.outcome==="win"?"Victoire":"Défaite"} · reste Terrain ${destination.court}`;
+  return `${destination.outcome==="win"?"↑ Monte":"↓ Descend"} Terrain ${destination.court}`;
+}
+
 function renderViewer(){
   const snapshot=viewerSnapshot;
   const playerId=Number(localStorage.getItem(viewerIdentityKey()));
@@ -2430,19 +2509,29 @@ function renderViewer(){
   if(match.rest){
     my.innerHTML=`<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div><div class="viewer-court">REPOS</div><p>Vous ne jouez pas sur ce round.</p>`;
   }else{
-    const destination=match.destination ? (match.destination.stays
-      ? `${match.destination.outcome==="win"?"Victoire":"Défaite"} → reste Terrain ${match.destination.court}${match.destination.court===1?" 👑":""}`
-      : `${match.destination.outcome==="win"?"Victoire":"Défaite"} → Terrain ${match.destination.court} ${match.destination.outcome==="win"?"↑":"↓"}`) : "";
+    const destination=viewerMovementLabel(match.destination);
+    const court=snapshot.currentRound.courts.find(row=>row.number===match.court);
+    const ownIsA=court?.teamA.includes(playerId);
+    const ownScore=match.score ? (ownIsA?match.score.a:match.score.b) : null;
+    const opponentScore=match.score ? (ownIsA?match.score.b:match.score.a) : null;
     my.innerHTML=`${isNewRound?'<div class="viewer-movement">NOUVEAU MATCH</div>':''}<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div>
       <div class="viewer-court">TERRAIN ${match.court}</div>
       <div class="viewer-matchup"><div>${escapePublic(viewerName(snapshot,match.player))}<br>${escapePublic(viewerName(snapshot,match.partner))}</div><div>VS</div><div>${match.opponents.map(id=>escapePublic(viewerName(snapshot,id))).join("<br>")}</div></div>
-      ${match.score?`<p style="text-align:center;font-size:24px;font-weight:950;">${match.score.a} — ${match.score.b}</p>`:""}
+      ${match.score?`<div class="viewer-finished">MATCH TERMINÉ ✓</div><div class="viewer-score-final">${ownScore} — ${opponentScore}</div>`:""}
       ${destination?`<div class="viewer-movement">${destination}</div>`:""}`;
   }
   if(isNewRound){ my.classList.remove("viewer-new"); void my.offsetWidth; my.classList.add("viewer-new"); }
   viewerLastRound=snapshot.roundNumber;
-  document.getElementById("viewerCourts").innerHTML=snapshot.currentRound.courts.map(court=>`<div class="recapLine"><b>Terrain ${court.number}</b><br>${court.teamA.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")} VS ${court.teamB.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")}${court.score?` · <b>${court.score.a}—${court.score.b}</b>`:""}</div>`).join("");
-  document.getElementById("viewerRanking").innerHTML=`<table><tbody>${snapshot.ranking.map(row=>`<tr><td>${row.position}</td><td>${escapePublic(row.name)}</td><td>${row.wins} V</td><td>${row.diff>=0?"+":""}${row.diff}</td></tr>`).join("")}</tbody></table>`;
+  const progress=window.LaTeamPlayer.roundProgress(snapshot);
+  document.getElementById("viewerProgress").textContent=`Round ${snapshot.roundNumber} — ${progress.completed}/${progress.total} terrains terminés`;
+  document.getElementById("viewerCourts").innerHTML=snapshot.currentRound.courts.map(court=>{
+    const moveA=viewerMovementLabel(window.LaTeamPlayer.teamDestination(court,court.teamA));
+    const moveB=viewerMovementLabel(window.LaTeamPlayer.teamDestination(court,court.teamB));
+    const teamA=court.teamA.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ");
+    const teamB=court.teamB.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ");
+    return `<div class="viewer-live-court ${court.validated?"done":""}"><div class="viewer-live-top"><b>Terrain ${court.number}</b><span>${court.validated?"✓ Terminé":"⏳ Match en cours"}</span></div><div class="viewer-live-match">${teamA} ${court.score?`<b>${court.score.a}—${court.score.b}</b>`:"VS"} ${teamB}</div>${moveA?`<div class="viewer-live-move">${escapePublic(moveA)} · ${teamA}</div><div class="viewer-live-move">${escapePublic(moveB)} · ${teamB}</div>`:""}${court.necessaryDuplicate?'<button type="button" class="necessary-duplicate" onclick="explainNecessaryDuplicate()">🟠 Doublon nécessaire</button>':""}</div>`;
+  }).join("");
+  document.getElementById("viewerRanking").innerHTML=`<table><thead><tr><th>#</th><th>Joueur</th><th>MJ</th><th>V</th><th>Diff</th></tr></thead><tbody>${snapshot.ranking.map(row=>`<tr><td>${row.position}</td><td>${escapePublic(row.name)}</td><td>${row.matches}</td><td>${row.wins}</td><td>${row.diff>=0?"+":""}${row.diff}</td></tr>`).join("")}</tbody></table>`;
   document.getElementById("viewerResults").innerHTML=snapshot.previousResults.slice(-32).reverse().map(row=>`<div class="recapLine"><b>R${row.round} · T${row.court}</b><br>${row.teamA.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")} <b>${row.a}—${row.b}</b> ${row.teamB.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")}</div>`).join("") || '<div class="small">Aucun résultat validé.</div>';
 }
 
@@ -2452,7 +2541,7 @@ function updateViewerConnection(online,updatedAt){
 }
 function onViewerError(message){
   showViewerMode(); viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.add("hidden");
-  viewerErrorEl.classList.remove("hidden"); viewerErrorEl.textContent=message;
+  viewerErrorEl.classList.remove("hidden"); viewerErrorEl.innerHTML=`<h2>Tournoi introuvable</h2><p>Vérifiez le code auprès de l’organisateur puis réessayez.</p>${(()=>{try{return sessionStorage.getItem("la-team-player-from-home")==="1"?'<button onclick="leavePlayerMode()">Retour à l’accueil</button>':"";}catch(error){return "";}})()}`;
 }
 
 /* -------------------- PWA / installation -------------------- */
@@ -2547,17 +2636,7 @@ function setupPwa(){
   updateFinishCourtUI();
   updateModeCards();
   refreshSavesUI();
-  showSetup();
-  if(tryLoadAutoSave()){
-    if(confirm("Reprendre la dernière partie (auto-save) ?")){
-      refreshSavesUI();
-      showGame();
-      renderMatch();
-      renderRanking();
-      renderRecapInGame();
-      writeAutoSave();
-    }
-  }
+  showHomeMode();
 })();
 </script>
 
