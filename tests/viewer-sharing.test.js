@@ -17,12 +17,17 @@ const appState=state();
 const snapshot=sharing.buildViewerSnapshot(appState,{code:"K7F4P2AB",revision:4},"owner-1",123456);
 assert.equal(sharing.validateViewerSnapshot(snapshot),true,"schéma compact valide");
 assert.deepEqual(Object.keys(snapshot).sort(),[
-  "code","currentRound","maxPoints","mode","ownerUid","players","previousResults","ranking","revision","roundNumber","schemaVersion","status","updatedAt"
+  "code","currentRound","endMode","maxPoints","mode","ownerUid","players","previousResults","ranking","revision","roundDurationMinutes","roundEndsAt","roundNumber","schemaVersion","status","updatedAt"
 ].sort(),"aucune donnée interne publiée");
 for(const forbidden of ["history","ladderOpp","ladderPartner","ladderTeams","partnersSeen","schedule","autosave"]){
   assert.equal(JSON.stringify(snapshot).includes(forbidden),false,`${forbidden} absent`);
 }
 assert.ok(Buffer.byteLength(JSON.stringify(snapshot))<100000,"document largement sous 1 Mio pour 32 joueurs");
+const timedState={...appState,endMode:"time",roundDurationMinutes:10,roundEndsAt:723456};
+const timedSnapshot=sharing.buildViewerSnapshot(timedState,{code:"K7F2",revision:5},"owner-1",123456);
+assert.equal(timedSnapshot.roundEndsAt,723456,"heure de fin absolue publiée une fois");
+assert.equal(timedSnapshot.roundDurationMinutes,10);
+assert.equal(sharing.validateViewerSnapshot(timedSnapshot),true);
 
 const mine=sharing.playerMatch(snapshot,0);
 assert.deepEqual({round:mine.round,court:mine.court,partner:mine.partner,opponents:mine.opponents},
@@ -48,6 +53,8 @@ assert.match(rules,/allow get: if isValidCode\(code\)/);
 assert.match(rules,/allow list: if false/);
 assert.match(rules,/resource\.data\.ownerUid == request\.auth\.uid/);
 assert.match(rules,/request\.resource\.data\.ownerUid == resource\.data\.ownerUid/);
+assert.match(rules,/hasLegacyPublicShape/);
+assert.match(rules,/hasTimedPublicShape/);
 const viewerMarkup=html.slice(html.indexOf('id="viewer"'),html.indexOf('<!-- SETUP -->'));
 for(const forbiddenAction of ["validateCourt","editCourtScore","nextMatch","replacePlayer","finishNow"]){
   assert.equal(viewerMarkup.includes(forbiddenAction),false,`Viewer sans action ${forbiddenAction}`);

@@ -28,6 +28,9 @@ const html=fs.readFileSync(path.resolve(__dirname,"../index.html"),"utf8");
 for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match","⌂ Accueil","▦ QR","Reprendre le tournoi →","SUIVRE LE TOURNOI"]){
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
+for(const expected of ["Mis à jour à","Retour au tournoi","Mode de fin de match","Durée du round","Activer les alertes"]){assert.ok(html.includes(expected),`expérience temps réel : ${expected}`);}
+assert.match(html,/function cancelViewerIdentityChange\(\)/,"retour depuis Changer de joueur");
+assert.match(html,/organizerUnlocked=true; openOrganizerMode\(\)/,"PIN ouvre directement le tournoi");
 assert.ok(html.includes('placeholder="K7F2"'),"exemple de code court");
 assert.match(html,/function returnOrganizerHome\(\)[\s\S]*writeAutoSave\(\)[\s\S]*showHomeMode\(\)/,"Accueil conserve l’autosave");
 assert.match(html,/async function openSharePanel\(\)[\s\S]*state\.sharedTournament\?\.code[\s\S]*enableTournamentSharing\(\)/,"QR active directement le partage si nécessaire");
@@ -36,7 +39,7 @@ assert.ok(html.includes(".topbar .actions #topQrBtn{width:auto;min-width:68px"),
 assert.ok(html.indexOf('id="home"')<html.indexOf('id="setup"'));
 assert.match(html,/if\(viewerCode\)[\s\S]*showViewerMode\(\)/);
 assert.ok(html.includes("localStorage.setItem(viewerIdentityKey(),viewerPlayerSelectEl.value)"));
-assert.ok(html.includes("localStorage.removeItem(viewerIdentityKey())"));
+assert.doesNotMatch(html,/function changeViewerIdentity\(\)[\s\S]{0,400}localStorage\.removeItem\(viewerIdentityKey\(\)\)/,"Changer de joueur reste annulable et conserve l'identité choisie");
 const viewerMarkup=html.slice(html.indexOf('id="viewer"'),html.indexOf('<!-- SETUP -->'));
 for(const forbidden of ["Valider le score","ROUND SUIVANT","Remplacer un joueur","Terminer le tournoi"]){
   assert.equal(viewerMarkup.includes(forbidden),false,`Joueur sans action organisateur : ${forbidden}`);

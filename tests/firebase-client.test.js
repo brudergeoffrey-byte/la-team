@@ -6,7 +6,7 @@ const vm=require("node:vm");
 const sharing=require("../firebase-sharing.js");
 
 function appState(){
-  return {mode:"ladder",n:8,courts:2,maxPoints:21,matchIndex:0,tournamentStatus:"live",sharedTournament:null,
+  return {mode:"ladder",n:8,courts:2,maxPoints:21,endMode:"time",roundDurationMinutes:10,roundEndsAt:Date.now()+600000,matchIndex:0,tournamentStatus:"live",sharedTournament:null,
     players:Array.from({length:8},(_,id)=>({name:`J${id+1}`,mj:0,v:0,plus:0,minus:0})),
     schedule:[{rest:[],courts:[{teamA:[0,1],teamB:[2,3]},{teamA:[4,5],teamB:[6,7]}]}],
     results:[],validatedCourts:[false,false],courtScores:[]};

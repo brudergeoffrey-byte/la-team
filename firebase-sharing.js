@@ -5,7 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function(){
   "use strict";
 
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const FIREBASE_CONFIG = Object.freeze({
     apiKey: "AIzaSyBxKmQ9lrj-5wWNtzhemqSi7h_rFqfykrY",
@@ -82,6 +82,9 @@
       mode:appState.mode,
       roundNumber:appState.matchIndex+1,
       maxPoints:appState.maxPoints,
+      endMode:appState.endMode==="time"?"time":"points",
+      roundDurationMinutes:appState.endMode==="time"?Number(appState.roundDurationMinutes)||10:null,
+      roundEndsAt:appState.endMode==="time"?Number(appState.roundEndsAt)||null:null,
       players:appState.players.map((player,id)=>({id,name:String(player.name||`J${id+1}`)})),
       currentRound:{
         rest:[...(round.rest||[])],
@@ -93,15 +96,17 @@
   }
 
   function validateViewerSnapshot(snapshot){
-    const keys=["schemaVersion","code","ownerUid","revision","updatedAt","status","mode","roundNumber","maxPoints","players","currentRound","ranking","previousResults"];
-    return Boolean(snapshot && Object.keys(snapshot).every(key=>keys.includes(key))
-      && snapshot.schemaVersion===1
+    const baseKeys=["schemaVersion","code","ownerUid","revision","updatedAt","status","mode","roundNumber","maxPoints","players","currentRound","ranking","previousResults"];
+    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:baseKeys;
+    return Boolean(snapshot && Object.keys(snapshot).length===keys.length && Object.keys(snapshot).every(key=>keys.includes(key))
+      && [1,2].includes(snapshot.schemaVersion)
       && /^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/.test(snapshot.code)
       && ["americano","ladder"].includes(snapshot.mode)
       && ["live","finished"].includes(snapshot.status)
       && snapshot.players.length>=4 && snapshot.players.length<=32
       && snapshot.ranking.length===snapshot.players.length
-      && Array.isArray(snapshot.currentRound?.courts));
+      && Array.isArray(snapshot.currentRound?.courts)
+      && (snapshot.schemaVersion===1 || (["points","time"].includes(snapshot.endMode) && (snapshot.endMode!=="time" || (snapshot.roundDurationMinutes>=1 && snapshot.roundEndsAt>0)))));
   }
 
   function playerMatch(snapshot,playerId){

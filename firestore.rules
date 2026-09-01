@@ -6,14 +6,8 @@ service cloud.firestore {
       return code.matches('^([ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$');
     }
 
-    function hasValidPublicShape(data, code) {
-      return data.keys().hasOnly([
-          'schemaVersion', 'code', 'ownerUid', 'revision', 'updatedAt',
-          'status', 'mode', 'roundNumber', 'maxPoints', 'players',
-          'currentRound', 'ranking', 'previousResults'
-        ])
-        && data.schemaVersion == 1
-        && data.code == code
+    function hasCommonPublicShape(data, code) {
+      return data.code == code
         && data.ownerUid is string
         && data.ownerUid.size() > 0
         && data.revision is int
@@ -33,6 +27,39 @@ service cloud.firestore {
         && data.ranking is list
         && data.ranking.size() == data.players.size()
         && data.previousResults is list;
+    }
+
+    function hasLegacyPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'mode', 'roundNumber', 'maxPoints', 'players',
+          'currentRound', 'ranking', 'previousResults'
+        ])
+        && data.schemaVersion == 1
+        && hasCommonPublicShape(data, code);
+    }
+
+    function hasTimedPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'mode', 'roundNumber', 'maxPoints', 'endMode',
+          'roundDurationMinutes', 'roundEndsAt', 'players', 'currentRound',
+          'ranking', 'previousResults'
+        ])
+        && data.schemaVersion == 2
+        && data.endMode in ['points', 'time']
+        && (data.endMode == 'points' || (
+          data.roundDurationMinutes is int
+          && data.roundDurationMinutes >= 1
+          && data.roundDurationMinutes <= 180
+          && data.roundEndsAt is int
+          && data.roundEndsAt > 0
+        ))
+        && hasCommonPublicShape(data, code);
+    }
+
+    function hasValidPublicShape(data, code) {
+      return hasLegacyPublicShape(data, code) || hasTimedPublicShape(data, code);
     }
 
     match /tournaments/{code} {

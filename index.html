@@ -237,6 +237,11 @@ h1,h2{letter-spacing:-.035em;text-align:left;}
 .pin-fields{display:grid;gap:14px;margin:20px 0;}
 .pin-input{text-align:center;font-size:32px;font-weight:950;letter-spacing:.45em;font-variant-numeric:tabular-nums;padding-left:.45em;}
 .pin-error{min-height:24px;color:var(--red);font-weight:800;text-align:center;margin:8px 0;}
+.app-back{width:44px!important;min-width:44px;padding:9px!important;border-radius:50%!important;font-size:20px!important;line-height:1;}
+.timer-display{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(67,223,189,.1);border:1px solid rgba(67,223,189,.28);}
+.timer-clock{font-size:clamp(30px,8vw,48px);font-weight:950;letter-spacing:.06em;font-variant-numeric:tabular-nums;}
+.timer-display.warning{border-color:var(--gold);background:rgba(255,200,90,.12);}.timer-display.ended{border-color:var(--red);background:rgba(255,123,123,.12);}
+.timer-status{font-weight:900;color:var(--ink-soft);}.viewer-sync{font-size:12px;color:var(--ink-soft);text-align:right;margin:4px 0 10px;}
 
 .card{
   background:linear-gradient(145deg,rgba(21,57,66,.96),rgba(12,40,48,.96));
@@ -407,6 +412,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   </div>
   <div id="shareModal" class="share-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shareTitle" onclick="if(event.target===this) closeSharePanel()">
     <div id="sharePanel" class="card share-panel">
+      <button class="secondary app-back" onclick="closeSharePanel()" aria-label="Retour au tournoi">←</button>
       <div class="eyebrow" id="shareTitle">SUIVRE LE TOURNOI</div>
       <div id="shareQr" class="share-qr"><span class="small" style="color:#123;">Préparation du QR code…</span></div>
       <p class="share-code-label">Code tournoi :</p>
@@ -462,6 +468,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <div id="viewerOffline" class="viewer-offline hidden"></div>
     <div id="viewerIdentity" class="card hidden">
       <button id="viewerIdentityHome" class="back-link hidden" onclick="leavePlayerMode()">← Retour à l’accueil</button>
+      <button id="viewerIdentityBack" class="secondary app-back hidden" onclick="cancelViewerIdentityChange()" aria-label="Retour au tournoi">←</button>
       <div class="eyebrow">MODE JOUEUR</div>
       <h1 class="screen-title">Qui êtes-vous ?</h1>
       <label for="viewerPlayerSelect">Je suis :</label>
@@ -470,7 +477,9 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     </div>
     <div id="viewerContent" class="hidden">
       <div class="viewer-head"><div class="eyebrow">TOURNOI EN DIRECT</div><button class="secondary" onclick="changeViewerIdentity()">Changer de joueur</button></div>
+      <div id="viewerUpdatedAt" class="viewer-sync"></div>
       <div class="viewer-section-title eyebrow">Ton match</div><div id="viewerMyMatch" class="card viewer-hero"></div>
+      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">TEMPS RESTANT</div><div id="viewerTimerClock" class="timer-clock">00:00</div></div><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div>
       <div class="card"><h2 class="viewer-section-title">Round en direct</h2><div id="viewerProgress" class="viewer-progress"></div><div id="viewerCourts"></div></div>
       <details class="card viewer-details"><summary>Classement</summary><div id="viewerRanking"></div></details>
       <details class="card viewer-details"><summary>Rounds précédents</summary><div id="viewerResults"></div></details>
@@ -525,8 +534,17 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
     <section class="step">
       <h2 class="step-title"><span class="step-number">5</span> Format du score</h2>
-      <label for="maxPoints">Total de points par match</label>
+      <label id="maxPointsLabel" for="maxPoints">Total de points par match</label>
       <input id="maxPoints" type="number" min="1" max="31" step="1" value="21" />
+      <label for="endMode">Mode de fin de match</label>
+      <select id="endMode" onchange="updateTimerSetupUI()"><option value="points" selected>Points</option><option value="time">Temps</option></select>
+      <div id="timerDurationWrap" class="hidden">
+        <label for="timerDuration">Durée du round</label>
+        <select id="timerDuration" onchange="updateTimerSetupUI()"><option value="5">5 min</option><option value="8">8 min</option><option value="10" selected>10 min</option><option value="12">12 min</option><option value="15">15 min</option><option value="custom">Durée personnalisée</option></select>
+        <input id="timerDurationCustom" class="hidden" type="number" min="1" max="180" value="10" aria-label="Durée personnalisée en minutes" />
+        <label><input id="timerSoundEnabled" type="checkbox" checked /> Son du timer activé</label>
+        <select id="timerSoundVolume" aria-label="Volume du timer"><option value="normal" selected>Volume normal</option><option value="loud">Volume fort</option></select>
+      </div>
       <button class="start-button" onclick="startNewTournament()">Lancer le tournoi →</button>
       <button class="secondary" onclick="openLoadDialog()">📂 Reprendre un tournoi</button>
     </section>
@@ -558,6 +576,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div class="event-strip">
         <div id="roundState" class="round-state"></div>
       </div>
+      <div id="organizerTimer" class="timer-display hidden"><div><div id="organizerTimerStatus" class="timer-status">TEMPS RESTANT</div><div id="organizerTimerClock" class="timer-clock">00:00</div></div><button id="organizerSoundBtn" class="secondary" onclick="toggleOrganizerTimerSound()">🔔 Son activé</button></div>
       <div id="courtStatusGrid" class="court-status-grid"></div>
       <div id="roundReady" class="round-ready hidden"></div>
       <div class="organizer-tools">
@@ -668,6 +687,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="./firebase-sharing.js"></script>
 <script src="./player-experience.js"></script>
 <script src="./organizer-lock.js"></script>
+<script src="./tournament-timer.js"></script>
 <script src="./vendor/qrcode.min.js"></script>
 <script src="./firebase-client.js"></script>
 <script>
@@ -678,6 +698,12 @@ let state = {
   n: 8,
   courts: 2,
   maxPoints: 21,
+  endMode: "points",
+  roundDurationMinutes: 10,
+  roundEndsAt: null,
+  timerSoundEnabled: true,
+  timerSoundVolume: "normal",
+  timerTournamentId: null,
   totalRounds: null,
 
   players: [],
@@ -717,6 +743,11 @@ const finishEl = document.getElementById("finish");
 const playerCountEl = document.getElementById("playerCount");
 const playersDiv = document.getElementById("players");
 const maxPointsEl = document.getElementById("maxPoints");
+const endModeEl = document.getElementById("endMode");
+const timerDurationEl = document.getElementById("timerDuration");
+const timerDurationCustomEl = document.getElementById("timerDurationCustom");
+const timerSoundEnabledEl = document.getElementById("timerSoundEnabled");
+const timerSoundVolumeEl = document.getElementById("timerSoundVolume");
 const gameModeEl = document.getElementById("gameMode");
 
 const courtWrap = document.getElementById("courtWrap");
@@ -775,10 +806,60 @@ const pinSubmitBtnEl = document.getElementById("pinSubmitBtn");
 let viewerSnapshot = null;
 let viewerLastRound = null;
 let organizerUnlocked = false;
+let viewerChangingIdentity = false;
+let timerInterval = null;
+let audioContext = null;
+let viewerAlertsEnabled = false;
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 function now(){ return Date.now(); }
+function updateTimerSetupUI(){
+  const timed=endModeEl.value==="time";
+  document.getElementById("timerDurationWrap").classList.toggle("hidden",!timed);
+  document.getElementById("maxPointsLabel").classList.toggle("hidden",timed);
+  maxPointsEl.classList.toggle("hidden",timed);
+  timerDurationCustomEl.classList.toggle("hidden",timerDurationEl.value!=="custom");
+}
+function selectedTimerMinutes(){return window.LaTeamTimer.normalizeDuration(timerDurationEl.value==="custom"?timerDurationCustomEl.value:timerDurationEl.value);}
+function ensureAudioContext(){
+  const AudioCtor=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtor)return null;
+  if(!audioContext)audioContext=new AudioCtor();
+  audioContext.resume?.(); return audioContext;
+}
+function playTimerSignal(volume="normal"){
+  const context=ensureAudioContext(); if(!context)return false;
+  const gain=context.createGain(),osc=context.createOscillator();
+  gain.gain.value=volume==="loud"?.22:.11; osc.frequency.value=740; osc.type="sine";
+  osc.connect(gain);gain.connect(context.destination);osc.start();gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.65);osc.stop(context.currentTime+.68);return true;
+}
+function timerAlertKey(kind,code,round){return `la-team-timer-alert-v1:${kind}:${code||"local"}:${round}`;}
+function alertOnce(kind,code,round,volume){
+  const key=timerAlertKey(kind,code,round);try{if(localStorage.getItem(key)==="1")return false;localStorage.setItem(key,"1");}catch(error){}
+  const played=playTimerSignal(volume);if(kind==="viewer"&&navigator.vibrate)navigator.vibrate([180,80,180]);return played;
+}
+function timerRender(target,clock,status,endsAt){
+  if(!target||!endsAt){target?.classList.add("hidden");return;}
+  target.classList.remove("hidden","warning","ended");const phase=window.LaTeamTimer.phase(endsAt);
+  target.classList.toggle("warning",phase==="warning");target.classList.toggle("ended",phase==="ended");
+  clock.textContent=window.LaTeamTimer.formatRemaining(window.LaTeamTimer.remainingMs(endsAt));
+  status.textContent=phase==="ended"?"TEMPS TERMINÉ":phase==="warning"?"FIN DU ROUND IMMINENTE":"TEMPS RESTANT";
+}
+function updateTimerDisplays(){
+  const organizerTimer=document.getElementById("organizerTimer");
+  timerRender(organizerTimer,document.getElementById("organizerTimerClock"),document.getElementById("organizerTimerStatus"),state.endMode==="time"?state.roundEndsAt:null);
+  if(state.endMode==="time"&&window.LaTeamTimer.phase(state.roundEndsAt)==="ended"&&canSaveCurrent()&&state.timerSoundEnabled){alertOnce("organizer",state.timerTournamentId,state.matchIndex+1,state.timerSoundVolume);}
+  const viewerEnds=viewerSnapshot?.endMode==="time"?viewerSnapshot.roundEndsAt:null;
+  timerRender(document.getElementById("viewerTimer"),document.getElementById("viewerTimerClock"),document.querySelector("#viewerTimer .timer-status"),viewerEnds);
+  if(viewerEnds&&window.LaTeamTimer.phase(viewerEnds)==="ended"&&viewerAlertsEnabled){alertOnce("viewer",viewerSnapshot.code,viewerSnapshot.roundNumber,"normal");}
+}
+function ensureTimerTicker(){if(timerInterval||typeof setInterval!=="function")return;timerInterval=setInterval(updateTimerDisplays,250);updateTimerDisplays();}
+function toggleOrganizerTimerSound(){state.timerSoundEnabled=!state.timerSoundEnabled;ensureAudioContext();document.getElementById("organizerSoundBtn").textContent=state.timerSoundEnabled?"🔔 Son activé":"🔕 Son désactivé";writeAutoSave();}
+function enableViewerAlerts(){
+  if(!ensureAudioContext()){viewerAlertsEnabled=false;document.getElementById("viewerAlertsBtn").textContent="Alertes indisponibles";return;}
+  viewerAlertsEnabled=true;try{localStorage.setItem("la-team-viewer-alerts-v1","1");}catch(error){}document.getElementById("viewerAlertsBtn").textContent="🔔 Alertes activées";updateTimerDisplays();
+}
 function fmtDate(ts){
   try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; }
 }
@@ -987,6 +1068,13 @@ function normalizeLoadedState(){
   if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
   if(!Array.isArray(state.history)) state.history = [];
   if(!state.mode) state.mode = "americano";
+  if(!["points","time"].includes(state.endMode)) state.endMode="points";
+  state.roundDurationMinutes=window.LaTeamTimer.normalizeDuration(state.roundDurationMinutes||10);
+  if(state.endMode!=="time") state.roundEndsAt=null;
+  else if(state.roundEndsAt!==null) state.roundEndsAt=Number(state.roundEndsAt)||null;
+  if(state.timerSoundEnabled===undefined) state.timerSoundEnabled=true;
+  if(!["normal","loud"].includes(state.timerSoundVolume)) state.timerSoundVolume="normal";
+  if(!state.timerTournamentId) state.timerTournamentId=`legacy-${state.savedAt||state.matchIndex||0}`;
   if(state.totalRounds === undefined) state.totalRounds = null;
   if(!state.partnersSeen || typeof state.partnersSeen !== "object") state.partnersSeen = {};
   if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
@@ -1257,7 +1345,8 @@ finishPlayerCountEl.addEventListener("blur", ()=>{
 /* -------------------- Ranking helpers -------------------- */
 function scoreOptions(){
   let s="";
-  for(let i=0;i<=state.maxPoints;i++) s += `<option value="${i}">${i}</option>`;
+  const maximum=state.endMode==="time"?31:state.maxPoints;
+  for(let i=0;i<=maximum;i++) s += `<option value="${i}">${i}</option>`;
   return s;
 }
 function sortPlayersForRanking(arr){
@@ -1733,7 +1822,7 @@ async function submitOrganizerPin(){
       }
     }
     localStorage.removeItem(window.LaTeamOrganizerLock.FAILURE_KEY);
-    organizerUnlocked=true; showHomeMode();
+    organizerUnlocked=true; openOrganizerMode();
   }catch(error){pinErrorEl.textContent="Impossible de sécuriser l’accès sur cet appareil.";}
   finally{pinSubmitBtnEl.disabled=false;}
 }
@@ -1821,6 +1910,10 @@ function goToSetup(keepProgress){
   gameModeEl.value = state.mode;
   updateModeCards();
   maxPointsEl.value = state.maxPoints;
+  endModeEl.value=state.endMode||"points";
+  const preset=window.LaTeamTimer.PRESETS.includes(state.roundDurationMinutes)?String(state.roundDurationMinutes):"custom";
+  timerDurationEl.value=preset;timerDurationCustomEl.value=String(state.roundDurationMinutes||10);
+  timerSoundEnabledEl.checked=state.timerSoundEnabled!==false;timerSoundVolumeEl.value=state.timerSoundVolume||"normal";updateTimerSetupUI();
   refreshSavesUI();
   showSetup();
 }
@@ -1836,7 +1929,9 @@ function onScoreChange(courtIndex, side){
   let a = +sa.value;
   let b = +sb.value;
 
-  if(side === "A"){
+  if(state.endMode==="time"){
+    a=clamp(a,0,31);b=clamp(b,0,31);
+  }else if(side === "A"){
     a = clamp(a, 0, total);
     b = total - a;
     sb.value = b;
@@ -1862,6 +1957,13 @@ function startNewTournament(){
   state.courts = (maxC > 1) ? (+courtCountEl.value || maxC) : 1;
 
   state.maxPoints = clamp(+maxPointsEl.value || 21, 1, 31);
+  state.endMode=endModeEl.value;
+  state.roundDurationMinutes=selectedTimerMinutes();
+  state.roundEndsAt=window.LaTeamTimer.roundEndsAt(state.endMode,state.roundDurationMinutes,now());
+  state.timerSoundEnabled=timerSoundEnabledEl.checked;
+  state.timerSoundVolume=timerSoundVolumeEl.value;
+  state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+  ensureAudioContext();
 
   state.players = [];
   for(let i=0;i<state.n;i++){
@@ -1944,7 +2046,7 @@ function renderMatch(){
      <span class="round-number">ROUND ${state.matchIndex+1}</span>
      <span class="round-meta">
        <span class="badge">${state.mode === "ladder" ? "King · Montée-Descente" : "Americano"}</span>
-       <span class="badge">${state.maxPoints} points</span>
+       <span class="badge">${state.endMode==="time"?`${state.roundDurationMinutes} min`:state.maxPoints+" points"}</span>
        <span class="badge">${state.courts} terrain${state.courts>1?"s":""}</span>
        <span class="badge">${state.n} joueurs</span>
      </span>`;
@@ -1958,7 +2060,7 @@ function renderMatch(){
     state.validatedCourts = Array(match.courts.length).fill(false);
 
   if(state.courtScores.length !== match.courts.length)
-    state.courtScores = Array(match.courts.length).fill(null).map(()=>({a:0,b:state.maxPoints}));
+    state.courtScores = Array(match.courts.length).fill(null).map(()=>state.endMode==="time"?({a:0,b:0}):({a:0,b:state.maxPoints}));
 
   const validatedCount = state.validatedCourts.filter(Boolean).length;
   roundStateEl.innerHTML = `<span>Avancement</span><strong>${validatedCount}/${match.courts.length} validés</strong>`;
@@ -2037,6 +2139,8 @@ function renderMatch(){
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   undoBtn.disabled = state.history.length === 0;
+  document.getElementById("organizerSoundBtn").textContent=state.timerSoundEnabled?"🔔 Son activé":"🔕 Son désactivé";
+  updateTimerDisplays();
 }
 
 function scrollToCourt(courtIndex){
@@ -2069,7 +2173,7 @@ function validateCourt(courtIndex){
 
   state.courtScores[courtIndex] = {a,b};
 
-  if(a + b !== state.maxPoints){
+  if(state.endMode!=="time" && a + b !== state.maxPoints){
     alert(`❌ Score invalide : la somme doit faire ${state.maxPoints}.`);
     state.history.pop();
     return;
@@ -2241,6 +2345,8 @@ function nextMatch(){
   state.matchIndex++;
   state.validatedCourts = [];
   state.courtScores = [];
+  state.roundEndsAt=window.LaTeamTimer.roundEndsAt(state.endMode,state.roundDurationMinutes,now());
+  ensureAudioContext();
   writeAutoSave();
 
   renderMatch();
@@ -2418,11 +2524,14 @@ function restartSamePlayers(){
   const names = state.players.map(p=>p.name);
   const mode = state.mode;
   const maxPoints = state.maxPoints;
+  const endMode=state.endMode,roundDurationMinutes=state.roundDurationMinutes,timerSoundEnabled=state.timerSoundEnabled,timerSoundVolume=state.timerSoundVolume;
 
   state.mode = mode;
   state.n = n;
   state.courts = courts;
   state.maxPoints = maxPoints;
+  state.endMode=endMode;state.roundDurationMinutes=roundDurationMinutes;state.roundEndsAt=window.LaTeamTimer.roundEndsAt(endMode,roundDurationMinutes,now());
+  state.timerSoundEnabled=timerSoundEnabled;state.timerSoundVolume=timerSoundVolume;state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
   state.totalRounds = null;
   state.tournamentStatus = "live";
   state.sharedTournament = null;
@@ -2493,6 +2602,7 @@ function newGameChoosePlayers(){
     n,
     courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),
+    endMode:"points",roundDurationMinutes:10,roundEndsAt:null,timerSoundEnabled:true,timerSoundVolume:"normal",timerTournamentId:null,
     totalRounds: null,
 
     players: [],
@@ -2596,30 +2706,37 @@ function showViewerMode(){
 
 function onViewerSnapshot(snapshot,metadata){
   showViewerMode(); viewerErrorEl.classList.add("hidden"); viewerSnapshot=snapshot;
+  document.getElementById("viewerUpdatedAt").textContent=`Mis à jour à ${new Date(snapshot.updatedAt||Date.now()).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
   const stored=localStorage.getItem(viewerIdentityKey());
   viewerPlayerSelectEl.innerHTML=snapshot.players.map(player=>`<option value="${player.id}">${escapePublic(player.name)}</option>`).join("");
   let joinedFromHome=false; try{ joinedFromHome=sessionStorage.getItem("la-team-player-from-home")==="1"; }catch(error){}
-  document.getElementById("viewerIdentityHome").classList.toggle("hidden",!joinedFromHome);
-  if(stored!==null && snapshot.players.some(player=>String(player.id)===stored)){
+  document.getElementById("viewerIdentityHome").classList.toggle("hidden",!joinedFromHome||viewerChangingIdentity);
+  document.getElementById("viewerIdentityBack").classList.toggle("hidden",!viewerChangingIdentity);
+  if(!viewerChangingIdentity && stored!==null && snapshot.players.some(player=>String(player.id)===stored)){
     viewerPlayerSelectEl.value=stored; viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
   }else{
     viewerIdentityEl.classList.remove("hidden"); viewerContentEl.classList.add("hidden");
   }
   updateViewerConnection(metadata.online && !metadata.fromCache,snapshot.updatedAt);
+  try{document.getElementById("viewerAlertsBtn").textContent=localStorage.getItem("la-team-viewer-alerts-v1")==="1"?"🔔 Réactiver les alertes":"🔔 Activer les alertes";}catch(error){}
+  ensureTimerTicker();updateTimerDisplays();
 }
 
 function confirmViewerIdentity(){
   if(!viewerSnapshot) return;
   localStorage.setItem(viewerIdentityKey(),viewerPlayerSelectEl.value);
+  viewerChangingIdentity=false;
   viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
 }
 
 function changeViewerIdentity(){
   if(!viewerSnapshot) return;
-  localStorage.removeItem(viewerIdentityKey());
+  viewerChangingIdentity=true;
   viewerContentEl.classList.add("hidden"); viewerIdentityEl.classList.remove("hidden");
+  document.getElementById("viewerIdentityHome").classList.add("hidden");document.getElementById("viewerIdentityBack").classList.remove("hidden");
   viewerPlayerSelectEl.focus(); window.scrollTo(0,0);
 }
+function cancelViewerIdentityChange(){viewerChangingIdentity=false;viewerIdentityEl.classList.add("hidden");viewerContentEl.classList.remove("hidden");renderViewer();window.scrollTo(0,0);}
 
 function viewerMovementLabel(destination){
   if(!destination) return "";
@@ -2753,6 +2870,7 @@ function setupPwa(){
     onConnectionChange:online=>updateViewerConnection(online,viewerSnapshot?.updatedAt)
   });
   setupPwa();
+  ensureTimerTicker();
   if(viewerCode){
     showViewerMode();
     viewerErrorEl.classList.remove("hidden");
