@@ -242,6 +242,7 @@ h1,h2{letter-spacing:-.035em;text-align:left;}
 .timer-clock{font-size:clamp(30px,8vw,48px);font-weight:950;letter-spacing:.06em;font-variant-numeric:tabular-nums;}
 .timer-display.warning{border-color:var(--gold);background:rgba(255,200,90,.12);}.timer-display.ended{border-color:var(--red);background:rgba(255,123,123,.12);}
 .timer-status{font-weight:900;color:var(--ink-soft);}.viewer-sync{font-size:12px;color:var(--ink-soft);text-align:right;margin:4px 0 10px;}
+.court-timers{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px;margin:12px 0;}.court-timer{padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(4,24,29,.58)}.court-timer.warning{border-color:var(--gold)}.court-timer.ended{border-color:var(--red)}.court-timer-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900}.court-timer-value{font-size:24px;font-weight:950;font-variant-numeric:tabular-nums;margin-top:5px}.court-timer-actions{display:flex;gap:6px}.court-timer-actions button{min-height:38px;padding:7px;font-size:12px;margin-top:8px}.timer-reset{color:#ffdada!important}.viewer-timer-actions{display:flex;flex-direction:column;gap:7px;min-width:150px}.viewer-timer-actions button{margin:0;min-height:42px;padding:8px;font-size:12px}
 
 .card{
   background:linear-gradient(145deg,rgba(21,57,66,.96),rgba(12,40,48,.96));
@@ -486,7 +487,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div class="viewer-head"><div class="eyebrow">TOURNOI EN DIRECT</div><button class="secondary" onclick="changeViewerIdentity()">Changer de joueur</button></div>
       <div id="viewerUpdatedAt" class="viewer-sync"></div>
       <div class="viewer-section-title eyebrow">Ton match</div><div id="viewerMyMatch" class="card viewer-hero"></div>
-      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">TEMPS RESTANT</div><div id="viewerTimerClock" class="timer-clock">00:00</div></div><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div>
+      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">CHRONO DU TERRAIN</div><div id="viewerTimerClock" class="timer-clock">Pas démarré</div></div><div class="viewer-timer-actions"><button id="viewerTimerStartBtn" onclick="startViewerCourtTimer()">Démarrer le chrono</button><button id="viewerTimerResetBtn" class="secondary timer-reset hidden" onclick="resetViewerCourtTimer()">Réinitialiser le chrono</button><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div></div>
       <div class="card"><h2 class="viewer-section-title">Round en direct</h2><div id="viewerProgress" class="viewer-progress"></div><div id="viewerCourts"></div></div>
       <details class="card viewer-details"><summary>Classement</summary><div id="viewerRanking"></div></details>
       <details class="card viewer-details"><summary>Rounds précédents</summary><div id="viewerResults"></div></details>
@@ -583,7 +584,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div class="event-strip">
         <div id="roundState" class="round-state"></div>
       </div>
-      <div id="organizerTimer" class="timer-display hidden"><div><div id="organizerTimerStatus" class="timer-status">TEMPS RESTANT</div><div id="organizerTimerClock" class="timer-clock">00:00</div></div><button id="organizerSoundBtn" class="secondary" onclick="toggleOrganizerTimerSound()">🔔 Son activé</button></div>
+      <div id="organizerTimer" class="hidden"><div id="organizerCourtTimers" class="court-timers"></div><button id="organizerSoundBtn" class="secondary" onclick="toggleOrganizerTimerSound()">🔔 Son activé</button></div>
       <div id="courtStatusGrid" class="court-status-grid"></div>
       <div id="roundReady" class="round-ready hidden"></div>
       <div class="organizer-tools">
@@ -695,6 +696,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="./player-experience.js"></script>
 <script src="./organizer-lock.js"></script>
 <script src="./tournament-timer.js"></script>
+<script src="./court-timers.js"></script>
 <script src="./vendor/qrcode.min.js"></script>
 <script src="./firebase-client.js"></script>
 <script>
@@ -708,6 +710,7 @@ let state = {
   endMode: "points",
   roundDurationMinutes: 10,
   roundEndsAt: null,
+  courtTimers: {},
   timerSoundEnabled: true,
   timerSoundVolume: "normal",
   timerTournamentId: null,
@@ -817,6 +820,7 @@ let viewerChangingIdentity = false;
 let timerInterval = null;
 let audioContext = null;
 let viewerAlertsEnabled = false;
+let viewerCourtTimers = {};
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -841,31 +845,61 @@ function playTimerSignal(volume="normal"){
   gain.gain.value=volume==="loud"?.22:.11; osc.frequency.value=740; osc.type="sine";
   osc.connect(gain);gain.connect(context.destination);osc.start();gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.65);osc.stop(context.currentTime+.68);return true;
 }
-function timerAlertKey(kind,code,round){return `la-team-timer-alert-v1:${kind}:${code||"local"}:${round}`;}
-function alertOnce(kind,code,round,volume){
-  const key=timerAlertKey(kind,code,round);try{if(localStorage.getItem(key)==="1")return false;localStorage.setItem(key,"1");}catch(error){}
+function timerAlertKey(kind,code,timer){return `la-team-timer-alert-v2:${kind}:${window.LaTeamCourtTimers.alertKey(code||"local",timer)}`;}
+function alertOnce(kind,code,timer,volume){
+  const key=timerAlertKey(kind,code,timer);try{if(localStorage.getItem(key)==="1")return false;localStorage.setItem(key,"1");}catch(error){}
   const played=playTimerSignal(volume);if(kind==="viewer"&&navigator.vibrate)navigator.vibrate([180,80,180]);return played;
 }
-function timerRender(target,clock,status,endsAt){
-  if(!target||!endsAt){target?.classList.add("hidden");return;}
-  target.classList.remove("hidden","warning","ended");const phase=window.LaTeamTimer.phase(endsAt);
+function timerRender(target,clock,status,timer){
+  if(!target){return;}
+  target.classList.remove("warning","ended");const phase=window.LaTeamCourtTimers.phase(timer);
   target.classList.toggle("warning",phase==="warning");target.classList.toggle("ended",phase==="ended");
-  clock.textContent=window.LaTeamTimer.formatRemaining(window.LaTeamTimer.remainingMs(endsAt));
-  status.textContent=phase==="ended"?"TEMPS TERMINÉ":phase==="warning"?"FIN DU ROUND IMMINENTE":"TEMPS RESTANT";
+  clock.textContent=window.LaTeamCourtTimers.label(timer);
+  status.textContent=phase==="idle"?"PAS DÉMARRÉ":phase==="ended"?"TERMINÉ":phase==="warning"?"FIN IMMINENTE":"TEMPS RESTANT";
 }
+function currentTimer(map,round,court,duration){return window.LaTeamCourtTimers.normalize(map?.[window.LaTeamCourtTimers.timerId(round,court)],round,court,duration);}
 function updateTimerDisplays(){
   const organizerTimer=document.getElementById("organizerTimer");
-  timerRender(organizerTimer,document.getElementById("organizerTimerClock"),document.getElementById("organizerTimerStatus"),state.endMode==="time"?state.roundEndsAt:null);
-  if(state.endMode==="time"&&window.LaTeamTimer.phase(state.roundEndsAt)==="ended"&&canSaveCurrent()&&state.timerSoundEnabled){alertOnce("organizer",state.timerTournamentId,state.matchIndex+1,state.timerSoundVolume);}
-  const viewerEnds=viewerSnapshot?.endMode==="time"?viewerSnapshot.roundEndsAt:null;
-  timerRender(document.getElementById("viewerTimer"),document.getElementById("viewerTimerClock"),document.querySelector("#viewerTimer .timer-status"),viewerEnds);
-  if(viewerEnds&&window.LaTeamTimer.phase(viewerEnds)==="ended"&&viewerAlertsEnabled){alertOnce("viewer",viewerSnapshot.code,viewerSnapshot.roundNumber,"normal");}
+  organizerTimer?.classList.toggle("hidden",state.endMode!=="time"||!canSaveCurrent());
+  if(state.endMode==="time"&&canSaveCurrent()){
+    const rows=[];let organizerMustSound=false;
+    for(let court=1;court<=state.courts;court++){
+      const timer=currentTimer(state.courtTimers,state.matchIndex+1,court,state.roundDurationMinutes),phase=window.LaTeamCourtTimers.phase(timer);
+      const alertKey=timerAlertKey("organizer",state.sharedTournament?.code||state.timerTournamentId,timer);
+      if(phase==="ended"&&state.timerSoundEnabled){try{if(localStorage.getItem(alertKey)!=="1"){localStorage.setItem(alertKey,"1");organizerMustSound=true;}}catch(error){organizerMustSound=true;}}
+      rows.push(`<div class="court-timer ${phase}"><div class="court-timer-head"><span>T${court}</span><span>${phase==="idle"?"Pas démarré":phase==="ended"?"Terminé":"En cours"}</span></div><div class="court-timer-value">${window.LaTeamCourtTimers.label(timer)}</div><div class="court-timer-actions">${phase==="idle"?`<button onclick="startOrganizerCourtTimer(${court})">Démarrer</button>`:`<button class="secondary timer-reset" onclick="resetOrganizerCourtTimer(${court})">Réinitialiser</button>`}</div></div>`);
+    }
+    document.getElementById("organizerCourtTimers").innerHTML=rows.join("");if(organizerMustSound)playTimerSignal(state.timerSoundVolume);
+  }
+  const viewerTimer=document.getElementById("viewerTimer"),playerId=Number(localStorage.getItem(viewerIdentityKey?.()||"")),match=viewerSnapshot?window.LaTeamSharing.playerMatch(viewerSnapshot,playerId):null;
+  viewerTimer?.classList.toggle("hidden",viewerSnapshot?.endMode!=="time"||!match||match.rest);
+  if(viewerSnapshot?.endMode==="time"&&match&&!match.rest){
+    const timer=currentTimer(viewerCourtTimers,viewerSnapshot.roundNumber,match.court,viewerSnapshot.roundDurationMinutes),phase=window.LaTeamCourtTimers.phase(timer);
+    timerRender(viewerTimer,document.getElementById("viewerTimerClock"),document.querySelector("#viewerTimer .timer-status"),timer);
+    document.getElementById("viewerTimerStartBtn").classList.toggle("hidden",phase!=="idle");document.getElementById("viewerTimerResetBtn").classList.toggle("hidden",phase==="idle");
+    if(phase==="ended"&&viewerAlertsEnabled)alertOnce("viewer",viewerSnapshot.code,timer,"normal");
+  }
 }
 function ensureTimerTicker(){if(timerInterval||typeof setInterval!=="function")return;timerInterval=setInterval(updateTimerDisplays,250);updateTimerDisplays();}
 function toggleOrganizerTimerSound(){state.timerSoundEnabled=!state.timerSoundEnabled;ensureAudioContext();document.getElementById("organizerSoundBtn").textContent=state.timerSoundEnabled?"🔔 Son activé":"🔕 Son désactivé";writeAutoSave();}
 function enableViewerAlerts(){
   if(!ensureAudioContext()){viewerAlertsEnabled=false;document.getElementById("viewerAlertsBtn").textContent="Alertes indisponibles";return;}
   viewerAlertsEnabled=true;try{localStorage.setItem("la-team-viewer-alerts-v1","1");}catch(error){}document.getElementById("viewerAlertsBtn").textContent="🔔 Alertes activées";updateTimerDisplays();
+}
+async function startOrganizerCourtTimer(court){await changeCourtTimer("start",court,null);}
+async function resetOrganizerCourtTimer(court){if(!confirm(`Réinitialiser le chrono du Terrain ${court} ?\n\nLe score et le tournoi ne seront pas modifiés.`))return;await changeCourtTimer("reset",court,null);}
+async function startViewerCourtTimer(){const playerId=Number(localStorage.getItem(viewerIdentityKey())),match=window.LaTeamSharing.playerMatch(viewerSnapshot,playerId);if(match&&!match.rest)await changeCourtTimer("start",match.court,playerId);}
+async function resetViewerCourtTimer(){const playerId=Number(localStorage.getItem(viewerIdentityKey())),match=window.LaTeamSharing.playerMatch(viewerSnapshot,playerId);if(!match||match.rest)return;if(!confirm("Confirmer la réinitialisation du chrono ?\n\nLe chrono reviendra à « Pas démarré ». Le score ne sera pas modifié."))return;await changeCourtTimer("reset",match.court,playerId);}
+async function changeCourtTimer(action,court,playerId){
+  const snapshot=playerId===null?null:viewerSnapshot,code=playerId===null?state.sharedTournament?.code:snapshot?.code,roundNumber=playerId===null?state.matchIndex+1:snapshot.roundNumber,durationMinutes=playerId===null?state.roundDurationMinutes:snapshot.roundDurationMinutes;
+  if(!code){
+    if(playerId!==null)return alert("Le tournoi n’est pas encore partagé.");
+    const id=window.LaTeamCourtTimers.timerId(roundNumber,court);state.courtTimers[id]=action==="start"?window.LaTeamCourtTimers.start(state.courtTimers[id],{roundNumber,courtNumber:court,durationMinutes,startedBy:"organizer"}).timer:window.LaTeamCourtTimers.reset(state.courtTimers[id],{});writeAutoSave();updateTimerDisplays();return;
+  }
+  try{
+    const timer=action==="start"?await window.LaTeamCloud.startCourtTimer({code,roundNumber,courtNumber:court,durationMinutes,playerId}):await window.LaTeamCloud.resetCourtTimer({code,roundNumber,courtNumber:court,playerId});
+    if(playerId===null&&timer){state.courtTimers[window.LaTeamCourtTimers.timerId(roundNumber,court)]=timer;writeAutoSave();}else if(timer)viewerCourtTimers[window.LaTeamCourtTimers.timerId(roundNumber,court)]=timer;updateTimerDisplays();
+  }catch(error){alert(error?.message||"Impossible de modifier ce chrono pour le moment.");}
 }
 function fmtDate(ts){
   try{ return new Date(ts).toLocaleString(); }catch(e){ return ""; }
@@ -1077,8 +1111,8 @@ function normalizeLoadedState(){
   if(!state.mode) state.mode = "americano";
   if(!["points","time"].includes(state.endMode)) state.endMode="points";
   state.roundDurationMinutes=window.LaTeamTimer.normalizeDuration(state.roundDurationMinutes||10);
-  if(state.endMode!=="time") state.roundEndsAt=null;
-  else if(state.roundEndsAt!==null) state.roundEndsAt=Number(state.roundEndsAt)||null;
+  state.roundEndsAt=null;
+  if(!state.courtTimers||typeof state.courtTimers!=="object")state.courtTimers={};
   if(state.timerSoundEnabled===undefined) state.timerSoundEnabled=true;
   if(!["normal","loud"].includes(state.timerSoundVolume)) state.timerSoundVolume="normal";
   if(!state.timerTournamentId) state.timerTournamentId=`legacy-${state.savedAt||state.matchIndex||0}`;
@@ -1966,7 +2000,7 @@ function startNewTournament(){
   state.maxPoints = clamp(+maxPointsEl.value || 21, 1, 31);
   state.endMode=endModeEl.value;
   state.roundDurationMinutes=selectedTimerMinutes();
-  state.roundEndsAt=window.LaTeamTimer.roundEndsAt(state.endMode,state.roundDurationMinutes,now());
+  state.roundEndsAt=null;state.courtTimers={};
   state.timerSoundEnabled=timerSoundEnabledEl.checked;
   state.timerSoundVolume=timerSoundVolumeEl.value;
   state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
@@ -2352,7 +2386,7 @@ function nextMatch(){
   state.matchIndex++;
   state.validatedCourts = [];
   state.courtScores = [];
-  state.roundEndsAt=window.LaTeamTimer.roundEndsAt(state.endMode,state.roundDurationMinutes,now());
+  state.roundEndsAt=null;
   ensureAudioContext();
   writeAutoSave();
 
@@ -2362,9 +2396,11 @@ function nextMatch(){
 
 function undoLast(){
   if(!state.history.length) return;
+  const liveCourtTimers={...(state.courtTimers||{})};
   const prev = state.history.pop();
   const remainingHistory = state.history;
   restoreSnapshot(prev, remainingHistory);
+  state.courtTimers={...(state.courtTimers||{}),...liveCourtTimers};
 
   writeAutoSave();
   renderRanking();
@@ -2537,7 +2573,7 @@ function restartSamePlayers(){
   state.n = n;
   state.courts = courts;
   state.maxPoints = maxPoints;
-  state.endMode=endMode;state.roundDurationMinutes=roundDurationMinutes;state.roundEndsAt=window.LaTeamTimer.roundEndsAt(endMode,roundDurationMinutes,now());
+  state.endMode=endMode;state.roundDurationMinutes=roundDurationMinutes;state.roundEndsAt=null;state.courtTimers={};
   state.timerSoundEnabled=timerSoundEnabled;state.timerSoundVolume=timerSoundVolume;state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
   state.totalRounds = null;
   state.tournamentStatus = "live";
@@ -2609,7 +2645,7 @@ function newGameChoosePlayers(){
     n,
     courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),
-    endMode:"points",roundDurationMinutes:10,roundEndsAt:null,timerSoundEnabled:true,timerSoundVolume:"normal",timerTournamentId:null,
+    endMode:"points",roundDurationMinutes:10,roundEndsAt:null,courtTimers:{},timerSoundEnabled:true,timerSoundVolume:"normal",timerTournamentId:null,
     totalRounds: null,
 
     players: [],
@@ -2700,6 +2736,11 @@ function onShareStatus(info){
   if(info.state==="created" || info.state==="synced") shareStatusEl.textContent="🟢 À jour — les joueurs voient ce round";
   else if(info.state==="syncing") shareStatusEl.textContent="Synchronisation…";
   else if(info.state==="pending") shareStatusEl.textContent="🟠 Hors connexion — mise à jour en attente";
+}
+function onCourtTimers(timers){
+  if(viewerSnapshot){viewerCourtTimers=timers||{};renderViewer();}
+  else{state.courtTimers={...(state.courtTimers||{}),...(timers||{})};if(canSaveCurrent())writeAutoSave();}
+  updateTimerDisplays();
 }
 
 function viewerName(snapshot,id){ return snapshot.players.find(player=>player.id===Number(id))?.name || `J${Number(id)+1}`; }
@@ -2873,6 +2914,7 @@ function setupPwa(){
     getState:()=>state,
     onShareStatus,
     onViewerSnapshot,
+    onCourtTimers,
     onViewerError,
     onConnectionChange:online=>updateViewerConnection(online,viewerSnapshot?.updatedAt)
   });

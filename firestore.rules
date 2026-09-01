@@ -58,8 +58,27 @@ service cloud.firestore {
         && hasCommonPublicShape(data, code);
     }
 
+    function hasCourtTimerPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'mode', 'roundNumber', 'maxPoints', 'endMode',
+          'roundDurationMinutes', 'players', 'currentRound', 'ranking',
+          'previousResults'
+        ])
+        && data.schemaVersion == 3
+        && data.endMode in ['points', 'time']
+        && (data.endMode == 'points' || (
+          data.roundDurationMinutes is int
+          && data.roundDurationMinutes >= 1
+          && data.roundDurationMinutes <= 180
+        ))
+        && hasCommonPublicShape(data, code);
+    }
+
     function hasValidPublicShape(data, code) {
-      return hasLegacyPublicShape(data, code) || hasTimedPublicShape(data, code);
+      return hasLegacyPublicShape(data, code)
+        || hasTimedPublicShape(data, code)
+        || hasCourtTimerPublicShape(data, code);
     }
 
     match /tournaments/{code} {
@@ -85,6 +104,94 @@ service cloud.firestore {
 
       allow delete: if request.auth != null
         && resource.data.ownerUid == request.auth.uid;
+
+      match /viewerSessions/{uid} {
+        allow get: if request.auth != null && request.auth.uid == uid;
+        allow list: if false;
+        allow create: if request.auth != null
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['playerId', 'createdAt'])
+          && request.resource.data.playerId is int
+          && request.resource.data.playerId >= 0
+          && request.resource.data.createdAt is int
+          && request.resource.data.playerId < get(/databases/$(database)/documents/tournaments/$(code)).data.players.size();
+        allow update, delete: if false;
+      }
+
+      match /courtTimers/{timerId} {
+        function tournament() {
+          return get(/databases/$(database)/documents/tournaments/$(code)).data;
+        }
+        function validTimer(data) {
+          return data.keys().hasOnly([
+              'state', 'roundNumber', 'courtNumber', 'durationMinutes',
+              'startedAt', 'endsAt', 'startedBy',
+              'generation', 'updatedAt'
+            ])
+            && tournament().endMode == 'time'
+            && data.state in ['idle', 'running']
+            && data.roundNumber == tournament().roundNumber
+            && data.courtNumber is int
+            && data.courtNumber >= 1
+            && data.courtNumber <= tournament().currentRound.courts.size()
+            && data.durationMinutes == tournament().roundDurationMinutes
+            && data.generation is int
+            && data.generation >= 1
+            && data.updatedAt is int
+            && ((timerId == '1' && data.courtNumber == 1)
+              || (timerId == '2' && data.courtNumber == 2)
+              || (timerId == '3' && data.courtNumber == 3)
+              || (timerId == '4' && data.courtNumber == 4)
+              || (timerId == '5' && data.courtNumber == 5)
+              || (timerId == '6' && data.courtNumber == 6)
+              || (timerId == '7' && data.courtNumber == 7)
+              || (timerId == '8' && data.courtNumber == 8))
+            && ((data.state == 'idle'
+                && data.startedAt == null
+                && data.endsAt == null
+                && data.startedBy == null)
+              || (data.state == 'running'
+                && data.startedAt is int
+                && data.endsAt is int
+                && data.endsAt - data.startedAt == data.durationMinutes * 60000
+                && (data.startedBy == 'organizer' || data.startedBy is int)));
+        }
+        function organizer() {
+          return request.auth != null && tournament().ownerUid == request.auth.uid;
+        }
+        function viewerOwnsCourt(data) {
+          let sessionPath = /databases/$(database)/documents/tournaments/$(code)/viewerSessions/$(request.auth.uid);
+          let court = tournament().currentRound.courts[data.courtNumber - 1];
+          return request.auth != null
+            && exists(sessionPath)
+            && (get(sessionPath).data.playerId in court.teamA
+              || get(sessionPath).data.playerId in court.teamB);
+        }
+        function validStarter(data) {
+          let sessionPath = /databases/$(database)/documents/tournaments/$(code)/viewerSessions/$(request.auth.uid);
+          return data.state == 'idle'
+            || (organizer() && data.startedBy == 'organizer')
+            || (viewerOwnsCourt(data)
+              && data.startedBy == get(sessionPath).data.playerId);
+        }
+        allow get, list: if isValidCode(code);
+        allow create: if validTimer(request.resource.data)
+          && request.resource.data.state == 'running'
+          && request.resource.data.generation == 1
+          && validStarter(request.resource.data)
+          && (organizer() || viewerOwnsCourt(request.resource.data));
+        allow update: if validTimer(request.resource.data)
+          && ((request.resource.data.roundNumber == resource.data.roundNumber
+              && request.resource.data.generation == resource.data.generation + 1
+              && ((resource.data.state == 'idle' && request.resource.data.state == 'running')
+                || (resource.data.state == 'running' && request.resource.data.state == 'idle')))
+            || (request.resource.data.roundNumber > resource.data.roundNumber
+              && request.resource.data.state == 'running'
+              && request.resource.data.generation == 1))
+          && validStarter(request.resource.data)
+          && (organizer() || viewerOwnsCourt(request.resource.data));
+        allow delete: if false;
+      }
     }
 
     match /{document=**} {

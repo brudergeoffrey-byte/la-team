@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const path = require("node:path");
 const timer = require("../tournament-timer.js");
+const courtTimers = require("../court-timers.js");
 
 function makeClassList(){
   const values = new Set();
@@ -40,7 +41,7 @@ function loadApp(sharedStorage){
   };
   const context = {
     console, document, alerts,
-    window:{scrollTo(){},LaTeamTimer:timer}, location:{reload(){}}, navigator:{},
+    window:{scrollTo(){},LaTeamTimer:timer,LaTeamCourtTimers:courtTimers}, location:{reload(){}}, navigator:{},
     alert(message){ alerts.push(String(message)); },
     confirm(){ return false; }, prompt(){ return prompts.shift() || ""; },
     setTimeout(fn){ fn(); },
@@ -75,7 +76,7 @@ function initialState(n, courts, mode){
     ladderByeCounts:mode==="ladder"?Array(n).fill(0):null,
     ladderLastRest:[], partnersSeen:{}, partnersFullCycleNotified:false,
     activeSaveId:null, tournamentStatus:"live", sharedTournament:null,
-    endMode:"points", roundDurationMinutes:10, roundEndsAt:null,
+    endMode:"points", roundDurationMinutes:10, roundEndsAt:null, courtTimers:{},
     timerSoundEnabled:true, timerSoundVolume:"normal", timerTournamentId:"test-tournament"
   };
 }

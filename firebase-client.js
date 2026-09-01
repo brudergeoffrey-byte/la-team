@@ -7,7 +7,7 @@
     `https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore-compat.js`
   ];
   const PENDING_KEY="la-team-publication-pending-v1";
-  let api=null, sdkPromise=null, db=null, auth=null, publishTimer=null, viewerUnsubscribe=null;
+  let api=null, sdkPromise=null, db=null, auth=null, publishTimer=null, viewerUnsubscribe=null,timerUnsubscribe=null;
 
   function loadScript(src){
     return new Promise((resolve,reject)=>{
@@ -68,7 +68,7 @@
   async function createSharedTournament(){
     if(root.navigator?.onLine===false) throw new Error("Une connexion est nécessaire uniquement pour activer le partage la première fois.");
     const state=api.getState();
-    if(state.sharedTournament?.code){ await publishNow(); return state.sharedTournament; }
+    if(state.sharedTournament?.code){ await publishNow(); subscribeCourtTimers(state.sharedTournament.code); return state.sharedTournament; }
     const user=await organizerUser();
     for(let attempt=0;attempt<8;attempt++){
       const code=root.LaTeamSharing.randomCode();
@@ -82,6 +82,7 @@
           transaction.set(ref,snapshot);
         });
         state.sharedTournament=sharing;
+        subscribeCourtTimers(code);
         clearPending();
         api.onShareStatus?.({state:"created",snapshot,url:viewerUrl(code)});
         return sharing;
@@ -127,6 +128,62 @@
       if(!root.LaTeamSharing.validateViewerSnapshot(snapshot)){ api.onViewerError?.("Données tournoi incompatibles."); return; }
       api.onViewerSnapshot?.(snapshot,{fromCache:doc.metadata.fromCache,online:root.navigator?.onLine!==false});
     },()=>api.onViewerError?.("Impossible de suivre ce tournoi pour le moment."));
+    subscribeCourtTimers(code);
+  }
+
+  function tournamentRef(code){return db.collection("tournaments").doc(code);}
+  function timerRef(code,roundNumber,courtNumber){return tournamentRef(code).collection("courtTimers").doc(String(courtNumber));}
+  function sessionRef(code,uid){return tournamentRef(code).collection("viewerSessions").doc(uid);}
+
+  async function bindViewerPlayer(code,playerId){
+    const user=await organizerUser(),ref=sessionRef(code,user.uid),numericPlayer=Number(playerId);
+    await db.runTransaction(async transaction=>{
+      const current=await transaction.get(ref);
+      if(current.exists){
+        if(Number(current.data().playerId)!==numericPlayer)throw new Error("Cet appareil est déjà lié à un autre joueur pour ce tournoi.");
+        return;
+      }
+      transaction.set(ref,{playerId:numericPlayer,createdAt:Date.now()});
+    });
+    return user;
+  }
+
+  async function startCourtTimer({code,roundNumber,courtNumber,durationMinutes,playerId=null}){
+    const user=playerId===null?await organizerUser():await bindViewerPlayer(code,playerId);
+    const parent=tournamentRef(code),ref=timerRef(code,roundNumber,courtNumber);
+    return db.runTransaction(async transaction=>{
+      const [tournamentDoc,currentDoc]=await Promise.all([transaction.get(parent),transaction.get(ref)]);
+      if(!tournamentDoc.exists)throw new Error("Tournoi introuvable.");
+      const snapshot=tournamentDoc.data();
+      if(playerId!==null&&!root.LaTeamCourtTimers.canPlayerControl(snapshot,playerId,courtNumber))throw new Error("Ce chrono n’appartient pas à votre terrain.");
+      const current=currentDoc.exists?currentDoc.data():null;
+      const transition=root.LaTeamCourtTimers.start(current,{roundNumber,courtNumber,durationMinutes,startedBy:playerId===null?"organizer":Number(playerId),now:Date.now()});
+      if(transition.started)transaction.set(ref,transition.timer);
+      return transition.timer;
+    });
+  }
+
+  async function resetCourtTimer({code,roundNumber,courtNumber,playerId=null}){
+    const user=playerId===null?await organizerUser():await bindViewerPlayer(code,playerId);
+    const parent=tournamentRef(code),ref=timerRef(code,roundNumber,courtNumber);
+    return db.runTransaction(async transaction=>{
+      const [tournamentDoc,currentDoc]=await Promise.all([transaction.get(parent),transaction.get(ref)]);
+      if(!tournamentDoc.exists||!currentDoc.exists)return null;
+      const snapshot=tournamentDoc.data();
+      if(playerId!==null&&!root.LaTeamCourtTimers.canPlayerControl(snapshot,playerId,courtNumber))throw new Error("Ce chrono n’appartient pas à votre terrain.");
+      if(currentDoc.data().state!=="running")return currentDoc.data();
+      const reset=root.LaTeamCourtTimers.reset(currentDoc.data(),{now:Date.now()});
+      transaction.set(ref,reset);return reset;
+    });
+  }
+
+  function subscribeCourtTimers(code){
+    if(!db||!code)return;
+    timerUnsubscribe?.();
+    timerUnsubscribe=tournamentRef(code).collection("courtTimers").onSnapshot({includeMetadataChanges:true},query=>{
+      const timers={};query.docs.forEach(doc=>{const timer=doc.data();timers[root.LaTeamCourtTimers.timerId(timer.roundNumber,timer.courtNumber)]=timer;});
+      api?.onCourtTimers?.(timers,{fromCache:query.metadata?.fromCache===true,online:root.navigator?.onLine!==false});
+    },()=>api?.onCourtTimerError?.("Impossible de synchroniser les chronos."));
   }
 
   function viewerCodeFromLocation(){
@@ -139,9 +196,9 @@
     root.addEventListener?.("offline",()=>api.onConnectionChange?.(false));
     const code=viewerCodeFromLocation();
     if(code) subscribeViewer(code).catch(error=>api.onViewerError?.(error.message));
-    else if(api.getState?.()?.sharedTournament?.enabled) flushPending();
+    else if(api.getState?.()?.sharedTournament?.enabled){ flushPending(); ensureSdk().then(()=>subscribeCourtTimers(api.getState().sharedTournament.code)).catch(()=>{}); }
     return code;
   }
 
-  root.LaTeamCloud={init,viewerUrl,createSharedTournament,schedulePublish,publishNow,flushPending,subscribeViewer,viewerCodeFromLocation};
+  root.LaTeamCloud={init,viewerUrl,createSharedTournament,schedulePublish,publishNow,flushPending,subscribeViewer,subscribeCourtTimers,bindViewerPlayer,startCourtTimer,resetCourtTimer,viewerCodeFromLocation};
 })(typeof window!=="undefined"?window:globalThis);
