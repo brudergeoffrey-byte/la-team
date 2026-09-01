@@ -1961,7 +1961,10 @@ function getActiveTournamentState(){
   }catch(error){ return null; }
 }
 function renderOrganizerHomeCard(){
-  const active=getActiveTournamentState();
+  // Un autosave local peut provenir de l'ancienne identité anonyme. Il reste
+  // conservé pour la migration, mais ne doit être présenté comme un tournoi
+  // administrable qu'après authentification de l'organisateur.
+  const active=organizerAccountUser ? getActiveTournamentState() : null;
   const info=document.getElementById("activeTournamentInfo");
   const primary=document.getElementById("organizerPrimaryBtn");
   const fresh=document.getElementById("newTournamentBtn");

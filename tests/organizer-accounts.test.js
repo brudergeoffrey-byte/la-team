@@ -35,5 +35,7 @@ assert.match(client,/setPersistence/);
 assert.match(client,/loadClubTournament/);
 assert.match(client,/savePrivateTournament/);
 assert.match(html,/Se connecter/);assert.match(html,/Créer un compte/);assert.match(html,/Mot de passe oublié/);assert.match(html,/logoutOrganizer/);
+assert.match(html,/const active=organizerAccountUser \? getActiveTournamentState\(\) : null/,
+  "un tournoi local n'est affiché comme actif qu'après authentification de l'organisateur");
 assert.ok(!client.includes("signInWithPopup"),"Google Sign-In non activé");
 console.log("ORGANIZER_ACCOUNTS_OK — compte, liaison UID, récupération et rôles validés");
