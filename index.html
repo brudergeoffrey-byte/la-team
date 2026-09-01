@@ -233,6 +233,10 @@ h1,h2{letter-spacing:-.035em;text-align:left;}
 .active-tournament strong{display:block;color:var(--lime);font-size:17px;}
 .active-tournament .small{margin-top:4px;}
 .entry-actions{display:grid;gap:8px;margin-top:auto;}
+.pin-shell{max-width:460px;margin:5vh auto 0;}
+.pin-fields{display:grid;gap:14px;margin:20px 0;}
+.pin-input{text-align:center;font-size:32px;font-weight:950;letter-spacing:.45em;font-variant-numeric:tabular-nums;padding-left:.45em;}
+.pin-error{min-height:24px;color:var(--red);font-weight:800;text-align:center;margin:8px 0;}
 
 .card{
   background:linear-gradient(145deg,rgba(21,57,66,.96),rgba(12,40,48,.96));
@@ -435,6 +439,22 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   <div id="join" class="join-shell hidden">
     <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
     <div class="card"><div class="eyebrow">MODE JOUEUR</div><h1 class="screen-title">Rejoindre le direct</h1><p class="screen-intro">Demandez le code à l’organisateur ou scannez son QR code.</p><label for="joinCode">Code du tournoi</label><input id="joinCode" class="join-code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="16" placeholder="K7F4P2AB" onkeydown="if(event.key==='Enter') joinTournament()" /><div id="joinError" class="form-error" role="alert"></div><button onclick="joinTournament()">REJOINDRE →</button></div>
+  </div>
+
+  <!-- VERROU LOCAL ORGANISATEUR -->
+  <div id="organizerLock" class="pin-shell hidden">
+    <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
+    <div class="card">
+      <div class="eyebrow">🎾 ORGANISATEUR</div>
+      <h1 id="pinTitle" class="screen-title">Accès Organisateur</h1>
+      <p id="pinIntro" class="screen-intro">Saisissez votre code à 4 chiffres.</p>
+      <div class="pin-fields">
+        <input id="organizerPin" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="Code Organisateur" placeholder="••••" onkeydown="if(event.key==='Enter') submitOrganizerPin()" />
+        <input id="organizerPinConfirm" class="pin-input hidden" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="Confirmer le code" placeholder="••••" onkeydown="if(event.key==='Enter') submitOrganizerPin()" />
+      </div>
+      <div id="pinError" class="pin-error" role="alert"></div>
+      <button id="pinSubmitBtn" onclick="submitOrganizerPin()">SE CONNECTER</button>
+    </div>
   </div>
 
   <!-- MODE JOUEUR STRICTEMENT EN LECTURE SEULE -->
@@ -647,6 +667,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
 <script src="./firebase-sharing.js"></script>
 <script src="./player-experience.js"></script>
+<script src="./organizer-lock.js"></script>
 <script src="./vendor/qrcode.min.js"></script>
 <script src="./firebase-client.js"></script>
 <script>
@@ -745,9 +766,15 @@ const homeEl = document.getElementById("home");
 const joinEl = document.getElementById("join");
 const joinCodeEl = document.getElementById("joinCode");
 const joinErrorEl = document.getElementById("joinError");
+const organizerLockEl = document.getElementById("organizerLock");
+const organizerPinEl = document.getElementById("organizerPin");
+const organizerPinConfirmEl = document.getElementById("organizerPinConfirm");
+const pinErrorEl = document.getElementById("pinError");
+const pinSubmitBtnEl = document.getElementById("pinSubmitBtn");
 
 let viewerSnapshot = null;
 let viewerLastRound = null;
+let organizerUnlocked = false;
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -1643,7 +1670,7 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
 /* -------------------- Screens -------------------- */
 function hideAllMainScreens(){
   homeEl.classList.add("hidden"); joinEl.classList.add("hidden"); viewerEl.classList.add("hidden");
-  setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
+  organizerLockEl.classList.add("hidden"); setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
 }
 function showHomeMode(){
   if(canSaveCurrent()) writeAutoSave();
@@ -1669,7 +1696,49 @@ function leavePlayerMode(){
   try{ sessionStorage.removeItem("la-team-player-from-home"); }catch(error){}
   const url=new URL("./",location.href); url.search=""; url.hash=""; location.assign(url.toString());
 }
+function readOrganizerPinRecord(){
+  try{return JSON.parse(localStorage.getItem(window.LaTeamOrganizerLock.STORAGE_KEY)||"null");}catch(error){return null;}
+}
+function readOrganizerFailureRecord(){
+  try{return JSON.parse(localStorage.getItem(window.LaTeamOrganizerLock.FAILURE_KEY)||"null");}catch(error){return null;}
+}
+function showOrganizerLock(){
+  organizerUnlocked=false; hideAllMainScreens(); organizerLockEl.classList.remove("hidden");
+  document.querySelector?.(".topbar")?.classList.add("hidden");
+  const creating=!readOrganizerPinRecord();
+  document.getElementById("pinTitle").textContent=creating?"Créer votre code Organisateur":"Accès Organisateur";
+  document.getElementById("pinIntro").textContent=creating?"Choisissez exactement 4 chiffres sur cet appareil.":"Saisissez votre code à 4 chiffres.";
+  organizerPinConfirmEl.classList.toggle("hidden",!creating);
+  pinSubmitBtnEl.textContent=creating?"CRÉER LE CODE":"SE CONNECTER";
+  organizerPinEl.value=""; organizerPinConfirmEl.value=""; pinErrorEl.textContent="";
+  window.scrollTo(0,0); setTimeout(()=>organizerPinEl.focus?.(),0);
+}
+async function submitOrganizerPin(){
+  const pin=organizerPinEl.value;
+  if(!window.LaTeamOrganizerLock.isValidPin(pin)){pinErrorEl.textContent="Le code doit contenir exactement 4 chiffres.";return;}
+  const record=readOrganizerPinRecord();
+  pinSubmitBtnEl.disabled=true;
+  try{
+    if(!record){
+      if(pin!==organizerPinConfirmEl.value){pinErrorEl.textContent="Les deux codes ne correspondent pas.";return;}
+      const created=await window.LaTeamOrganizerLock.createRecord(pin);
+      localStorage.setItem(window.LaTeamOrganizerLock.STORAGE_KEY,JSON.stringify(created));
+    }else{
+      const failures=readOrganizerFailureRecord();
+      const remaining=window.LaTeamOrganizerLock.remainingLockMs(failures);
+      if(remaining>0){pinErrorEl.textContent=`Trop d’essais. Réessayez dans ${Math.ceil(remaining/1000)} secondes.`;return;}
+      if(!await window.LaTeamOrganizerLock.verifyPin(pin,record)){
+        localStorage.setItem(window.LaTeamOrganizerLock.FAILURE_KEY,JSON.stringify(window.LaTeamOrganizerLock.failureState(failures)));
+        pinErrorEl.textContent="Code incorrect";return;
+      }
+    }
+    localStorage.removeItem(window.LaTeamOrganizerLock.FAILURE_KEY);
+    organizerUnlocked=true; showHomeMode();
+  }catch(error){pinErrorEl.textContent="Impossible de sécuriser l’accès sur cet appareil.";}
+  finally{pinSubmitBtnEl.disabled=false;}
+}
 function openOrganizerMode(){
+  if(!organizerUnlocked){showOrganizerLock();return;}
   const active=getActiveTournamentState();
   if(active){
     if(active!==state) tryLoadAutoSave();
@@ -1679,12 +1748,14 @@ function openOrganizerMode(){
   showSetup();
 }
 function startFreshOrganizerMode(){
+  if(!organizerUnlocked){showOrganizerLock();return;}
   if(getActiveTournamentState() && !confirm("Créer un nouveau tournoi ? La partie actuelle sera remplacée au lancement du nouveau tournoi.")) return;
   showSetup();
 }
 function returnOrganizerHome(){
   if(canSaveCurrent()) writeAutoSave();
   closeSharePanel();
+  organizerUnlocked=false;
   showHomeMode();
 }
 function getActiveTournamentState(){

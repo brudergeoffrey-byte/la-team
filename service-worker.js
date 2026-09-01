@@ -1,4 +1,4 @@
-const CACHE_VERSION = "la-team-shell-v5";
+const CACHE_VERSION = "la-team-shell-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "./offline.html",
   "./firebase-sharing.js",
   "./player-experience.js",
+  "./organizer-lock.js",
   "./firebase-client.js",
   "./vendor/qrcode.min.js",
   "./vendor/qrcode-LICENSE.txt",
