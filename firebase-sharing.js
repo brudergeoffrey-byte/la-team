@@ -5,7 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function(){
   "use strict";
 
-  const SCHEMA_VERSION = 3;
+  const SCHEMA_VERSION = 4;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const FIREBASE_CONFIG = Object.freeze({
     apiKey: "AIzaSyBxKmQ9lrj-5wWNtzhemqSi7h_rFqfykrY",
@@ -75,6 +75,7 @@
     return {
       schemaVersion:SCHEMA_VERSION,
       code:String(sharing.code),
+      clubId:String(appState.clubId||sharing.clubId||""),
       ownerUid:String(ownerUid),
       revision:Number(sharing.revision),
       updatedAt:Number(timestamp),
@@ -96,9 +97,10 @@
 
   function validateViewerSnapshot(snapshot){
     const baseKeys=["schemaVersion","code","ownerUid","revision","updatedAt","status","mode","roundNumber","maxPoints","players","currentRound","ranking","previousResults"];
-    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:snapshot?.schemaVersion===3?[...baseKeys,"endMode","roundDurationMinutes"]:baseKeys;
+    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:snapshot?.schemaVersion===3?[...baseKeys,"endMode","roundDurationMinutes"]:snapshot?.schemaVersion===4?[...baseKeys,"clubId","endMode","roundDurationMinutes"]:baseKeys;
     return Boolean(snapshot && Object.keys(snapshot).length===keys.length && Object.keys(snapshot).every(key=>keys.includes(key))
-      && [1,2,3].includes(snapshot.schemaVersion)
+      && [1,2,3,4].includes(snapshot.schemaVersion)
+      && (snapshot.schemaVersion!==4 || (typeof snapshot.clubId==="string"&&snapshot.clubId.length>=4))
       && /^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/.test(snapshot.code)
       && ["americano","ladder"].includes(snapshot.mode)
       && ["live","finished"].includes(snapshot.status)
@@ -107,7 +109,7 @@
       && Array.isArray(snapshot.currentRound?.courts)
       && (snapshot.schemaVersion===1 || (["points","time"].includes(snapshot.endMode)
         && (snapshot.endMode!=="time" || (snapshot.roundDurationMinutes>=1
-          && (snapshot.schemaVersion===3 || snapshot.roundEndsAt>0))))));
+          && ([3,4].includes(snapshot.schemaVersion) || snapshot.roundEndsAt>0))))));
   }
 
   function playerMatch(snapshot,playerId){

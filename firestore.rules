@@ -6,6 +6,19 @@ service cloud.firestore {
       return code.matches('^([ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$');
     }
 
+    function signedIn() { return request.auth != null; }
+    function memberPath(clubId) { return /databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid); }
+    function activeMember(clubId) {
+      return signedIn() && exists(memberPath(clubId)) && get(memberPath(clubId)).data.status == 'active'
+        && get(memberPath(clubId)).data.role in ['owner', 'admin', 'organizer'];
+    }
+    function clubAdmin(clubId) {
+      return activeMember(clubId) && get(memberPath(clubId)).data.role in ['owner', 'admin'];
+    }
+    function clubOwner(clubId) {
+      return activeMember(clubId) && get(memberPath(clubId)).data.role == 'owner';
+    }
+
     function hasCommonPublicShape(data, code) {
       return data.code == code
         && data.ownerUid is string
@@ -75,10 +88,103 @@ service cloud.firestore {
         && hasCommonPublicShape(data, code);
     }
 
+    function hasClubPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'clubId', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'mode', 'roundNumber', 'maxPoints', 'endMode',
+          'roundDurationMinutes', 'players', 'currentRound', 'ranking',
+          'previousResults'
+        ])
+        && data.schemaVersion == 4
+        && data.clubId is string
+        && data.clubId.size() >= 4
+        && data.endMode in ['points', 'time']
+        && (data.endMode == 'points' || (
+          data.roundDurationMinutes is int
+          && data.roundDurationMinutes >= 1
+          && data.roundDurationMinutes <= 180
+        ))
+        && hasCommonPublicShape(data, code);
+    }
+
     function hasValidPublicShape(data, code) {
       return hasLegacyPublicShape(data, code)
         || hasTimedPublicShape(data, code)
-        || hasCourtTimerPublicShape(data, code);
+        || hasCourtTimerPublicShape(data, code)
+        || hasClubPublicShape(data, code);
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['schemaVersion','email','displayName','defaultClubId','createdAt','updatedAt'])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.defaultClubId is string;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','defaultClubId','updatedAt'])
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && request.resource.data.email == resource.data.email;
+      allow delete: if false;
+    }
+
+    match /clubs/{clubId} {
+      allow get: if activeMember(clubId);
+      allow list: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['schemaVersion','clubId','name','ownerUid','memberUids','status','createdAt','updatedAt'])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.clubId == clubId
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.status == 'active';
+      allow update: if clubAdmin(clubId)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.clubId == resource.data.clubId
+        && request.resource.data.schemaVersion == resource.data.schemaVersion;
+      allow delete: if clubOwner(clubId);
+
+      match /members/{uid} {
+        function validMember(data) {
+          return data.keys().hasOnly(['schemaVersion','uid','role','email','status','createdAt','updatedAt'])
+            && data.schemaVersion == 1 && data.uid == uid
+            && data.role in ['owner','admin','organizer']
+            && data.status in ['active','invited','disabled'];
+        }
+        allow get, list: if activeMember(clubId);
+        allow create: if validMember(request.resource.data) && (
+          (uid == request.auth.uid
+            && request.resource.data.role == 'owner'
+            && getAfter(/databases/$(database)/documents/clubs/$(clubId)).data.ownerUid == request.auth.uid)
+          || (clubOwner(clubId) && request.resource.data.role in ['admin','organizer'])
+          || (clubAdmin(clubId) && !clubOwner(clubId) && request.resource.data.role == 'organizer'));
+        allow update: if validMember(request.resource.data)
+          && request.resource.data.uid == resource.data.uid
+          && ((clubOwner(clubId) && uid != request.auth.uid)
+            || (clubAdmin(clubId) && !clubOwner(clubId)
+              && resource.data.role == 'organizer' && request.resource.data.role == 'organizer'));
+        allow delete: if (clubOwner(clubId) && uid != request.auth.uid)
+          || (clubAdmin(clubId) && !clubOwner(clubId) && resource.data.role == 'organizer');
+      }
+
+      match /tournaments/{tournamentId} {
+        function validPrivate(data) {
+          return data.keys().hasOnly(['schemaVersion','tournamentId','clubId','ownerUid','createdByUid','publicCode','status','roundNumber','updatedAt','state'])
+            && data.schemaVersion == 1 && data.tournamentId == tournamentId
+            && data.clubId == clubId && data.ownerUid == get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerUid
+            && data.createdByUid is string && data.status in ['live','finished']
+            && data.roundNumber is int && data.roundNumber >= 1 && data.state is map;
+        }
+        allow read: if activeMember(clubId);
+        allow create: if activeMember(clubId) && validPrivate(request.resource.data)
+          && request.resource.data.createdByUid == request.auth.uid;
+        allow update: if activeMember(clubId) && validPrivate(request.resource.data)
+          && request.resource.data.clubId == resource.data.clubId
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.createdByUid == resource.data.createdByUid;
+        allow delete: if clubAdmin(clubId);
+      }
     }
 
     match /tournaments/{code} {
@@ -90,20 +196,25 @@ service cloud.firestore {
       // propriétaire et ne peut publier que le schéma Viewer compact.
       allow create: if isValidCode(code)
         && request.auth != null
-        && request.resource.data.ownerUid == request.auth.uid
+        && ((request.resource.data.schemaVersion < 4 && request.resource.data.ownerUid == request.auth.uid)
+          || (request.resource.data.schemaVersion == 4
+            && activeMember(request.resource.data.clubId)
+            && request.resource.data.ownerUid == get(/databases/$(database)/documents/clubs/$(request.resource.data.clubId)).data.ownerUid))
         && hasValidPublicShape(request.resource.data, code);
 
       // Connaître le code ou posséder une autre identité Firebase ne donne
       // aucun droit. Le propriétaire et le schéma ne peuvent pas être changés.
       allow update: if request.auth != null
-        && resource.data.ownerUid == request.auth.uid
+        && ((resource.data.schemaVersion < 4 && resource.data.ownerUid == request.auth.uid)
+          || (resource.data.schemaVersion == 4 && activeMember(resource.data.clubId)))
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.code == resource.data.code
         && request.resource.data.revision > resource.data.revision
         && hasValidPublicShape(request.resource.data, code);
 
       allow delete: if request.auth != null
-        && resource.data.ownerUid == request.auth.uid;
+        && ((resource.data.schemaVersion < 4 && resource.data.ownerUid == request.auth.uid)
+          || (resource.data.schemaVersion == 4 && clubAdmin(resource.data.clubId)));
 
       match /viewerSessions/{uid} {
         allow get: if request.auth != null && request.auth.uid == uid;
@@ -157,7 +268,8 @@ service cloud.firestore {
                 && (data.startedBy == 'organizer' || data.startedBy is int)));
         }
         function organizer() {
-          return request.auth != null && tournament().ownerUid == request.auth.uid;
+          return request.auth != null && ((tournament().schemaVersion < 4 && tournament().ownerUid == request.auth.uid)
+            || (tournament().schemaVersion == 4 && activeMember(tournament().clubId)));
         }
         function viewerOwnsCourt(data) {
           let sessionPath = /databases/$(database)/documents/tournaments/$(code)/viewerSessions/$(request.auth.uid);

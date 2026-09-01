@@ -20,7 +20,7 @@ const lock=require("../organizer-lock.js");
   for(const text of ["Accès Organisateur","Créer votre code Organisateur","Confirmer le code","Code incorrect"]){
     assert.ok(html.includes(text),`interface PIN : ${text}`);
   }
-  assert.match(html,/function returnOrganizerHome\(\)[\s\S]*organizerUnlocked=false/,"Accueil reverrouille l’espace");
+  assert.match(html,/function returnOrganizerHome\(\)[\s\S]*organizerUnlocked=Boolean\(organizerAccountUser\)/,"le compte authentifié remplace le PIN obligatoire");
   assert.ok(!fs.readFileSync(path.resolve(__dirname,"../firebase-sharing.js"),"utf8").includes("organizer-pin"),"PIN absent de la projection publique");
   assert.ok(!fs.readFileSync(path.resolve(__dirname,"../firestore.rules"),"utf8").includes("organizer-pin"),"règles Firebase inchangées");
   console.log("ORGANIZER_LOCK_OK — création, confirmation, refus, temporisation et verrouillage local validés");

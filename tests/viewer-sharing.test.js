@@ -7,7 +7,7 @@ const sharing=require("../firebase-sharing.js");
 
 function state(n=32,courts=8,mode="ladder"){
   const courtRows=Array.from({length:courts},(_,c)=>({teamA:[c*4,c*4+1],teamB:[c*4+2,c*4+3]}));
-  return {mode,n,courts,maxPoints:21,matchIndex:5,tournamentStatus:"live",
+  return {mode,n,courts,maxPoints:21,matchIndex:5,tournamentStatus:"live",clubId:"club-a",
     players:Array.from({length:n},(_,id)=>({name:`J${id+1}`,mj:5,v:id%3,plus:60+id,minus:50})),
     schedule:Array.from({length:6},()=>({rest:[],courts:courtRows})),
     results:Array.from({length:6},()=>courtRows.map((_,c)=>c%2?{a:8,b:13}:{a:15,b:6}))};
@@ -17,7 +17,7 @@ const appState=state();
 const snapshot=sharing.buildViewerSnapshot(appState,{code:"K7F4P2AB",revision:4},"owner-1",123456);
 assert.equal(sharing.validateViewerSnapshot(snapshot),true,"schéma compact valide");
 assert.deepEqual(Object.keys(snapshot).sort(),[
-  "code","currentRound","endMode","maxPoints","mode","ownerUid","players","previousResults","ranking","revision","roundDurationMinutes","roundNumber","schemaVersion","status","updatedAt"
+  "clubId","code","currentRound","endMode","maxPoints","mode","ownerUid","players","previousResults","ranking","revision","roundDurationMinutes","roundNumber","schemaVersion","status","updatedAt"
 ].sort(),"aucune donnée interne publiée");
 for(const forbidden of ["history","ladderOpp","ladderPartner","ladderTeams","partnersSeen","schedule","autosave"]){
   assert.equal(JSON.stringify(snapshot).includes(forbidden),false,`${forbidden} absent`);
@@ -56,6 +56,7 @@ assert.match(rules,/request\.resource\.data\.ownerUid == resource\.data\.ownerUi
 assert.match(rules,/hasLegacyPublicShape/);
 assert.match(rules,/hasTimedPublicShape/);
 assert.match(rules,/hasCourtTimerPublicShape/);
+assert.match(rules,/hasClubPublicShape/);
 assert.match(rules,/match \/viewerSessions\/\{uid\}[\s\S]*allow update, delete: if false/,"liaison joueur immuable côté serveur");
 assert.match(rules,/match \/courtTimers\/\{timerId\}[\s\S]*viewerOwnsCourt[\s\S]*allow create:[\s\S]*allow update:/,"écriture chrono isolée par terrain");
 assert.match(rules,/allow delete: if false/,"suppression de chrono refusée");

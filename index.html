@@ -369,6 +369,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .home-shell{max-width:820px;margin:5vh auto 0;text-align:center}.home-title{font-size:clamp(38px,9vw,72px);letter-spacing:-.055em;margin-bottom:8px}.home-subtitle{color:var(--ink-soft);font-size:16px;margin:0 auto 28px;max-width:560px}
 .entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left}.entry-card{display:flex;flex-direction:column;min-height:330px;padding:24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(150deg,rgba(22,66,69,.96),rgba(8,35,42,.98));box-shadow:var(--shadow)}
 .entry-card.player{border-color:rgba(184,243,74,.35)}.entry-icon{font-size:38px}.entry-card h2{text-align:left;font-size:25px;margin:16px 0 12px}.entry-card ul{padding-left:20px;margin:0 0 22px;color:var(--ink-soft);line-height:1.75}.entry-card button{margin-top:auto;min-height:54px}.join-shell{max-width:520px;margin:8vh auto 0}.back-link{width:auto;background:transparent;color:var(--ink-soft);padding:8px 0;margin:0 0 12px;text-align:left}.join-code{text-transform:uppercase;letter-spacing:.16em;text-align:center;font-size:25px;font-weight:900}.form-error{min-height:22px;color:#ffb2b2;font-size:13px;margin-top:8px}.viewer-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.viewer-head button{width:auto;margin:0;padding:8px 11px;font-size:12px}.viewer-section-title{text-align:left;margin:0 0 12px}.viewer-progress{color:var(--ink-soft);font-size:13px;font-weight:800;margin:-5px 0 12px}.viewer-live-court{padding:11px 12px;margin:8px 0;border:1px solid var(--line);border-radius:14px;background:rgba(4,24,29,.45)}.viewer-live-court.done{border-color:rgba(67,223,189,.3)}.viewer-live-top{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-soft)}.viewer-live-match{font-size:14px;font-weight:850;line-height:1.45;margin-top:5px}.viewer-live-move{font-size:12px;color:#bff8e9;margin-top:5px}.viewer-score-final{font-size:clamp(22px,7vw,34px);font-weight:950;text-align:center;margin:14px 0 4px}.viewer-finished{color:#9af5df;text-align:center;font-size:13px;font-weight:950;letter-spacing:.1em}.viewer-details summary{cursor:pointer;font-size:18px;font-weight:900;padding:4px 0 12px}.viewer-details[open] summary{color:var(--lime)}
+.auth-shell{max-width:540px;margin:5vh auto 0}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0}.auth-tabs button{margin:0;background:rgba(4,24,29,.65);color:var(--ink-soft);border:1px solid var(--line)}.auth-tabs button.active{background:var(--lime);color:#062129;border-color:var(--lime)}.auth-note{padding:11px;border-radius:12px;background:rgba(184,243,74,.09);color:#dfffb1;font-size:13px}.cloud-tournaments{display:grid;gap:8px;margin-top:12px}.cloud-tournament{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:13px}.cloud-tournament button{width:auto;margin:0;padding:8px 11px}.account-line{color:var(--ink-soft);font-size:12px;text-align:center;margin-top:10px}.account-line button{width:auto;margin:0 0 0 6px;padding:5px 8px;font-size:11px}
 
 #game>.card:last-child{margin-top:18px;}
 table{overflow:hidden;border-radius:14px;}
@@ -444,7 +445,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <h1 class="home-title">Comment voulez-vous jouer ?</h1>
     <p class="home-subtitle">Organisez le tournoi ou rejoignez vos partenaires en quelques secondes.</p>
     <div class="entry-grid">
-      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2 id="organizerCardTitle">Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><div id="activeTournamentInfo" class="active-tournament hidden"></div><div class="entry-actions"><button id="organizerPrimaryBtn" onclick="openOrganizerMode()">Organiser un tournoi →</button><button id="newTournamentBtn" class="secondary hidden" onclick="startFreshOrganizerMode()">Créer un nouveau tournoi</button></div></article>
+      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2 id="organizerCardTitle">Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><div id="activeTournamentInfo" class="active-tournament hidden"></div><div class="entry-actions"><button id="organizerPrimaryBtn" onclick="openOrganizerMode()">Organiser un tournoi →</button><button id="newTournamentBtn" class="secondary hidden" onclick="startFreshOrganizerMode()">Créer un nouveau tournoi</button></div><div id="organizerAccountLine" class="account-line"></div></article>
       <article class="entry-card player"><div class="entry-icon">📱</div><h2>Rejoindre un tournoi en direct</h2><ul><li>Voir ton terrain</li><li>Ton partenaire et tes adversaires</li><li>Suivre les résultats et les mouvements</li></ul><button onclick="openJoinMode()">Rejoindre un tournoi →</button></article>
     </div>
   </div>
@@ -456,6 +457,22 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   </div>
 
   <!-- VERROU LOCAL ORGANISATEUR -->
+  <div id="organizerAuth" class="auth-shell hidden">
+    <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
+    <div class="card">
+      <div class="eyebrow">🎾 COMPTE ORGANISATEUR</div>
+      <h1 class="screen-title">Accès Organisateur</h1>
+      <p class="screen-intro">Connectez-vous pour créer, reprendre et synchroniser les tournois de votre club.</p>
+      <div class="auth-tabs"><button id="authLoginTab" class="active" onclick="setAuthMode('login')">Se connecter</button><button id="authCreateTab" class="secondary" onclick="setAuthMode('create')">Créer un compte</button></div>
+      <label for="authEmail">Adresse e-mail</label><input id="authEmail" type="email" inputmode="email" autocomplete="email" placeholder="vous@club.be" />
+      <label for="authPassword">Mot de passe</label><input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="8 caractères minimum" />
+      <div id="authCreateFields" class="hidden"><label for="authClubName">Nom du club</label><input id="authClubName" type="text" autocomplete="organization" maxlength="80" placeholder="Mon club de padel" /><div class="auth-note">Si cet appareil possède déjà un tournoi anonyme, son UID et ses droits seront conservés automatiquement.</div></div>
+      <div id="authError" class="form-error" role="alert"></div>
+      <button id="authSubmitBtn" onclick="submitOrganizerAuth()">SE CONNECTER</button>
+      <button id="authResetBtn" class="secondary" onclick="forgotOrganizerPassword()">Mot de passe oublié</button>
+    </div>
+  </div>
+
   <div id="organizerLock" class="pin-shell hidden">
     <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
     <div class="card">
@@ -501,6 +518,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <div class="eyebrow">Nouveau tournoi</div>
     <h1 class="screen-title">Prêts à jouer ?</h1>
     <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
+    <div id="clubWorkspace" class="auth-note hidden"><strong id="clubWorkspaceName"></strong><div id="cloudTournaments" class="cloud-tournaments"></div></div>
 
     <section class="step">
       <h2 class="step-title"><span class="step-number">1</span> Combien sommes-nous ?</h2>
@@ -693,6 +711,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 </div>
 
 <script src="./firebase-sharing.js"></script>
+<script src="./organizer-accounts.js"></script>
 <script src="./player-experience.js"></script>
 <script src="./organizer-lock.js"></script>
 <script src="./tournament-timer.js"></script>
@@ -737,6 +756,8 @@ let state = {
   partnersFullCycleNotified: false,
 
   activeSaveId: null,
+  clubId: null,
+  cloudTournamentId: null,
   tournamentStatus: "live",
   sharedTournament: null
 };
@@ -808,6 +829,7 @@ const joinEl = document.getElementById("join");
 const joinCodeEl = document.getElementById("joinCode");
 const joinErrorEl = document.getElementById("joinError");
 const organizerLockEl = document.getElementById("organizerLock");
+const organizerAuthEl = document.getElementById("organizerAuth");
 const organizerPinEl = document.getElementById("organizerPin");
 const organizerPinConfirmEl = document.getElementById("organizerPinConfirm");
 const pinErrorEl = document.getElementById("pinError");
@@ -816,6 +838,9 @@ const pinSubmitBtnEl = document.getElementById("pinSubmitBtn");
 let viewerSnapshot = null;
 let viewerLastRound = null;
 let organizerUnlocked = false;
+let organizerAccountUser = null;
+let organizerClubs = [];
+let organizerAuthMode = "login";
 let viewerChangingIdentity = false;
 let timerInterval = null;
 let audioContext = null;
@@ -1800,7 +1825,7 @@ function buildNextRoundLadder(prevRoundCourts, prevResults, roundIndex){
 /* -------------------- Screens -------------------- */
 function hideAllMainScreens(){
   homeEl.classList.add("hidden"); joinEl.classList.add("hidden"); viewerEl.classList.add("hidden");
-  organizerLockEl.classList.add("hidden"); setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
+  organizerAuthEl.classList.add("hidden"); organizerLockEl.classList.add("hidden"); setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
 }
 function showHomeMode(){
   if(canSaveCurrent()) writeAutoSave();
@@ -1867,9 +1892,48 @@ async function submitOrganizerPin(){
   }catch(error){pinErrorEl.textContent="Impossible de sécuriser l’accès sur cet appareil.";}
   finally{pinSubmitBtnEl.disabled=false;}
 }
-function openOrganizerMode(){
-  if(!organizerUnlocked){showOrganizerLock();return;}
+function showOrganizerAuth(){hideAllMainScreens();organizerAuthEl.classList.remove("hidden");document.querySelector?.(".topbar")?.classList.add("hidden");document.getElementById("authError").textContent="";window.scrollTo(0,0);}
+function setAuthMode(mode){
+  organizerAuthMode=mode==="create"?"create":"login";const creating=organizerAuthMode==="create";
+  document.getElementById("authCreateFields").classList.toggle("hidden",!creating);document.getElementById("authResetBtn").classList.toggle("hidden",creating);
+  document.getElementById("authLoginTab").classList.toggle("active",!creating);document.getElementById("authCreateTab").classList.toggle("active",creating);
+  document.getElementById("authSubmitBtn").textContent=creating?"CRÉER MON COMPTE":"SE CONNECTER";document.getElementById("authError").textContent="";
+}
+async function submitOrganizerAuth(){
+  const button=document.getElementById("authSubmitBtn"),errorEl=document.getElementById("authError");button.disabled=true;errorEl.style.color="";errorEl.textContent="";
+  try{
+    const email=document.getElementById("authEmail").value,password=document.getElementById("authPassword").value;
+    if(organizerAuthMode==="create")await window.LaTeamCloud.createOrganizerAccount({email,password,clubName:document.getElementById("authClubName").value});
+    else await window.LaTeamCloud.signInOrganizer(email,password);
+    await refreshOrganizerWorkspace();organizerUnlocked=true;await openOrganizerMode();
+  }catch(error){errorEl.textContent=error.message;}finally{button.disabled=false;}
+}
+async function forgotOrganizerPassword(){
+  const email=document.getElementById("authEmail").value,errorEl=document.getElementById("authError");
+  try{await window.LaTeamCloud.sendPasswordReset(email);errorEl.style.color="#b8f34a";errorEl.textContent="E-mail de réinitialisation envoyé.";}catch(error){errorEl.style.color="";errorEl.textContent=error.message;}
+}
+async function refreshOrganizerWorkspace(){
+  organizerClubs=await window.LaTeamCloud.listOrganizerClubs();
+  if(!organizerClubs.length)throw new Error("Aucun club n’est associé à ce compte.");
+  state.clubId=state.clubId&&organizerClubs.some(c=>c.id===state.clubId)?state.clubId:organizerClubs[0].id;
+  const club=organizerClubs.find(c=>c.id===state.clubId),items=await window.LaTeamCloud.listClubTournaments(state.clubId);
+  document.getElementById("clubWorkspace").classList.remove("hidden");document.getElementById("clubWorkspaceName").textContent=`Club : ${club.name}`;
+  document.getElementById("cloudTournaments").innerHTML=items.length?items.map(item=>`<div class="cloud-tournament"><span><b>${escapePublic(item.status==="live"?"Tournoi en cours":"Tournoi terminé")}</b><br><span class="small">Round ${item.roundNumber} · ${new Date(item.updatedAt).toLocaleString()}</span></span><button class="secondary" onclick="recoverCloudTournament('${escapePublic(item.id)}')">Reprendre</button></div>`).join(""):"<span class=\"small\">Aucun tournoi synchronisé pour ce club.</span>";
+}
+async function recoverCloudTournament(tournamentId){
+  try{state=await window.LaTeamCloud.loadClubTournament(state.clubId,tournamentId);normalizeLoadedState();writeAutoSave();showGame();renderMatch();renderRanking();renderRecapInGame();}catch(error){alert("Impossible de récupérer ce tournoi.");}
+}
+async function logoutOrganizer(){
+  if(canSaveCurrent())writeAutoSave();await window.LaTeamCloud.signOutOrganizer();organizerAccountUser=null;organizerUnlocked=false;showHomeMode();
+}
+async function openOrganizerMode(){
+  if(!organizerAccountUser){showOrganizerAuth();return;}
+  organizerUnlocked=true;
+  try{if(!organizerClubs.length)await refreshOrganizerWorkspace();}catch(error){showOrganizerAuth();document.getElementById("authError").textContent=error.message;return;}
   const active=getActiveTournamentState();
+  if(active?.sharedTournament?.ownerUid&&active.sharedTournament.ownerUid!==organizerAccountUser.uid&&!active.clubId){
+    alert("Ce tournoi local appartient à une autre identité. Connectez-vous avec son compte d’origine ou sécurisez d’abord son identité anonyme.");showSetup();return;
+  }
   if(active){
     if(active!==state) tryLoadAutoSave();
     refreshSavesUI(); showGame(); renderMatch(); renderRanking(); renderRecapInGame(); writeAutoSave();
@@ -1878,14 +1942,14 @@ function openOrganizerMode(){
   showSetup();
 }
 function startFreshOrganizerMode(){
-  if(!organizerUnlocked){showOrganizerLock();return;}
+  if(!organizerAccountUser){showOrganizerAuth();return;}
   if(getActiveTournamentState() && !confirm("Créer un nouveau tournoi ? La partie actuelle sera remplacée au lancement du nouveau tournoi.")) return;
   showSetup();
 }
 function returnOrganizerHome(){
   if(canSaveCurrent()) writeAutoSave();
   closeSharePanel();
-  organizerUnlocked=false;
+  organizerUnlocked=Boolean(organizerAccountUser);
   showHomeMode();
 }
 function getActiveTournamentState(){
@@ -1901,6 +1965,8 @@ function renderOrganizerHomeCard(){
   const info=document.getElementById("activeTournamentInfo");
   const primary=document.getElementById("organizerPrimaryBtn");
   const fresh=document.getElementById("newTournamentBtn");
+  const accountLine=document.getElementById("organizerAccountLine");
+  accountLine.innerHTML=organizerAccountUser?`${escapePublic(organizerAccountUser.email||"Compte Organisateur")} <button class="secondary" onclick="logoutOrganizer()">Déconnexion</button>`:"Compte Organisateur requis";
   if(!active){
     document.getElementById("organizerCardTitle").textContent="Créer et gérer un tournoi";
     info.classList.add("hidden"); primary.textContent="Organiser un tournoi →"; fresh.classList.add("hidden"); return;
@@ -2639,6 +2705,7 @@ function newGameChoosePlayers(){
   maxPointsEl.value = String(clamp(+finishMaxPointsEl.value || 21, 1, 31));
 
   const keptActiveSaveId = state.activeSaveId || null;
+  const keptClubId = state.clubId || organizerClubs[0]?.id || null;
 
   state = {
     mode: gameModeEl.value,
@@ -2669,6 +2736,8 @@ function newGameChoosePlayers(){
     partnersFullCycleNotified: false,
 
     activeSaveId: keptActiveSaveId,
+    clubId: keptClubId,
+    cloudTournamentId: null,
     tournamentStatus: "live",
     sharedTournament: null
   };
@@ -2916,7 +2985,8 @@ function setupPwa(){
     onViewerSnapshot,
     onCourtTimers,
     onViewerError,
-    onConnectionChange:online=>updateViewerConnection(online,viewerSnapshot?.updatedAt)
+    onConnectionChange:online=>updateViewerConnection(online,viewerSnapshot?.updatedAt),
+    onPrivateSync:info=>{if(info.state==="synced"&&autosaveText)autosaveText.textContent=`🟢 Sauvegardé sur le club · ${fmtDate(Date.now())}`;}
   });
   setupPwa();
   ensureTimerTicker();
@@ -2926,6 +2996,7 @@ function setupPwa(){
     viewerErrorEl.textContent="Connexion au tournoi…";
     return;
   }
+  window.LaTeamCloud?.observeOrganizerAuth?.(user=>{organizerAccountUser=user;organizerUnlocked=Boolean(user);if(!user)organizerClubs=[];if(!homeEl.classList.contains("hidden"))renderOrganizerHomeCard();})?.catch?.(()=>{});
   createInputs();
   updateCourtChoiceUI();
   updateFinishCourtUI();

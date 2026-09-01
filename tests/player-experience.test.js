@@ -13,7 +13,7 @@ for(const invalid of ["K7F","K7F22","K0F2","KOF2","KI12"]){assert.equal(player.i
 assert.equal(player.tournamentUrl("https://app.exemple.com/base/index.html"," k7 f2 "),"https://app.exemple.com/base/?t=K7F2");
 assert.deepEqual(player.roundProgress({currentRound:{courts:Array.from({length:8},(_,index)=>({validated:index<6}))}}),{completed:6,total:8});
 
-const appState={mode:"ladder",n:8,courts:2,maxPoints:21,matchIndex:0,tournamentStatus:"live",
+const appState={mode:"ladder",n:8,courts:2,maxPoints:21,matchIndex:0,tournamentStatus:"live",clubId:"club-a",
   players:Array.from({length:8},(_,id)=>({name:`J${id+1}`,mj:0,v:0,plus:0,minus:0})),
   schedule:[{rest:[],courts:[
     {teamA:[0,1],teamB:[2,3],necessaryDuplicates:["0-1"]},
@@ -25,6 +25,9 @@ assert.deepEqual(player.teamDestination(snapshot.currentRound.courts[0],[0,1]),{
 assert.equal(snapshot.currentRound.courts[0].necessaryDuplicate,true);
 
 const html=fs.readFileSync(path.resolve(__dirname,"../index.html"),"utf8");
+assert.match(html,/id="organizerAuth"/);
+assert.match(html,/Connectez-vous pour créer, reprendre et synchroniser les tournois de votre club/);
+assert.match(html,/id="viewer"[\s\S]*Qui êtes-vous \?/m,"Viewer sans formulaire de compte classique");
 for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match","⌂ Accueil","▦ QR","Reprendre le tournoi →","SUIVRE LE TOURNOI"]){
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
