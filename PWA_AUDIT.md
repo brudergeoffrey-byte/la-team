@@ -44,7 +44,7 @@ Le serveur a été arrêté après une première ouverture complète, simulant l
 
 ### iPhone et iPad
 
-1. Ouvrir `https://zt2tpb4pyc-wq.github.io/la-team/` dans Safari avec Internet.
+1. Ouvrir `https://brudergeoffrey-byte.github.io/la-team/` dans Safari avec Internet.
 2. Attendre l'affichage complet de La Team.
 3. Toucher **Partager**.
 4. Choisir **Sur l'écran d'accueil**.

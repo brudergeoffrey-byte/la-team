@@ -12,7 +12,7 @@ function appState(){
     results:[],validatedCourts:[false,false],courtScores:[]};
 }
 
-function harness(url="https://zt2tpb4pyc-wq.github.io/la-team/"){
+function harness(url="https://brudergeoffrey-byte.github.io/la-team/"){
   const documents=new Map(),listeners=new Map(),storage=new Map(),events={},statuses=[];
   let authCalls=0;
   const navigator={onLine:true};
@@ -64,14 +64,14 @@ function harness(url="https://zt2tpb4pyc-wq.github.io/la-team/"){
   h.navigator.onLine=true; await h.events.online(); await new Promise(resolve=>setImmediate(resolve));
   assert.equal(h.documents.get(share.code).players[0].name,"Remplaçant","reprise réseau resynchronisée");
 
-  const viewer=harness(`https://zt2tpb4pyc-wq.github.io/la-team/?t=${share.code}`);
+  const viewer=harness(`https://brudergeoffrey-byte.github.io/la-team/?t=${share.code}`);
   viewer.documents.set(share.code,h.documents.get(share.code));
   let received=null;
   viewer.context.LaTeamCloud.init({getState:()=>appState(),onViewerSnapshot:snapshot=>{received=snapshot;},onViewerError:message=>{throw new Error(message);}});
   await new Promise(resolve=>setImmediate(resolve));
   assert.ok(received,"Viewer reçoit le document exact");
   assert.equal(viewer.getAuthCalls(),0,"Viewer ne reçoit aucune identité organisateur");
-  assert.equal(viewer.context.LaTeamCloud.viewerUrl(share.code),`https://zt2tpb4pyc-wq.github.io/la-team/?t=${share.code}`,"QR contient uniquement l’URL Viewer");
+  assert.equal(viewer.context.LaTeamCloud.viewerUrl(share.code),`https://brudergeoffrey-byte.github.io/la-team/?t=${share.code}`,"QR contient uniquement l’URL Viewer");
 
   console.log("FIREBASE_CLIENT_OK — création, scores, correction, coupure/reprise et Viewer lecture seule validés");
 })().catch(error=>{console.error(error);process.exitCode=1;});

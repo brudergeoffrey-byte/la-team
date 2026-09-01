@@ -62,7 +62,7 @@ assert.ok([...codes].every(code=>/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(
 
 const qrContext={}; vm.createContext(qrContext);
 vm.runInContext(fs.readFileSync(path.resolve(__dirname,"../vendor/qrcode.min.js"),"utf8"),qrContext);
-const viewerUrl=`https://zt2tpb4pyc-wq.github.io/la-team/?t=${snapshot.code}`;
+const viewerUrl=`https://brudergeoffrey-byte.github.io/la-team/?t=${snapshot.code}`;
 const qr=qrContext.qrcode(0,"M"); qr.addData(viewerUrl); qr.make();
 assert.match(qr.createSvgTag(4,2),/^<svg/,"QR généré localement");
 assert.equal(viewerUrl.includes(snapshot.ownerUid),false,"QR sans identité ni secret organisateur");
