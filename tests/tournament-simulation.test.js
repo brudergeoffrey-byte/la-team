@@ -73,7 +73,7 @@ function initialState(n, courts, mode){
     ladderTeams:mode==="ladder"?{}:null,
     ladderByeCounts:mode==="ladder"?Array(n).fill(0):null,
     ladderLastRest:[], partnersSeen:{}, partnersFullCycleNotified:false,
-    activeSaveId:null
+    activeSaveId:null, tournamentStatus:"live", sharedTournament:null
   };
 }
 

@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isValidCode(code) {
+      return code.matches('^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$');
+    }
+
+    function hasValidPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'mode', 'roundNumber', 'maxPoints', 'players',
+          'currentRound', 'ranking', 'previousResults'
+        ])
+        && data.schemaVersion == 1
+        && data.code == code
+        && data.ownerUid is string
+        && data.ownerUid.size() > 0
+        && data.revision is int
+        && data.revision >= 1
+        && data.updatedAt is int
+        && data.status in ['live', 'finished']
+        && data.mode in ['americano', 'ladder']
+        && data.roundNumber is int
+        && data.roundNumber >= 1
+        && data.maxPoints is int
+        && data.maxPoints >= 1
+        && data.maxPoints <= 31
+        && data.players is list
+        && data.players.size() >= 4
+        && data.players.size() <= 32
+        && data.currentRound is map
+        && data.ranking is list
+        && data.ranking.size() == data.players.size()
+        && data.previousResults is list;
+    }
+
+    match /tournaments/{code} {
+      // Le code public permet uniquement la lecture exacte du tournoi.
+      allow get: if isValidCode(code);
+      allow list: if false;
+
+      // Tout organisateur peut créer un tournoi, mais il en devient l'unique
+      // propriétaire et ne peut publier que le schéma Viewer compact.
+      allow create: if isValidCode(code)
+        && request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && hasValidPublicShape(request.resource.data, code);
+
+      // Connaître le code ou posséder une autre identité Firebase ne donne
+      // aucun droit. Le propriétaire et le schéma ne peuvent pas être changés.
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.code == resource.data.code
+        && request.resource.data.revision > resource.data.revision
+        && hasValidPublicShape(request.resource.data, code);
+
+      allow delete: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -108,7 +108,7 @@ button:disabled{ opacity:0.5; cursor:not-allowed; }
 .row{ display:flex; gap:10px; }
 .row>div{ flex:1; }
 
-.hidden{ display:none; }
+.hidden{ display:none!important; }
 
 table{ width:100%; border-collapse:collapse; }
 th,td{ padding:8px; text-align:center; }
@@ -329,6 +329,16 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .pwa-install{background:rgba(184,243,74,.13);border:1px solid rgba(184,243,74,.28);color:#eaffc4;}
 .edit-score{background:rgba(88,166,255,.13)!important;border:1px solid rgba(88,166,255,.28)!important;color:#cce5ff!important;}
 .organizer-tools{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 14px}.organizer-tools button{width:auto;min-height:42px;margin:0;padding:8px 11px;font-size:12px;}
+.share-panel{border-color:rgba(184,243,74,.35);background:linear-gradient(145deg,rgba(20,61,65,.98),rgba(8,35,42,.98));}
+.share-code{font-size:clamp(30px,10vw,52px);font-weight:950;letter-spacing:.16em;color:var(--lime);text-align:center;margin:8px 0;}
+.share-qr{display:grid;place-items:center;min-height:260px;margin:14px auto;padding:16px;border-radius:20px;background:#fff;max-width:360px;overflow:hidden;}
+.share-qr svg{display:block;width:100%;height:auto;}.share-url{overflow-wrap:anywhere;text-align:center;color:var(--ink-soft);font-size:12px;}
+.viewer-shell{max-width:760px;margin:0 auto;}.viewer-hero{border-color:rgba(184,243,74,.4);background:linear-gradient(145deg,rgba(22,66,69,.98),rgba(8,35,42,.98));}
+.viewer-kicker{color:var(--lime);font-size:13px;font-weight:950;letter-spacing:.15em;}.viewer-court{font-size:clamp(38px,13vw,72px);line-height:1;font-weight:950;letter-spacing:-.05em;margin:8px 0 18px;}
+.viewer-matchup{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center;font-size:clamp(17px,5vw,25px);font-weight:900;}
+.viewer-movement{margin-top:16px;padding:12px;border-radius:14px;background:rgba(184,243,74,.12);color:#eaffc4;font-weight:850;text-align:center;}
+.viewer-offline{padding:9px 12px;border-radius:12px;background:rgba(255,174,66,.12);color:#ffd18a;font-size:12px;text-align:center;}.viewer-new{animation:viewerPulse 1.4s ease-out;}
+@keyframes viewerPulse{0%{box-shadow:0 0 0 0 rgba(184,243,74,.65)}100%{box-shadow:0 0 0 24px rgba(184,243,74,0)}}
 
 #game>.card:last-child{margin-top:18px;}
 table{overflow:hidden;border-radius:14px;}
@@ -379,6 +389,25 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <span id="offlineStatus" class="pwa-pill pwa-offline hidden">Hors connexion</span>
     <span id="updateStatus" class="pwa-pill pwa-update hidden">Nouvelle version disponible — elle sera installée au prochain redémarrage.</span>
     <button id="installPwaBtn" type="button" class="pwa-pill pwa-install hidden" onclick="installPwa()">Installer La Team</button>
+  </div>
+
+  <!-- VIEWER STRICTEMENT EN LECTURE SEULE -->
+  <div id="viewer" class="viewer-shell hidden">
+    <div id="viewerOffline" class="viewer-offline hidden"></div>
+    <div id="viewerIdentity" class="card hidden">
+      <div class="eyebrow">Suivre le tournoi</div>
+      <h1 class="screen-title">Qui êtes-vous ?</h1>
+      <label for="viewerPlayerSelect">Je suis :</label>
+      <select id="viewerPlayerSelect"></select>
+      <button onclick="confirmViewerIdentity()">Voir mon match →</button>
+    </div>
+    <div id="viewerContent" class="hidden">
+      <div id="viewerMyMatch" class="card viewer-hero"></div>
+      <div class="card"><h2>Tous les terrains</h2><div id="viewerCourts"></div></div>
+      <div class="card"><h2>Classement</h2><div id="viewerRanking"></div></div>
+      <div class="card"><h2>Résultats précédents</h2><div id="viewerResults"></div></div>
+    </div>
+    <div id="viewerError" class="card hidden"></div>
   </div>
 
   <!-- SETUP -->
@@ -464,6 +493,17 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div id="roundReady" class="round-ready hidden"></div>
       <div class="organizer-tools">
         <button class="secondary" onclick="replacePlayer()">⇄ Remplacer un joueur</button>
+        <button class="secondary" onclick="openSharePanel()">📱 Joueurs / QR</button>
+      </div>
+      <div id="sharePanel" class="card share-panel hidden">
+        <div class="eyebrow">SUIVRE LE TOURNOI</div>
+        <div id="shareQr" class="share-qr"><span class="small" style="color:#123;">Activez le partage pour générer le QR code.</span></div>
+        <div id="shareCode" class="share-code">—</div>
+        <p class="share-url" id="shareUrl"></p>
+        <p class="small" style="text-align:center;">Scannez pour voir votre terrain et votre prochain match.</p>
+        <div id="shareStatus" class="small" style="text-align:center;"></div>
+        <button id="enableShareBtn" onclick="enableTournamentSharing()">Activer le partage</button>
+        <button class="secondary" onclick="closeSharePanel()">Fermer</button>
       </div>
       <div id="partnerProgress" class="rotation-meter"></div>
       <div id="fullCycleNotice" class="cycle-notice hidden"></div>
@@ -566,6 +606,9 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
 </div>
 
+<script src="./firebase-sharing.js"></script>
+<script src="./vendor/qrcode.min.js"></script>
+<script src="./firebase-client.js"></script>
 <script>
 const STATE_VERSION = 2;
 
@@ -596,7 +639,9 @@ let state = {
   partnersSeen: null,
   partnersFullCycleNotified: false,
 
-  activeSaveId: null
+  activeSaveId: null,
+  tournamentStatus: "live",
+  sharedTournament: null
 };
 
 const SAVES_INDEX_KEY = "la-team-saves-index-v1";
@@ -646,6 +691,17 @@ const saveCountBadge = document.getElementById("saveCountBadge");
 const offlineStatusEl = document.getElementById("offlineStatus");
 const updateStatusEl = document.getElementById("updateStatus");
 const installPwaBtn = document.getElementById("installPwaBtn");
+const viewerEl = document.getElementById("viewer");
+const viewerIdentityEl = document.getElementById("viewerIdentity");
+const viewerContentEl = document.getElementById("viewerContent");
+const viewerPlayerSelectEl = document.getElementById("viewerPlayerSelect");
+const viewerOfflineEl = document.getElementById("viewerOffline");
+const viewerErrorEl = document.getElementById("viewerError");
+const sharePanelEl = document.getElementById("sharePanel");
+const shareStatusEl = document.getElementById("shareStatus");
+
+let viewerSnapshot = null;
+let viewerLastRound = null;
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -865,6 +921,8 @@ function normalizeLoadedState(){
     state.ladderByeCounts = (state.mode === "ladder") ? Array(state.n).fill(0) : null;
   }
   if(!Array.isArray(state.ladderLastRest)) state.ladderLastRest = [];
+  if(!["live","finished"].includes(state.tournamentStatus)) state.tournamentStatus = "live";
+  if(!state.sharedTournament || typeof state.sharedTournament !== "object") state.sharedTournament = null;
   ensureLadderMemory();
   return true;
 }
@@ -915,6 +973,7 @@ function writeAutoSave(){
     const payload = { version: STATE_VERSION, savedAt: autosaveAt, state: stateForPersistence() };
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
     autosaveText.textContent = `🟢 Auto-save : ${fmtDate(autosaveAt)}`;
+    window.LaTeamCloud?.schedulePublish();
   }catch(e){}
 }
 function tryLoadAutoSave(){
@@ -1621,6 +1680,8 @@ function startNewTournament(){
   }
 
   state.totalRounds = null;
+  state.tournamentStatus = "live";
+  state.sharedTournament = null;
   state.partnersSeen = {};
   state.partnersFullCycleNotified = false;
 
@@ -2110,6 +2171,8 @@ function renderRecapInGame(){
 
 /* -------------------- Finish -------------------- */
 function finishNow(){
+  state.tournamentStatus = "finished";
+  writeAutoSave();
   renderFinishTable();
   showFinish();
 }
@@ -2171,6 +2234,8 @@ function restartSamePlayers(){
   state.courts = courts;
   state.maxPoints = maxPoints;
   state.totalRounds = null;
+  state.tournamentStatus = "live";
+  state.sharedTournament = null;
 
   state.players = names.map(name=>({name, mj:0, v:0, plus:0, minus:0}));
 
@@ -2260,7 +2325,9 @@ function newGameChoosePlayers(){
     partnersSeen: {},
     partnersFullCycleNotified: false,
 
-    activeSaveId: keptActiveSaveId
+    activeSaveId: keptActiveSaveId,
+    tournamentStatus: "live",
+    sharedTournament: null
   };
 
   refreshSavesUI();
@@ -2280,6 +2347,112 @@ function resetAll(){
   try{ localStorage.removeItem(ACTIVE_SAVE_KEY); }catch(e){}
 
   location.reload();
+}
+
+/* -------------------- Partage Firebase / Viewer -------------------- */
+function escapePublic(value){
+  return String(value ?? "").replace(/[&<>"']/g, char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+}
+
+function openSharePanel(){
+  sharePanelEl.classList.remove("hidden");
+  renderSharePanel();
+  sharePanelEl.scrollIntoView?.({behavior:"smooth",block:"center"});
+}
+function closeSharePanel(){ sharePanelEl.classList.add("hidden"); }
+
+function renderSharePanel(){
+  const sharing=state.sharedTournament;
+  if(!sharing?.code) return;
+  const url=window.LaTeamCloud.viewerUrl(sharing.code);
+  document.getElementById("shareCode").textContent=sharing.code;
+  document.getElementById("shareUrl").textContent=url;
+  document.getElementById("enableShareBtn").classList.add("hidden");
+  const qrBox=document.getElementById("shareQr");
+  if(typeof qrcode === "function"){
+    const qr=qrcode(0,"M"); qr.addData(url); qr.make();
+    qrBox.innerHTML=qr.createSvgTag(8,2);
+    qrBox.setAttribute("aria-label",`QR code Viewer ${url}`);
+  }else qrBox.innerHTML=`<span class="small" style="color:#123;">${escapePublic(url)}</span>`;
+}
+
+async function enableTournamentSharing(){
+  const button=document.getElementById("enableShareBtn");
+  button.disabled=true; shareStatusEl.textContent="Connexion sécurisée…";
+  try{
+    await window.LaTeamCloud.createSharedTournament();
+    writeAutoSave(); renderSharePanel();
+  }catch(error){ shareStatusEl.textContent=`Impossible d’activer le partage : ${error.message}`; }
+  finally{ button.disabled=false; }
+}
+
+function onShareStatus(info){
+  if(!shareStatusEl) return;
+  if(info.state==="created" || info.state==="synced") shareStatusEl.textContent="🟢 À jour — les joueurs voient ce round";
+  else if(info.state==="syncing") shareStatusEl.textContent="Synchronisation…";
+  else if(info.state==="pending") shareStatusEl.textContent="🟠 Hors connexion — mise à jour en attente";
+}
+
+function viewerName(snapshot,id){ return snapshot.players.find(player=>player.id===Number(id))?.name || `J${Number(id)+1}`; }
+function viewerIdentityKey(){ return `la-team-viewer-player-v1:${viewerSnapshot?.code||""}`; }
+
+function showViewerMode(){
+  setupEl.classList.add("hidden"); gameEl.classList.add("hidden"); finishEl.classList.add("hidden");
+  document.querySelector?.(".topbar")?.classList.add("hidden");
+  viewerEl.classList.remove("hidden");
+}
+
+function onViewerSnapshot(snapshot,metadata){
+  showViewerMode(); viewerErrorEl.classList.add("hidden"); viewerSnapshot=snapshot;
+  const stored=localStorage.getItem(viewerIdentityKey());
+  viewerPlayerSelectEl.innerHTML=snapshot.players.map(player=>`<option value="${player.id}">${escapePublic(player.name)}</option>`).join("");
+  if(stored!==null && snapshot.players.some(player=>String(player.id)===stored)){
+    viewerPlayerSelectEl.value=stored; viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
+  }else{
+    viewerIdentityEl.classList.remove("hidden"); viewerContentEl.classList.add("hidden");
+  }
+  updateViewerConnection(metadata.online && !metadata.fromCache,snapshot.updatedAt);
+}
+
+function confirmViewerIdentity(){
+  if(!viewerSnapshot) return;
+  localStorage.setItem(viewerIdentityKey(),viewerPlayerSelectEl.value);
+  viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
+}
+
+function renderViewer(){
+  const snapshot=viewerSnapshot;
+  const playerId=Number(localStorage.getItem(viewerIdentityKey()));
+  const match=window.LaTeamSharing.playerMatch(snapshot,playerId);
+  const my=document.getElementById("viewerMyMatch");
+  const isNewRound=viewerLastRound!==null && viewerLastRound!==snapshot.roundNumber;
+  if(!match){ my.innerHTML="<h2>Match non disponible</h2>"; return; }
+  if(match.rest){
+    my.innerHTML=`<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div><div class="viewer-court">REPOS</div><p>Vous ne jouez pas sur ce round.</p>`;
+  }else{
+    const destination=match.destination ? (match.destination.stays
+      ? `${match.destination.outcome==="win"?"Victoire":"Défaite"} → reste Terrain ${match.destination.court}${match.destination.court===1?" 👑":""}`
+      : `${match.destination.outcome==="win"?"Victoire":"Défaite"} → Terrain ${match.destination.court} ${match.destination.outcome==="win"?"↑":"↓"}`) : "";
+    my.innerHTML=`${isNewRound?'<div class="viewer-movement">NOUVEAU MATCH</div>':''}<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div>
+      <div class="viewer-court">TERRAIN ${match.court}</div>
+      <div class="viewer-matchup"><div>${escapePublic(viewerName(snapshot,match.player))}<br>${escapePublic(viewerName(snapshot,match.partner))}</div><div>VS</div><div>${match.opponents.map(id=>escapePublic(viewerName(snapshot,id))).join("<br>")}</div></div>
+      ${match.score?`<p style="text-align:center;font-size:24px;font-weight:950;">${match.score.a} — ${match.score.b}</p>`:""}
+      ${destination?`<div class="viewer-movement">${destination}</div>`:""}`;
+  }
+  if(isNewRound){ my.classList.remove("viewer-new"); void my.offsetWidth; my.classList.add("viewer-new"); }
+  viewerLastRound=snapshot.roundNumber;
+  document.getElementById("viewerCourts").innerHTML=snapshot.currentRound.courts.map(court=>`<div class="recapLine"><b>Terrain ${court.number}</b><br>${court.teamA.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")} VS ${court.teamB.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")}${court.score?` · <b>${court.score.a}—${court.score.b}</b>`:""}</div>`).join("");
+  document.getElementById("viewerRanking").innerHTML=`<table><tbody>${snapshot.ranking.map(row=>`<tr><td>${row.position}</td><td>${escapePublic(row.name)}</td><td>${row.wins} V</td><td>${row.diff>=0?"+":""}${row.diff}</td></tr>`).join("")}</tbody></table>`;
+  document.getElementById("viewerResults").innerHTML=snapshot.previousResults.slice(-32).reverse().map(row=>`<div class="recapLine"><b>R${row.round} · T${row.court}</b><br>${row.teamA.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")} <b>${row.a}—${row.b}</b> ${row.teamB.map(id=>escapePublic(viewerName(snapshot,id))).join(" / ")}</div>`).join("") || '<div class="small">Aucun résultat validé.</div>';
+}
+
+function updateViewerConnection(online,updatedAt){
+  viewerOfflineEl.classList.toggle("hidden",online);
+  if(!online) viewerOfflineEl.textContent=`🟠 Hors connexion — dernière mise à jour à ${new Date(updatedAt||Date.now()).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+}
+function onViewerError(message){
+  showViewerMode(); viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.add("hidden");
+  viewerErrorEl.classList.remove("hidden"); viewerErrorEl.textContent=message;
 }
 
 /* -------------------- PWA / installation -------------------- */
@@ -2355,14 +2528,26 @@ function setupPwa(){
 
 /* -------------------- INIT -------------------- */
 (function init(){
+  const viewerCode=window.LaTeamCloud?.init({
+    getState:()=>state,
+    onShareStatus,
+    onViewerSnapshot,
+    onViewerError,
+    onConnectionChange:online=>updateViewerConnection(online,viewerSnapshot?.updatedAt)
+  });
+  setupPwa();
+  if(viewerCode){
+    showViewerMode();
+    viewerErrorEl.classList.remove("hidden");
+    viewerErrorEl.textContent="Connexion au tournoi…";
+    return;
+  }
   createInputs();
   updateCourtChoiceUI();
   updateFinishCourtUI();
   updateModeCards();
   refreshSavesUI();
   showSetup();
-  setupPwa();
-
   if(tryLoadAutoSave()){
     if(confirm("Reprendre la dernière partie (auto-save) ?")){
       refreshSavesUI();
