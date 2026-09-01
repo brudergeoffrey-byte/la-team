@@ -263,10 +263,10 @@ input,select{
   outline:none;transition:border-color .18s,box-shadow .18s,transform .18s;
 }
 select{
-  appearance:none;-webkit-appearance:none;
-  padding-right:44px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5 7.5 5 5 5-5' stroke='%23b8f34a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 14px center;background-size:20px 20px;
+  -webkit-appearance:none!important;appearance:none!important;color-scheme:dark;
+  padding-right:54px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4.5 8 12 15.5 19.5 8' stroke='%23d9ff79' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-position:right 16px center!important;background-size:28px 28px!important;
 }
 select:disabled{opacity:.65;cursor:not-allowed;}
 input:focus,select:focus{border-color:var(--aqua);box-shadow:0 0 0 4px rgba(67,223,189,.13);}
@@ -307,7 +307,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .team{font-size:17px;font-weight:850;line-height:1.25;}
 .team:last-child{text-align:right;}.versus{font-size:11px;font-weight:950;color:var(--ink-soft);letter-spacing:.12em;}
 .score-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;}
-.score-row select{font-size:25px;font-weight:950;text-align:center;margin:0;min-height:58px;padding-inline:30px;background-position:right 8px center;background-size:17px 17px;}
+.score-row select{font-size:25px;font-weight:950;text-align:center;margin:0;min-height:58px;padding-inline:34px;background-position:right 7px center!important;background-size:22px 22px!important;}
 .score-separator{font-weight:900;color:var(--ink-soft);}
 .validate-button{margin-top:10px;}
 .validated-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(67,223,189,.12);color:#8ff5de;font-size:12px;font-weight:850;}
