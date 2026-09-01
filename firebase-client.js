@@ -118,7 +118,7 @@
   }
 
   async function subscribeViewer(code){
-    if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(code)) throw new Error("Code tournoi invalide.");
+    if(!/^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/.test(code)) throw new Error("Code tournoi invalide.");
     await ensureSdk();
     viewerUnsubscribe?.();
     viewerUnsubscribe=db.collection("tournaments").doc(code).onSnapshot({includeMetadataChanges:true},doc=>{

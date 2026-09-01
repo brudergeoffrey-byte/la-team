@@ -5,10 +5,12 @@ const path=require("node:path");
 const player=require("../player-experience.js");
 const sharing=require("../firebase-sharing.js");
 
-assert.equal(player.normalizeTournamentCode(" k7 f4 p2 ab "),"K7F4P2AB");
-assert.equal(player.isValidTournamentCode(" k7 f4 p2 ab "),true);
+assert.equal(player.normalizeTournamentCode(" k7 f2 "),"K7F2");
+assert.equal(player.isValidTournamentCode(" k7 f2 "),true);
+assert.equal(player.isValidTournamentCode(" k7 f4 p2 ab "),true,"ancien code 8 caractères compatible");
 assert.equal(player.isValidTournamentCode("K7F4P2"),false);
-assert.equal(player.tournamentUrl("https://app.exemple.com/base/index.html"," abcd 2345 "),"https://app.exemple.com/base/?t=ABCD2345");
+for(const invalid of ["K7F","K7F22","K0F2","KOF2","KI12"]){assert.equal(player.isValidTournamentCode(invalid),false,`code invalide : ${invalid}`);}
+assert.equal(player.tournamentUrl("https://app.exemple.com/base/index.html"," k7 f2 "),"https://app.exemple.com/base/?t=K7F2");
 assert.deepEqual(player.roundProgress({currentRound:{courts:Array.from({length:8},(_,index)=>({validated:index<6}))}}),{completed:6,total:8});
 
 const appState={mode:"ladder",n:8,courts:2,maxPoints:21,matchIndex:0,tournamentStatus:"live",
@@ -26,6 +28,7 @@ const html=fs.readFileSync(path.resolve(__dirname,"../index.html"),"utf8");
 for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Code du tournoi","Changer de joueur","Round en direct","Ton match","⌂ Accueil","▦ QR","Reprendre le tournoi →","SUIVRE LE TOURNOI"]){
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
+assert.ok(html.includes('placeholder="K7F2"'),"exemple de code court");
 assert.match(html,/function returnOrganizerHome\(\)[\s\S]*writeAutoSave\(\)[\s\S]*showHomeMode\(\)/,"Accueil conserve l’autosave");
 assert.match(html,/async function openSharePanel\(\)[\s\S]*state\.sharedTournament\?\.code[\s\S]*enableTournamentSharing\(\)/,"QR active directement le partage si nécessaire");
 assert.ok(html.includes("active.sharedTournament?.code"),"accueil indique le partage actif");

@@ -20,7 +20,7 @@
     const bytes = randomValues || (typeof crypto !== "undefined" && crypto.getRandomValues
       ? crypto.getRandomValues(new Uint8Array(8))
       : Array.from({length:8}, ()=>Math.floor(Math.random()*256)));
-    return Array.from(bytes).slice(0,8).map(value=>CODE_ALPHABET[value % CODE_ALPHABET.length]).join("");
+    return Array.from(bytes).slice(0,4).map(value=>CODE_ALPHABET[value % CODE_ALPHABET.length]).join("");
   }
 
   function rankingFromPlayers(players){
@@ -96,7 +96,7 @@
     const keys=["schemaVersion","code","ownerUid","revision","updatedAt","status","mode","roundNumber","maxPoints","players","currentRound","ranking","previousResults"];
     return Boolean(snapshot && Object.keys(snapshot).every(key=>keys.includes(key))
       && snapshot.schemaVersion===1
-      && /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(snapshot.code)
+      && /^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/.test(snapshot.code)
       && ["americano","ladder"].includes(snapshot.mode)
       && ["live","finished"].includes(snapshot.status)
       && snapshot.players.length>=4 && snapshot.players.length<=32

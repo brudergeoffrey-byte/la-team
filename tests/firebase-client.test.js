@@ -42,15 +42,21 @@ function harness(url="https://brudergeoffrey-byte.github.io/la-team/"){
 }
 
 (async()=>{
+  const originalRandomCode=sharing.randomCode;
+  const generatedCodes=["ABCD","K7F2"];
+  sharing.randomCode=()=>generatedCodes.shift();
   const h=harness(),state=appState();
+  h.documents.set("ABCD",{collision:true});
   h.context.LaTeamCloud.init({getState:()=>state,onShareStatus:status=>h.statuses.push(status)});
   const share=await h.context.LaTeamCloud.createSharedTournament();
-  assert.match(share.code,/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/);
-  assert.equal(h.documents.size,1,"création distante unique");
+  sharing.randomCode=originalRandomCode;
+  assert.equal(share.code,"K7F2","collision régénérée automatiquement");
+  assert.match(share.code,/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/);
+  assert.equal(h.documents.size,2,"document existant conservé et nouveau code créé");
   assert.equal(h.getAuthCalls(),1,"authentification anonyme organisateur");
   const reopenedShare=await h.context.LaTeamCloud.createSharedTournament();
   assert.equal(reopenedShare.code,share.code,"réouverture du QR : même code");
-  assert.equal(h.documents.size,1,"réouverture du QR : aucun nouveau tournoi");
+  assert.equal(h.documents.size,2,"réouverture du QR : aucun nouveau tournoi");
   const revisionAfterReopen=h.documents.get(share.code).revision;
   const published=h.documents.get(share.code);
   assert.equal(published.ownerUid,"owner-1");

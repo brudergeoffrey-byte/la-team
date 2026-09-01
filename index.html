@@ -438,7 +438,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   <!-- REJOINDRE -->
   <div id="join" class="join-shell hidden">
     <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
-    <div class="card"><div class="eyebrow">MODE JOUEUR</div><h1 class="screen-title">Rejoindre le direct</h1><p class="screen-intro">Demandez le code à l’organisateur ou scannez son QR code.</p><label for="joinCode">Code du tournoi</label><input id="joinCode" class="join-code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="16" placeholder="K7F4P2AB" onkeydown="if(event.key==='Enter') joinTournament()" /><div id="joinError" class="form-error" role="alert"></div><button onclick="joinTournament()">REJOINDRE →</button></div>
+    <div class="card"><div class="eyebrow">MODE JOUEUR</div><h1 class="screen-title">Rejoindre le direct</h1><p class="screen-intro">Demandez le code à l’organisateur ou scannez son QR code.</p><label for="joinCode">Code du tournoi</label><input id="joinCode" class="join-code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="16" placeholder="K7F2" onkeydown="if(event.key==='Enter') joinTournament()" /><div id="joinError" class="form-error" role="alert"></div><button onclick="joinTournament()">REJOINDRE →</button></div>
   </div>
 
   <!-- VERROU LOCAL ORGANISATEUR -->
@@ -1687,7 +1687,7 @@ function joinTournament(){
   const code=window.LaTeamPlayer.normalizeTournamentCode(joinCodeEl.value);
   joinCodeEl.value=code;
   if(!window.LaTeamPlayer.isValidTournamentCode(code)){
-    joinErrorEl.textContent="Vérifiez le code : il doit contenir 8 caractères."; return;
+    joinErrorEl.textContent="Vérifiez le code : 4 caractères sont attendus."; return;
   }
   try{ sessionStorage.setItem("la-team-player-from-home","1"); }catch(error){}
   location.assign(window.LaTeamPlayer.tournamentUrl(location.href,code));

@@ -56,9 +56,11 @@ assert.ok(html.includes('.hidden{ display:none!important; }'),"contrôles organi
 assert.ok(html.includes('<meta name="viewport" content="width=device-width, initial-scale=1.0"'),"viewport mobile configuré");
 
 const codes=new Set();
-for(let i=0;i<10000;i++) codes.add(sharing.randomCode());
-assert.ok(codes.size>9990,"codes publics suffisamment dispersés");
-assert.ok([...codes].every(code=>/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(code)),"codes lisibles sans caractères ambigus");
+for(let i=0;i<1000;i++) codes.add(sharing.randomCode());
+assert.ok(codes.size>=995,"codes publics courts suffisamment dispersés");
+assert.ok([...codes].every(code=>/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/.test(code)),"nouveaux codes courts lisibles sans caractères ambigus");
+const legacySnapshot=sharing.buildViewerSnapshot(appState,{code:"K7F4P2AB",revision:1},"owner-1",123456);
+assert.equal(sharing.validateViewerSnapshot(legacySnapshot),true,"ancien code 8 caractères toujours accepté");
 
 const qrContext={}; vm.createContext(qrContext);
 vm.runInContext(fs.readFileSync(path.resolve(__dirname,"../vendor/qrcode.min.js"),"utf8"),qrContext);

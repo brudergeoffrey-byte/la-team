@@ -4,7 +4,7 @@
   if(root) root.LaTeamPlayer=api;
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
-  const CODE_PATTERN=/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+  const CODE_PATTERN=/^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/;
   function normalizeTournamentCode(value){ return String(value||"").replace(/\s+/g,"").toUpperCase(); }
   function isValidTournamentCode(value){ return CODE_PATTERN.test(normalizeTournamentCode(value)); }
   function tournamentUrl(currentUrl,code){

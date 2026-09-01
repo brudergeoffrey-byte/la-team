@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isValidCode(code) {
-      return code.matches('^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$');
+      return code.matches('^([ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$');
     }
 
     function hasValidPublicShape(data, code) {
