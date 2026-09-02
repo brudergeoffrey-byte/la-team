@@ -375,6 +375,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .viewer-movement{margin-top:16px;padding:12px;border-radius:14px;background:rgba(184,243,74,.12);color:#eaffc4;font-weight:850;text-align:center;}
 .viewer-personal-timer{margin:18px 0 0;text-align:center}.viewer-personal-clock{font-size:clamp(42px,16vw,72px);font-weight:950;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.04em}.viewer-personal-clock.warning{color:var(--gold)}.viewer-personal-clock.ended{color:var(--red)}.viewer-preparing{margin-top:16px;padding:14px;border-radius:14px;background:rgba(67,223,189,.1);color:#bff8e9;text-align:center;font-weight:850}
 .viewer-offline{padding:9px 12px;border-radius:12px;background:rgba(255,174,66,.12);color:#ffd18a;font-size:12px;text-align:center;}.viewer-new{animation:viewerPulse 1.4s ease-out;}
+.viewer-home-button{position:sticky;top:8px;z-index:22;width:auto;min-height:44px;margin:0 0 10px;padding:9px 13px;border:1px solid rgba(184,243,74,.35);background:rgba(7,29,36,.95);color:var(--lime);box-shadow:0 8px 24px rgba(0,0,0,.3);backdrop-filter:blur(14px)}
 @keyframes viewerPulse{0%{box-shadow:0 0 0 0 rgba(184,243,74,.65)}100%{box-shadow:0 0 0 24px rgba(184,243,74,0)}}
 .home-shell{max-width:820px;margin:5vh auto 0;text-align:center}.home-title{font-size:clamp(38px,9vw,72px);letter-spacing:-.055em;margin-bottom:8px}.home-subtitle{color:var(--ink-soft);font-size:16px;margin:0 auto 28px;max-width:560px}
 .entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left}.entry-card{display:flex;flex-direction:column;min-height:330px;padding:24px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(150deg,rgba(22,66,69,.96),rgba(8,35,42,.98));box-shadow:var(--shadow)}
@@ -501,9 +502,9 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
   <!-- MODE JOUEUR STRICTEMENT EN LECTURE SEULE -->
   <div id="viewer" class="viewer-shell hidden">
+    <button id="viewerIdentityHome" class="viewer-home-button" onclick="leavePlayerMode()">← Accueil</button>
     <div id="viewerOffline" class="viewer-offline hidden"></div>
     <div id="viewerIdentity" class="card hidden">
-      <button id="viewerIdentityHome" class="back-link hidden" onclick="leavePlayerMode()">← Retour à l’accueil</button>
       <button id="viewerIdentityBack" class="secondary app-back hidden" onclick="cancelViewerIdentityChange()" aria-label="Retour au tournoi">←</button>
       <div class="eyebrow">MODE JOUEUR</div>
       <h1 class="screen-title">Qui êtes-vous ?</h1>
@@ -2860,8 +2861,6 @@ function onViewerSnapshot(snapshot,metadata){
   document.getElementById("viewerUpdatedAt").textContent=`Mis à jour à ${new Date(snapshot.updatedAt||Date.now()).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
   const stored=localStorage.getItem(viewerIdentityKey());
   viewerPlayerSelectEl.innerHTML=snapshot.players.map(player=>`<option value="${player.id}">${escapePublic(player.name)}</option>`).join("");
-  let joinedFromHome=false; try{ joinedFromHome=sessionStorage.getItem("la-team-player-from-home")==="1"; }catch(error){}
-  document.getElementById("viewerIdentityHome").classList.toggle("hidden",!joinedFromHome||viewerChangingIdentity);
   document.getElementById("viewerIdentityBack").classList.toggle("hidden",!viewerChangingIdentity);
   if(!viewerChangingIdentity && stored!==null && snapshot.players.some(player=>String(player.id)===stored)){
     viewerPlayerSelectEl.value=stored; viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.remove("hidden"); renderViewer();
@@ -2884,7 +2883,7 @@ function changeViewerIdentity(){
   if(!viewerSnapshot) return;
   viewerChangingIdentity=true;
   viewerContentEl.classList.add("hidden"); viewerIdentityEl.classList.remove("hidden");
-  document.getElementById("viewerIdentityHome").classList.add("hidden");document.getElementById("viewerIdentityBack").classList.remove("hidden");
+  document.getElementById("viewerIdentityBack").classList.remove("hidden");
   viewerPlayerSelectEl.focus(); window.scrollTo(0,0);
 }
 function cancelViewerIdentityChange(){viewerChangingIdentity=false;viewerIdentityEl.classList.add("hidden");viewerContentEl.classList.remove("hidden");renderViewer();window.scrollTo(0,0);}
@@ -2939,7 +2938,7 @@ function updateViewerConnection(online,updatedAt){
 }
 function onViewerError(message){
   showViewerMode(); viewerIdentityEl.classList.add("hidden"); viewerContentEl.classList.add("hidden");
-  viewerErrorEl.classList.remove("hidden"); viewerErrorEl.innerHTML=`<h2>Tournoi introuvable</h2><p>Vérifiez le code auprès de l’organisateur puis réessayez.</p>${(()=>{try{return sessionStorage.getItem("la-team-player-from-home")==="1"?'<button onclick="leavePlayerMode()">Retour à l’accueil</button>':"";}catch(error){return "";}})()}`;
+  viewerErrorEl.classList.remove("hidden"); viewerErrorEl.innerHTML=`<h2>Tournoi introuvable</h2><p>Vérifiez le code auprès de l’organisateur puis réessayez.</p>`;
 }
 
 /* -------------------- PWA / installation -------------------- */
