@@ -2903,7 +2903,7 @@ function renderViewer(){
   const isNewRound=viewerLastRound!==null && viewerLastRound!==snapshot.roundNumber;
   if(!match){ my.innerHTML="<h2>Match non disponible</h2>"; return; }
   if(match.rest){
-    my.innerHTML=`<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div><div class="viewer-court">REPOS</div><p>Vous ne jouez pas sur ce round.</p>`;
+    my.innerHTML=`<div class="viewer-kicker">ROUND ${snapshot.roundNumber}</div><div class="viewer-court">REPOS CE ROUND</div><p>Votre prochain match apparaîtra automatiquement ici.</p>`;
   }else{
     const destination=viewerMovementLabel(match.destination);
     const court=snapshot.currentRound.courts.find(row=>row.number===match.court);
