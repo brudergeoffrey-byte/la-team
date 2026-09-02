@@ -83,7 +83,7 @@ const qr=qrContext.qrcode(0,"M"); qr.addData(viewerUrl); qr.make();
 assert.match(qr.createSvgTag(4,2),/^<svg/,"QR généré localement");
 assert.equal(viewerUrl.includes(snapshot.ownerUid),false,"QR sans identité ni secret organisateur");
 
-for(const viewers of [4,8,16,32]){
+for(const viewers of [0,3,8,16,32]){
   const choices=Array.from({length:viewers},(_,id)=>sharing.playerMatch(snapshot,id));
   assert.equal(choices.length,viewers,`${viewers} Viewer simultanés`);
   assert.ok(choices.every(Boolean),`${viewers} Viewer trouvent leur match`);
