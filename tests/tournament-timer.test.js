@@ -2,7 +2,7 @@
 const assert=require("node:assert/strict");
 const timer=require("../tournament-timer.js");
 
-for(const minutes of [5,10,15]) assert.equal(timer.roundEndsAt("time",minutes,1000),1000+minutes*60000);
+for(const minutes of [5,8,10,12,15,37,180]) assert.equal(timer.roundEndsAt("time",minutes,1000),1000+minutes*60000);
 assert.equal(timer.roundEndsAt("points",10,1000),null);
 assert.equal(timer.formatRemaining(452000),"07:32");
 assert.equal(timer.formatRemaining(-20),"00:00");
