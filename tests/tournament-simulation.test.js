@@ -5,6 +5,7 @@ const vm = require("node:vm");
 const path = require("node:path");
 const timer = require("../tournament-timer.js");
 const courtTimers = require("../court-timers.js");
+const roundTimer = require("../round-timer.js");
 
 function makeClassList(){
   const values = new Set();
@@ -41,7 +42,7 @@ function loadApp(sharedStorage){
   };
   const context = {
     console, document, alerts,
-    window:{scrollTo(){},LaTeamTimer:timer,LaTeamCourtTimers:courtTimers}, location:{reload(){}}, navigator:{},
+    window:{scrollTo(){},LaTeamTimer:timer,LaTeamCourtTimers:courtTimers,LaTeamRoundTimer:roundTimer}, location:{reload(){}}, navigator:{},
     alert(message){ alerts.push(String(message)); },
     confirm(){ return false; }, prompt(){ return prompts.shift() || ""; },
     setTimeout(fn){ fn(); },
@@ -57,6 +58,7 @@ function loadApp(sharedStorage){
     buildFirstRoundLadder, buildNextRoundLadder, buildScheduleAmericano,
     generateNextAmericanoRound, renderMatch, validateCourt, nextMatch, undoLast,
     editCourtScore, replacePlayer, restartSamePlayers,
+    continueKingAfterCycle, finishAfterKingCycle, finishNow,
     renderRecap, explainNecessaryDuplicate,
     saveToSlot, loadFromSlot, writeAutoSave, tryLoadAutoSave, stateSnapshot,
     getState:()=>state, setState:s=>{state=s;}, uniquePartnerRounds, teamKey
@@ -75,6 +77,7 @@ function initialState(n, courts, mode){
     ladderTeams:mode==="ladder"?{}:null,
     ladderByeCounts:mode==="ladder"?Array(n).fill(0):null,
     ladderLastRest:[], partnersSeen:{}, partnersFullCycleNotified:false,
+    kingCycleReachedAt:null,kingCycleDecisionPending:false,kingCycleContinued:false,
     activeSaveId:null, tournamentStatus:"live", sharedTournament:null,
     endMode:"points", roundDurationMinutes:10, roundEndsAt:null, courtTimers:{}, roundTimer:null,
     timerSoundEnabled:true, timerSoundVolume:"normal", timerTournamentId:"test-tournament"
@@ -118,7 +121,7 @@ function expectedKingDestinations(round, results, courts){
   return expected;
 }
 
-function runScenario({mode,n,courts,rounds,pattern,corrections=false}){
+function runScenario({mode,n,courts,rounds,pattern,corrections=false,autoContinueCycle=true}){
   const {app,elements} = loadApp();
   const s = initialState(n,courts,mode);
   app.setState(s);
@@ -169,6 +172,8 @@ function runScenario({mode,n,courts,rounds,pattern,corrections=false}){
     }
     const results = JSON.parse(JSON.stringify(app.getState().results[r]));
     previous = {round:JSON.parse(JSON.stringify(round)),results};
+
+    if(autoContinueCycle&&app.getState().kingCycleDecisionPending)app.continueKingAfterCycle();
 
     if(r < rounds-1){
       const beforeNext = app.stateSnapshot();
@@ -236,6 +241,57 @@ for(const n of [4,8,12,16]){
   assert.ok([...partnerCounts.values()].every(count=>count===1));
 }
 
+// Un cycle King complet est un jalon : l'Organisateur peut continuer 5, 10
+// ou 20 rounds sans perdre l'historique, les mouvements ou les statistiques.
+for(const [n,courts] of [[4,1],[8,2],[12,3],[16,4],[32,8],[10,2]]){
+  const {app,elements}=loadApp(),s=initialState(n,courts,"ladder");
+  if(n===8||n===32){s.endMode="time";s.roundDurationMinutes=15;}
+  const originalEndMode=s.endMode;app.setState(s);s.schedule=[app.buildFirstRoundLadder(n,courts)];
+  let previous=null,safety=n*40;
+  while(!s.kingCycleDecisionPending&&safety--){
+    app.renderMatch();const round=s.schedule[s.matchIndex];assertRound(round,n,courts);
+    if(previous){const expected=expectedKingDestinations(previous.round,previous.results,courts),actual=new Map();round.courts.forEach((court,index)=>[...court.teamA,...court.teamB].forEach(player=>actual.set(player,index)));for(const [player,destination] of expected)if(!round.rest.includes(player))assert.equal(actual.get(player),destination);}
+    for(let court=0;court<courts;court++){const [a,b]=scoreFor("varied",s.matchIndex,court);elements.get(`scoreA_${court}`).value=String(a);elements.get(`scoreB_${court}`).value=String(b);app.validateCourt(court);}
+    previous={round:JSON.parse(JSON.stringify(round)),results:JSON.parse(JSON.stringify(s.results[s.matchIndex]))};
+    if(!s.kingCycleDecisionPending)app.nextMatch();
+  }
+  assert.ok(s.kingCycleDecisionPending,`cycle King atteint pour ${n}/${courts}`);
+  assert.equal(s.kingCycleReachedAt,s.matchIndex+1);
+  assert.ok(elements.get("fullCycleNotice").innerHTML.includes("✅ Cycle complet atteint"));
+  assert.ok(elements.get("fullCycleNotice").innerHTML.includes("TERMINER LE TOURNOI"));
+  const stoppedRound=s.matchIndex,statsBefore=JSON.stringify(s.players),scheduleBefore=s.schedule.length;
+  app.nextMatch();assert.equal(s.matchIndex,stoppedRound,"choix explicite exigé au jalon");
+  app.continueKingAfterCycle();
+  assert.equal(s.kingCycleContinued,true);assert.equal(s.kingCycleDecisionPending,false);
+  assert.equal(JSON.stringify(s.players),statsBefore,"classement non remis à zéro");
+  assert.equal(s.schedule.length,scheduleBefore,"historique de rotation non effacé");
+  assert.equal(s.endMode,originalEndMode,"mode Points/Temps conservé");
+  const startMatches=s.players.reduce((sum,player)=>sum+player.mj,0);
+  for(let extra=1;extra<=20;extra++){
+    app.nextMatch();app.renderMatch();const round=s.schedule[s.matchIndex];assertRound(round,n,courts);
+    const expected=expectedKingDestinations(previous.round,previous.results,courts),actual=new Map();round.courts.forEach((court,index)=>[...court.teamA,...court.teamB].forEach(player=>actual.set(player,index)));
+    for(const [player,destination] of expected)if(!round.rest.includes(player))assert.equal(actual.get(player),destination,`mouvement prolongé ${n}/${courts}`);
+    for(const court of round.courts)assert.ok((court.necessaryDuplicates||[]).length>0,"doublon signalé après épuisement mathématique des partenaires");
+    for(let court=0;court<courts;court++){const [a,b]=scoreFor("trend",extra,court);elements.get(`scoreA_${court}`).value=String(a);elements.get(`scoreB_${court}`).value=String(b);app.validateCourt(court);}
+    previous={round:JSON.parse(JSON.stringify(round)),results:JSON.parse(JSON.stringify(s.results[s.matchIndex]))};
+    if([5,10,20].includes(extra)){
+      assert.equal(s.players.reduce((sum,player)=>sum+player.mj,0),startMatches+extra*courts*4,`${extra} rounds supplémentaires comptabilisés`);
+      assert.equal(s.players.reduce((sum,player)=>sum+player.plus,0),s.players.reduce((sum,player)=>sum+player.minus,0),"points marqués/encaissés cohérents");
+    }
+  }
+  assert.equal(s.kingCycleDecisionPending,false,"le jalon n’est pas redemandé après Continuer");
+  assert.equal(s.kingCycleReachedAt,stoppedRound+1,"le premier cycle reste enregistré sans cycle artificiel");
+  app.finishNow();assert.equal(s.tournamentStatus,"finished","fin manuelle après prolongation");
+}
+
+{
+  const {app,elements}=loadApp(),s=initialState(4,1,"ladder");app.setState(s);s.schedule=[app.buildFirstRoundLadder(4,1)];
+  for(let guard=0;guard<20&&!s.kingCycleDecisionPending;guard++){
+    app.renderMatch();for(let court=0;court<s.courts;court++){elements.get(`scoreA_${court}`).value="15";elements.get(`scoreB_${court}`).value="6";app.validateCourt(court);}if(!s.kingCycleDecisionPending)app.nextMatch();
+  }
+  assert.ok(s.kingCycleDecisionPending);app.finishAfterKingCycle();assert.equal(s.tournamentStatus,"finished","choix Terminer effectif au jalon");
+}
+
 // Sauvegarde et autosave conservent exactement l'état métier.
 {
   const {app} = loadApp();
@@ -281,4 +337,4 @@ for(const n of [4,8,12,16]){
   assertRound(restarted.schedule[0],12,3);
 }
 
-console.log("OK — 17 simulations longues (dont King 32/8) + 4 cycles Americano + correction/persistance/Retour validés");
+console.log("OK — simulations longues, cycles King prolongés (+5/+10/+20), Americano, correction/persistance/Retour validés");

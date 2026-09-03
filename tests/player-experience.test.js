@@ -63,4 +63,6 @@ const viewerMarkup=html.slice(html.indexOf('id="viewer"'),html.indexOf('<!-- SET
 for(const forbidden of ["Valider le score","ROUND SUIVANT","Remplacer un joueur","Terminer le tournoi"]){
   assert.equal(viewerMarkup.includes(forbidden),false,`Joueur sans action organisateur : ${forbidden}`);
 }
+for(const expected of ["✅ Cycle complet atteint","Tous les joueurs ont parcouru le cycle idéal. Vous pouvez terminer le tournoi ou continuer à jouer.","TERMINER LE TOURNOI","CONTINUER"]){assert.ok(html.includes(expected),`décision de fin King : ${expected}`);}
+assert.match(html,/function continueKingAfterCycle\(\)[\s\S]*kingCycleDecisionPending=false[\s\S]*kingCycleContinued=true[\s\S]*writeAutoSave/,"Continuer conserve et sauvegarde le tournoi");
 console.log("PLAYER_EXPERIENCE_OK — accueil, codes, identité, round en direct et lecture seule validés");

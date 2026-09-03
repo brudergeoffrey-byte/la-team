@@ -329,6 +329,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .meter-track{height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px;}
 .meter-fill{height:100%;background:linear-gradient(90deg,var(--aqua),var(--lime));border-radius:inherit;transition:width .35s ease;}
 .cycle-notice{padding:13px 15px;margin:10px 0;border:1px solid rgba(184,243,74,.3);border-radius:16px;background:rgba(184,243,74,.1);color:#eaffc4;font-size:13px;font-weight:700;}
+.cycle-notice strong{display:block;color:var(--lime);font-size:16px;margin-bottom:5px}.cycle-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.cycle-actions button{margin:0;min-height:44px}.cycle-actions .continue-cycle{background:var(--lime);color:#102018}
 .event-strip{display:flex;justify-content:space-between;gap:12px;align-items:end;margin:6px 0 12px;}
 .event-name{font-size:16px;font-weight:900}.club-name{font-size:12px;color:var(--ink-soft);margin-top:2px}
 .round-state{font-size:13px;color:var(--ink-soft);text-align:right}.round-state strong{display:block;color:var(--ink);font-size:18px}
@@ -773,6 +774,9 @@ let state = {
 
   partnersSeen: null,
   partnersFullCycleNotified: false,
+  kingCycleReachedAt: null,
+  kingCycleDecisionPending: false,
+  kingCycleContinued: false,
 
   activeSaveId: null,
   clubId: null,
@@ -1060,6 +1064,11 @@ function maybeNotifyFullPartnerCycle(){
 
   if(seen >= total){
     state.partnersFullCycleNotified = true;
+    if(state.mode === "ladder" && !state.kingCycleReachedAt){
+      state.kingCycleReachedAt = state.matchIndex + 1;
+      state.kingCycleDecisionPending = true;
+      state.kingCycleContinued = false;
+    }
     renderPartnerProgress();
   }
 }
@@ -1078,9 +1087,22 @@ function renderPartnerProgress(){
       <div class="meter-fill" style="width:${percent}%"></div>
     </div>`;
   fullCycleNoticeEl.classList.toggle("hidden", !state.partnersFullCycleNotified);
-  fullCycleNoticeEl.textContent = state.partnersFullCycleNotified
-    ? "Tour complet : tout le monde a joué avec tout le monde en partenaire. Vous pouvez continuer, mais des doublons vont maintenant devenir probables ou inévitables."
-    : "";
+  if(!state.partnersFullCycleNotified){fullCycleNoticeEl.innerHTML="";return;}
+  if(state.mode!=="ladder"){
+    fullCycleNoticeEl.textContent="Tour complet : tout le monde a joué avec tout le monde en partenaire. Les doublons deviennent maintenant probables ou inévitables.";
+    return;
+  }
+  const round=state.schedule?.[state.matchIndex],roundComplete=Boolean(round?.courts?.length)&&state.validatedCourts?.length===round.courts.length&&state.validatedCourts.every(Boolean);
+  const actions=state.kingCycleDecisionPending&&roundComplete?`<div class="cycle-actions"><button class="danger" onclick="finishAfterKingCycle()">TERMINER LE TOURNOI</button><button class="continue-cycle" onclick="continueKingAfterCycle()">CONTINUER</button></div>`:"";
+  fullCycleNoticeEl.innerHTML=`<strong>✅ Cycle complet atteint</strong><span>Tous les joueurs ont parcouru le cycle idéal. Vous pouvez terminer le tournoi ou continuer à jouer.</span>${state.kingCycleContinued?'<div class="small" style="margin-top:7px">Le tournoi continue · historique et classement conservés.</div>':actions}`;
+}
+function continueKingAfterCycle(){
+  if(state.mode!=="ladder"||!state.kingCycleDecisionPending)return;
+  state.kingCycleDecisionPending=false;state.kingCycleContinued=true;writeAutoSave();renderMatch();
+}
+function finishAfterKingCycle(){
+  if(state.mode!=="ladder"||!state.kingCycleDecisionPending)return;
+  state.kingCycleDecisionPending=false;writeAutoSave();finishNow();
 }
 
 /* -------------------- Saves -------------------- */
@@ -1162,6 +1184,9 @@ function normalizeLoadedState(){
   if(state.totalRounds === undefined) state.totalRounds = null;
   if(!state.partnersSeen || typeof state.partnersSeen !== "object") state.partnersSeen = {};
   if(state.partnersFullCycleNotified === undefined) state.partnersFullCycleNotified = false;
+  if(state.kingCycleReachedAt === undefined) state.kingCycleReachedAt = null;
+  if(state.kingCycleDecisionPending === undefined) state.kingCycleDecisionPending = false;
+  if(state.kingCycleContinued === undefined) state.kingCycleContinued = false;
   if(!Array.isArray(state.ladderByeCounts) || state.ladderByeCounts.length !== state.n){
     state.ladderByeCounts = (state.mode === "ladder") ? Array(state.n).fill(0) : null;
   }
@@ -2110,6 +2135,9 @@ function startNewTournament(){
   state.sharedTournament = null;
   state.partnersSeen = {};
   state.partnersFullCycleNotified = false;
+  state.kingCycleReachedAt = null;
+  state.kingCycleDecisionPending = false;
+  state.kingCycleContinued = false;
 
   state.ladderOpp = (state.mode === "ladder")
     ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
@@ -2276,7 +2304,7 @@ function renderMatch(){
     document.getElementById(`scoreB_${idx}`).value = state.courtScores[idx].b;
   });
 
-  nextBtn.disabled = !state.validatedCourts.every(Boolean);
+  nextBtn.disabled = !state.validatedCourts.every(Boolean) || Boolean(state.kingCycleDecisionPending);
   const movementOverview=document.getElementById("movementOverview");
   movementOverview.classList.toggle("hidden",!roundComplete||state.mode!=="ladder");
   if(roundComplete&&state.mode==="ladder")movementOverview.innerHTML=`<div class="movement-overview-title">MOUVEMENTS DU PROCHAIN ROUND</div><div class="movement-flow">${match.courts.map((_,idx)=>`<span>T${idx+1}</span>${idx<match.courts.length-1?'<b>↔</b>':''}`).join("")}</div>`;
@@ -2475,6 +2503,7 @@ function replacePlayer(){
 
 function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
+  if(state.mode==="ladder" && state.kingCycleDecisionPending) return;
 
   pushHistory();
 
@@ -2684,6 +2713,9 @@ function restartSamePlayers(){
 
   state.partnersSeen = {};
   state.partnersFullCycleNotified = false;
+  state.kingCycleReachedAt = null;
+  state.kingCycleDecisionPending = false;
+  state.kingCycleContinued = false;
 
   state.ladderOpp = (mode === "ladder")
     ? Array.from({length:n}, ()=>Array(n).fill(0))
@@ -2769,6 +2801,9 @@ function newGameChoosePlayers(){
 
     partnersSeen: {},
     partnersFullCycleNotified: false,
+    kingCycleReachedAt: null,
+    kingCycleDecisionPending: false,
+    kingCycleContinued: false,
 
     activeSaveId: keptActiveSaveId,
     clubId: keptClubId,
