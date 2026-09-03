@@ -403,13 +403,13 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   .row{flex-direction:row;}
   .secondary-actions{display:grid;grid-template-columns:1fr 1fr;}
   .secondary-actions .danger-action{grid-column:1/-1;}
-  .team{font-size:15px;}
+  .team{font-size:17px;overflow-wrap:anywhere;}
   th,td{padding:9px 5px;font-size:12px;}
   .hide-mobile{display:none;}
   .round-cockpit{top:65px;padding:11px;margin-inline:-2px}.cockpit-head{gap:8px}.cockpit-progress{font-size:12px}.cockpit-alert{font-size:12px}.court-status-grid{grid-template-columns:repeat(4,minmax(0,1fr));padding:7px 0 0;margin:0;background:transparent;}
   .court-status{font-size:10px;padding:7px 3px;min-height:38px;}
   .event-strip{align-items:start}.round-state strong{font-size:16px}
-  .home-shell{margin-top:2vh}.entry-grid{grid-template-columns:1fr}.entry-card{min-height:260px;padding:20px}.entry-card h2{font-size:22px}.viewer-shell{margin-top:4px}.viewer-hero{padding:18px}.viewer-court{font-size:clamp(42px,15vw,64px);margin-bottom:14px}.viewer-matchup{font-size:clamp(16px,4.8vw,21px)}
+  .home-shell{margin-top:2vh}.entry-grid{grid-template-columns:1fr}.entry-card{min-height:260px;padding:20px}.entry-card h2{font-size:22px}.viewer-shell{margin-top:4px}.viewer-hero{padding:18px}.viewer-court{font-size:clamp(42px,15vw,64px);margin-bottom:14px}.viewer-matchup{font-size:clamp(18px,5.4vw,23px);overflow-wrap:anywhere}
 }
 
 @media (min-width:900px){#courts{grid-template-columns:repeat(4,minmax(0,1fr));}.court-card{padding:14px!important}.team{font-size:14px}.score-row select{min-height:50px;font-size:21px}}
@@ -517,7 +517,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
       <div class="viewer-head"><div class="eyebrow">TOURNOI EN DIRECT</div><button class="secondary" onclick="changeViewerIdentity()">Changer de joueur</button></div>
       <div id="viewerUpdatedAt" class="viewer-sync"></div>
       <div class="viewer-section-title eyebrow">Ton match</div><div id="viewerMyMatch" class="card viewer-hero"></div>
-      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">CHRONO DU ROUND</div><div id="viewerTimerClock" class="timer-clock">Pas démarré</div></div><div class="viewer-timer-actions"><button id="viewerTimerStartBtn" onclick="startViewerCourtTimer()">Démarrer le chrono</button><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div></div>
+      <div id="viewerTimer" class="timer-display hidden"><div><div class="timer-status">CHRONO DU ROUND</div><div id="viewerTimerClock" class="timer-clock">En attente de l’Organisateur</div></div><div class="viewer-timer-actions"><button id="viewerAlertsBtn" class="secondary" onclick="enableViewerAlerts()">🔔 Activer les alertes</button></div></div>
       <div class="card"><h2 class="viewer-section-title">Round en direct</h2><div id="viewerProgress" class="viewer-progress"></div><div id="viewerCourts"></div></div>
       <details class="card viewer-details"><summary>Classement</summary><div id="viewerRanking"></div></details>
       <details class="card viewer-details"><summary>Rounds précédents</summary><div id="viewerResults"></div></details>
@@ -734,6 +734,8 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="./round-timer.js"></script>
 <script src="./vendor/qrcode.min.js"></script>
 <script src="./firebase-client.js"></script>
+<script src="./club-v2.js"></script>
+<script src="./firebase-v2.js"></script>
 <script>
 const STATE_VERSION = 2;
 
@@ -919,7 +921,6 @@ function updateTimerDisplays(){
     const timer=currentRoundTimer(viewerRoundTimer,viewerSnapshot.roundNumber,viewerSnapshot.roundDurationMinutes),phase=window.LaTeamRoundTimer.phase(timer);
     timerRender(viewerTimer,document.getElementById("viewerTimerClock"),document.querySelector("#viewerTimer .timer-status"),timer);
     const personalClock=document.getElementById("viewerPersonalClock");if(personalClock){personalClock.textContent=phase==="ended"?"00:00":window.LaTeamRoundTimer.label(timer);personalClock.className=`viewer-personal-clock ${phase}`;}
-    document.getElementById("viewerTimerStartBtn").classList.toggle("hidden",phase!=="idle");
     if(phase==="ended"&&viewerAlertsEnabled)alertOnce("viewer",viewerSnapshot.code,timer,"normal");
   }
 }
@@ -931,7 +932,6 @@ function enableViewerAlerts(){
 }
 async function startOrganizerRoundTimer(){await changeRoundTimer("start",null);}
 async function resetOrganizerRoundTimer(){if(!confirm("Réinitialiser le chrono du round ?\n\nLe score et le tournoi ne seront pas modifiés."))return;await changeRoundTimer("reset",null);}
-async function startViewerCourtTimer(){const playerId=Number(localStorage.getItem(viewerIdentityKey())),match=window.LaTeamSharing.playerMatch(viewerSnapshot,playerId);if(match&&!match.rest)await changeRoundTimer("start",playerId);}
 async function changeRoundTimer(action,playerId){
   const snapshot=playerId===null?null:viewerSnapshot,code=playerId===null?state.sharedTournament?.code:snapshot?.code,roundNumber=playerId===null?state.matchIndex+1:snapshot.roundNumber,durationMinutes=playerId===null?state.roundDurationMinutes:snapshot.roundDurationMinutes;
   if(!code){

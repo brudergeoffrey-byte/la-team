@@ -32,5 +32,10 @@ assert.match(rules,/request\.resource\.data\.role == 'owner'[\s\S]*getAfter/,"ow
 assert.match(rules,/clubAdmin\(clubId\) && !clubOwner\(clubId\)[\s\S]*request\.resource\.data\.role == 'organizer'/,"admin limité au rôle organizer");
 assert.match(rules,/allow get: if isValidCode\(code\)/,"Viewer lit la projection exacte");
 assert.match(rules,/allow list: if false/,"Viewer ne liste pas les tournois publics");
-assert.match(rules,/activeRoundViewer/);assert.match(rules,/roundStartedAt == request\.time/);assert.match(rules,/allow update, delete: if false/);
-console.log("MULTI_CLUB_SECURITY_OK — isolation A/B, rôles, non-membre, anti-escalade et Viewer validés");
+assert.doesNotMatch(rules,/function activeRoundViewer/,"Viewer sans droit sur le timer global");
+for(const marker of ["match /players/{playerId}","match /seasons/{seasonId}","match /standings/{playerId}","match /events/{eventId}","match /registrations/{registrationId}","match /participants/{participantId}","match /scoreProposals/{proposalId}","match /auditLog/{auditId}"]){
+  assert.ok(rules.includes(marker),`schéma V2 présent : ${marker}`);
+}
+assert.match(rules,/match \/standings\/\{playerId\}[\s\S]*allow create, update, delete: if false/,"statistiques officielles écrites uniquement par le serveur");
+assert.match(rules,/ownsLinkedPlayer\(request\.resource\.data\)/,"liaison playerId protégée par ownerUid");
+console.log("MULTI_CLUB_SECURITY_OK — isolation A/B, rôles, anti-escalade, V2 et Viewer validés");

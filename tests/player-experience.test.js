@@ -32,7 +32,7 @@ for(const expected of ["Organiser un tournoi →","Rejoindre un tournoi →","Co
   assert.ok(html.includes(expected),`parcours visible : ${expected}`);
 }
 for(const expected of ["Mis à jour à","Retour au tournoi","Mode de fin de match","Durée du round","Activer les alertes"]){assert.ok(html.includes(expected),`expérience temps réel : ${expected}`);}
-for(const expected of ["Démarrer le chrono","Réinitialiser le chrono","CHRONO DU ROUND","organizerCourtTimers"]){assert.ok(html.includes(expected),`chrono global : ${expected}`);}
+for(const expected of ["En attente de l’Organisateur","Réinitialiser le chrono","CHRONO DU ROUND","organizerCourtTimers"]){assert.ok(html.includes(expected),`chrono global : ${expected}`);}
 for(const expected of ["roundCockpit","cockpitClock","Score attendu : Terrain","MOUVEMENTS DU PROCHAIN ROUND","viewerPersonalClock","Prochain round en préparation","NOUVEAU MATCH"]){assert.ok(html.includes(expected),`cockpit et assistant Joueur : ${expected}`);}
 for(const expected of ["data-court-time","court-time-left","⏱ TEMPS TERMINÉ"]){assert.ok(html.includes(expected),`temps restant par match : ${expected}`);}
 assert.ok(html.includes("REPOS CE ROUND"),"repos Viewer sans ambiguïté");

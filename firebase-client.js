@@ -174,8 +174,8 @@
     await db.runTransaction(async transaction=>{const [tournamentDoc,currentDoc]=await Promise.all([transaction.get(parent),transaction.get(ref)]);if(!tournamentDoc.exists||currentDoc.exists)return;const snapshot=tournamentDoc.data();if(snapshot.endMode!=="time")return;transaction.set(ref,{state:"idle",roundNumber:Number(snapshot.roundNumber),durationMinutes:Number(snapshot.roundDurationMinutes),roundStartedAt:null,startedBy:null,viewerStartConsumed:false,generation:0,updatedAt:root.firebase.firestore.FieldValue.serverTimestamp()});});
   }
 
-  async function startRoundTimer({code,playerId=null}){
-    const user=playerId===null?await organizerUser():await bindViewerPlayer(code,playerId);
+  async function startRoundTimer({code}){
+    await organizerUser();
     const parent=tournamentRef(code),ref=roundTimerRef(code);
     await db.runTransaction(async transaction=>{
       const [tournamentDoc,currentDoc]=await Promise.all([transaction.get(parent),transaction.get(ref)]);
@@ -183,9 +183,7 @@
       const snapshot=tournamentDoc.data();
       const current=currentDoc.exists?currentDoc.data():null;
       if(current?.state==="running"&&Number(current.roundNumber)===Number(snapshot.roundNumber))return;
-      if(playerId!==null&&!root.LaTeamCourtTimers.courtForPlayer(snapshot,playerId))throw new Error("Vous ne jouez pas sur ce round.");
-      if(playerId!==null&&Number(current?.roundNumber)===Number(snapshot.roundNumber)&&current?.viewerStartConsumed)throw new Error("Ce chrono a déjà été lancé pour ce round.");
-      transaction.set(ref,{state:"running",roundNumber:Number(snapshot.roundNumber),durationMinutes:Number(snapshot.roundDurationMinutes),roundStartedAt:root.firebase.firestore.FieldValue.serverTimestamp(),startedBy:playerId===null?"organizer":Number(playerId),viewerStartConsumed:true,generation:Number(current?.generation||0)+1,updatedAt:root.firebase.firestore.FieldValue.serverTimestamp()});
+      transaction.set(ref,{state:"running",roundNumber:Number(snapshot.roundNumber),durationMinutes:Number(snapshot.roundDurationMinutes),roundStartedAt:root.firebase.firestore.FieldValue.serverTimestamp(),startedBy:"organizer",viewerStartConsumed:true,generation:Number(current?.generation||0)+1,updatedAt:root.firebase.firestore.FieldValue.serverTimestamp()});
     });
     const latest=await ref.get();return latest.exists?latest.data():null;
   }

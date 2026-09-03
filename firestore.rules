@@ -18,6 +18,25 @@ service cloud.firestore {
     function clubOwner(clubId) {
       return activeMember(clubId) && get(memberPath(clubId)).data.role == 'owner';
     }
+    function registeredAccount() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schemaVersion == 2
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.playerId is string;
+    }
+    function currentPlayerId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.playerId;
+    }
+    function registeredClubPlayer(clubId) {
+      return registeredAccount()
+        && exists(/databases/$(database)/documents/clubs/$(clubId)/players/$(currentPlayerId()))
+        && get(/databases/$(database)/documents/clubs/$(clubId)/players/$(currentPlayerId())).data.membershipStatus == 'active';
+    }
+    function ownsLinkedPlayer(data) {
+      return !data.keys().hasAny(['playerId'])
+        || (existsAfter(/databases/$(database)/documents/players/$(data.playerId))
+          && getAfter(/databases/$(database)/documents/players/$(data.playerId)).data.ownerUid == request.auth.uid);
+    }
 
     function hasCommonPublicShape(data, code) {
       return data.code == code
@@ -118,14 +137,36 @@ service cloud.firestore {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if false;
       allow create: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['schemaVersion','email','displayName','defaultClubId','createdAt','updatedAt'])
-        && request.resource.data.schemaVersion == 1
+        && request.resource.data.keys().hasOnly(['schemaVersion','email','displayName','defaultClubId','playerId','createdAt','updatedAt'])
+        && request.resource.data.schemaVersion in [1, 2]
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.defaultClubId is string;
+        && request.resource.data.defaultClubId is string
+        && ownsLinkedPlayer(request.resource.data);
       allow update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','defaultClubId','updatedAt'])
-        && request.resource.data.schemaVersion == resource.data.schemaVersion
-        && request.resource.data.email == resource.data.email;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['schemaVersion','displayName','defaultClubId','playerId','updatedAt'])
+        && request.resource.data.schemaVersion >= resource.data.schemaVersion
+        && request.resource.data.schemaVersion <= 2
+        && request.resource.data.email == resource.data.email
+        && (!resource.data.keys().hasAny(['playerId']) || request.resource.data.playerId == resource.data.playerId)
+        && ownsLinkedPlayer(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /players/{playerId} {
+      function validPlayer(data) {
+        return data.keys().hasOnly(['schemaVersion','playerId','publicId','ownerUid','displayName','normalizedName','status','createdAt','updatedAt'])
+          && data.schemaVersion == 2 && data.playerId == playerId
+          && data.publicId.matches('^LT-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$')
+          && data.ownerUid is string && data.displayName is string
+          && data.normalizedName is string && data.status in ['active','disabled'];
+      }
+      allow get: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow list: if false;
+      allow create: if signedIn() && validPlayer(request.resource.data)
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && validPlayer(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','normalizedName','updatedAt']);
       allow delete: if false;
     }
 
@@ -168,6 +209,121 @@ service cloud.firestore {
           || (clubAdmin(clubId) && !clubOwner(clubId) && resource.data.role == 'organizer');
       }
 
+      match /players/{playerId} {
+        function validClubPlayer(data) {
+          return data.keys().hasOnly(['schemaVersion','clubId','playerId','ownerUid','displayName','normalizedName','membershipStatus','joinedAt','updatedAt'])
+            && data.schemaVersion == 2 && data.clubId == clubId && data.playerId == playerId
+            && data.ownerUid is string && data.displayName is string && data.normalizedName is string
+            && data.membershipStatus in ['active','disabled'];
+        }
+        allow get: if activeMember(clubId)
+          || (registeredAccount() && currentPlayerId() == playerId && resource.data.ownerUid == request.auth.uid);
+        allow list: if activeMember(clubId);
+        allow create: if clubAdmin(clubId) && validClubPlayer(request.resource.data)
+          && exists(/databases/$(database)/documents/players/$(playerId))
+          && get(/databases/$(database)/documents/players/$(playerId)).data.ownerUid == request.resource.data.ownerUid;
+        allow update: if clubAdmin(clubId) && validClubPlayer(request.resource.data)
+          && request.resource.data.clubId == resource.data.clubId
+          && request.resource.data.playerId == resource.data.playerId
+          && request.resource.data.ownerUid == resource.data.ownerUid;
+        allow delete: if clubAdmin(clubId);
+      }
+
+      match /seasons/{seasonId} {
+        function validScoring(data) {
+          return data.keys().hasOnly(['scoringVersion','winPoints','lossPoints','minimumMatches','primary','tieBreakers'])
+            && data.scoringVersion == 1
+            && data.winPoints is int && data.lossPoints is int
+            && data.winPoints > data.lossPoints && data.lossPoints >= 0
+            && data.minimumMatches is int && data.minimumMatches >= 0
+            && data.primary == 'averageChampionshipPoints'
+            && data.tieBreakers == ['championshipPoints','averageDifference','wins'];
+        }
+        function validSeason(data) {
+          return data.keys().hasOnly(['schemaVersion','seasonId','clubId','name','label','startsAt','endsAt','timezone','status','scoring','scoringVersion','createdAt','updatedAt'])
+            && data.schemaVersion == 2 && data.seasonId == seasonId && data.clubId == clubId
+            && data.name is string && data.startsAt is int && data.endsAt is int && data.endsAt > data.startsAt
+            && data.status in ['draft','active','finished'] && data.scoringVersion == 1
+            && validScoring(data.scoring) && data.scoring.scoringVersion == data.scoringVersion;
+        }
+        allow read: if activeMember(clubId) || registeredClubPlayer(clubId);
+        allow create: if clubAdmin(clubId) && validSeason(request.resource.data);
+        allow update: if clubAdmin(clubId) && validSeason(request.resource.data)
+          && request.resource.data.clubId == resource.data.clubId
+          && request.resource.data.seasonId == resource.data.seasonId
+          && (resource.data.status == 'draft'
+            || (request.resource.data.scoring == resource.data.scoring
+              && request.resource.data.scoringVersion == resource.data.scoringVersion));
+        allow delete: if clubOwner(clubId) && resource.data.status == 'draft';
+
+        match /standings/{playerId} {
+          allow get: if activeMember(clubId)
+            || (registeredAccount() && currentPlayerId() == playerId);
+          allow list: if activeMember(clubId) || registeredClubPlayer(clubId);
+          // Une fonction serveur Admin est la seule source des statistiques officielles.
+          allow create, update, delete: if false;
+        }
+      }
+
+      match /events/{eventId} {
+        function validEvent(data) {
+          return data.keys().hasOnly(['schemaVersion','eventId','clubId','seasonId','tournamentId','name','startsAt','plannedEndsAt','actualEndedAt','timezone','capacity','registrationStatus','status','createdAt','updatedAt'])
+            && data.schemaVersion == 2 && data.eventId == eventId && data.clubId == clubId
+            && data.name is string && data.startsAt is int && data.capacity is int
+            && data.capacity >= 4 && data.capacity <= 256
+            && data.registrationStatus in ['open','closed']
+            && data.status in ['draft','registration','live','finished'];
+        }
+        allow read: if activeMember(clubId) || registeredClubPlayer(clubId);
+        allow create: if activeMember(clubId) && validEvent(request.resource.data);
+        allow update: if activeMember(clubId) && validEvent(request.resource.data)
+          && request.resource.data.clubId == resource.data.clubId
+          && request.resource.data.eventId == resource.data.eventId;
+        allow delete: if clubAdmin(clubId) && resource.data.status == 'draft';
+
+        match /registrations/{registrationId} {
+          function validRegistration(data) {
+            return data.keys().hasOnly(['schemaVersion','registrationId','eventId','clubId','type','playerId','displayName','normalizedName','status','registeredByUid','createdAt','updatedAt'])
+              && data.schemaVersion == 2 && data.registrationId == registrationId
+              && data.eventId == eventId && data.clubId == clubId
+              && data.type in ['registered','guest']
+              && data.status in ['registered','waiting','cancelled'];
+          }
+          function ownRegistration(data) {
+            return registeredAccount() && data.type == 'registered'
+              && data.playerId == currentPlayerId() && data.registeredByUid == request.auth.uid;
+          }
+          allow get: if activeMember(clubId) || ownRegistration(resource.data);
+          allow list: if activeMember(clubId);
+          allow create: if validRegistration(request.resource.data)
+            && (activeMember(clubId) || ownRegistration(request.resource.data));
+          allow update: if validRegistration(request.resource.data)
+            && request.resource.data.clubId == resource.data.clubId
+            && request.resource.data.eventId == resource.data.eventId
+            && request.resource.data.playerId == resource.data.playerId
+            && request.resource.data.type == resource.data.type
+            && (activeMember(clubId)
+              || (ownRegistration(resource.data)
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])));
+          allow delete: if false;
+        }
+
+        match /participants/{participantId} {
+          function validParticipant(data) {
+            return data.keys().hasOnly(['schemaVersion','participantId','registrationId','playerId','displayNameSnapshot','type','engineIndex'])
+              && data.schemaVersion == 2 && data.participantId == participantId
+              && data.registrationId is string && data.displayNameSnapshot is string
+              && data.type in ['registered','guest'] && data.engineIndex is int && data.engineIndex >= 0
+              && ((data.type == 'registered' && data.playerId is string)
+                || (data.type == 'guest' && data.playerId == null));
+          }
+          allow read: if activeMember(clubId)
+            || (registeredAccount() && resource.data.playerId == currentPlayerId());
+          allow create, update, delete: if activeMember(clubId)
+            && validParticipant(request.resource.data);
+        }
+      }
+
       match /tournaments/{tournamentId} {
         function validPrivate(data) {
           return data.keys().hasOnly(['schemaVersion','tournamentId','clubId','ownerUid','createdByUid','publicCode','status','roundNumber','updatedAt','state'])
@@ -184,6 +340,64 @@ service cloud.firestore {
           && request.resource.data.ownerUid == resource.data.ownerUid
           && request.resource.data.createdByUid == resource.data.createdByUid;
         allow delete: if clubAdmin(clubId);
+
+        match /matches/{matchId} {
+          function validOfficialMatch(data) {
+            return data.keys().hasOnly(['schemaVersion','matchId','clubId','tournamentId','eventId','seasonId','roundNumber','courtNumber','teamA','teamB','teamAPlayerIds','teamBPlayerIds','playerIds','scoreA','scoreB','status','validatedByUid','validatedAt','revision'])
+              && data.schemaVersion == 2 && data.matchId == matchId
+              && data.clubId == clubId && data.tournamentId == tournamentId
+              && data.roundNumber is int && data.courtNumber is int
+              && data.teamA is list && data.teamA.size() == 2
+              && data.teamB is list && data.teamB.size() == 2
+              && data.teamAPlayerIds is list && data.teamAPlayerIds.size() <= 2
+              && data.teamBPlayerIds is list && data.teamBPlayerIds.size() <= 2
+              && data.playerIds == data.teamAPlayerIds.concat(data.teamBPlayerIds)
+              && data.scoreA is int && data.scoreB is int
+              && data.scoreA >= 0 && data.scoreA <= 99 && data.scoreB >= 0 && data.scoreB <= 99
+              && data.scoreA != data.scoreB && data.status == 'validated';
+          }
+          allow get: if activeMember(clubId)
+            || (registeredAccount() && currentPlayerId() in resource.data.playerIds);
+          allow list: if activeMember(clubId)
+            || (registeredAccount() && currentPlayerId() in resource.data.playerIds);
+          allow create: if activeMember(clubId) && validOfficialMatch(request.resource.data)
+            && request.resource.data.validatedByUid == request.auth.uid;
+          allow update: if activeMember(clubId) && validOfficialMatch(request.resource.data)
+            && request.resource.data.clubId == resource.data.clubId
+            && request.resource.data.tournamentId == resource.data.tournamentId
+            && request.resource.data.matchId == resource.data.matchId
+            && request.resource.data.validatedByUid == request.auth.uid
+            && request.resource.data.revision == resource.data.revision + 1;
+          allow delete: if false;
+        }
+
+        match /auditLog/{auditId} {
+          allow read: if activeMember(clubId);
+          allow create: if activeMember(clubId)
+            && request.resource.data.clubId == clubId
+            && request.resource.data.tournamentId == tournamentId
+            && request.resource.data.auditId == auditId
+            && request.resource.data.actorUid == request.auth.uid;
+          allow update, delete: if false;
+        }
+
+        match /roundSummaries/{roundNumber} {
+          function validRoundSummary(data) {
+            return data.keys().hasOnly(['schemaVersion','clubId','tournamentId','eventId','seasonId','roundNumber','byePlayerIds','validatedByUid','validatedAt'])
+              && data.schemaVersion == 2 && data.clubId == clubId && data.tournamentId == tournamentId
+              && data.roundNumber is int && data.roundNumber >= 1 && data.byePlayerIds is list
+              && data.validatedByUid == request.auth.uid;
+          }
+          allow read: if activeMember(clubId);
+          allow create, update: if activeMember(clubId) && validRoundSummary(request.resource.data);
+          allow delete: if false;
+        }
+
+        match /matchTimers/{matchId} {
+          allow read: if activeMember(clubId);
+          // Schéma réservé : fermé jusqu'à l'implémentation explicite du timer individuel.
+          allow create, update, delete: if false;
+        }
       }
     }
 
@@ -229,6 +443,44 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      match /scoreProposals/{proposalId} {
+        function proposalTournament() {
+          return get(/databases/$(database)/documents/tournaments/$(code)).data;
+        }
+        function proposalSession() {
+          return get(/databases/$(database)/documents/tournaments/$(code)/viewerSessions/$(request.auth.uid)).data;
+        }
+        function validProposal(data) {
+          return data.keys().hasOnly(['schemaVersion','proposalId','publicCode','clubId','tournamentId','roundNumber','courtNumber','proposedByUid','proposedByParticipantId','engineIndex','scoreA','scoreB','status','createdAt','updatedAt'])
+            && data.schemaVersion == 2 && data.proposalId == proposalId && data.publicCode == code
+            && data.clubId == proposalTournament().clubId
+            && data.roundNumber == proposalTournament().roundNumber
+            && data.courtNumber is int && data.courtNumber >= 1
+            && data.courtNumber <= proposalTournament().currentRound.courts.size()
+            && data.engineIndex == proposalSession().playerId
+            && (data.engineIndex in proposalTournament().currentRound.courts[data.courtNumber - 1].teamA
+              || data.engineIndex in proposalTournament().currentRound.courts[data.courtNumber - 1].teamB)
+            && data.proposedByUid == request.auth.uid
+            && data.scoreA is int && data.scoreA >= 0 && data.scoreA <= 99
+            && data.scoreB is int && data.scoreB >= 0 && data.scoreB <= 99
+            && data.scoreA != data.scoreB && data.status == 'pending';
+        }
+        function proposalOrganizer() {
+          return request.auth != null && proposalTournament().schemaVersion == 4
+            && activeMember(proposalTournament().clubId);
+        }
+        allow get: if request.auth != null && (resource.data.proposedByUid == request.auth.uid || proposalOrganizer());
+        allow list: if proposalOrganizer();
+        allow create: if request.auth != null
+          && exists(/databases/$(database)/documents/tournaments/$(code)/viewerSessions/$(request.auth.uid))
+          && validProposal(request.resource.data);
+        allow update: if proposalOrganizer()
+          && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])
+          && request.resource.data.status in ['accepted','rejected'];
+        allow delete: if false;
+      }
+
       match /courtTimers/{timerId} {
         // Ancien format par terrain : lecture conservée pendant la migration,
         // mais toute nouvelle écriture est fermée.
@@ -244,14 +496,6 @@ service cloud.firestore {
           return request.auth != null
             && ((tournament().schemaVersion < 4 && tournament().ownerUid == request.auth.uid)
               || (tournament().schemaVersion == 4 && activeMember(tournament().clubId)));
-        }
-        function sessionPath() {
-          return /databases/$(database)/documents/tournaments/$(code)/viewerSessions/$(request.auth.uid);
-        }
-        function activeRoundViewer() {
-          return request.auth != null
-            && exists(sessionPath())
-            && !(get(sessionPath()).data.playerId in tournament().currentRound.rest);
         }
         function validCommon(data) {
           return timerId == 'current'
@@ -276,11 +520,6 @@ service cloud.firestore {
             && data.viewerStartConsumed == true
             && (data.startedBy == 'organizer' || data.startedBy is int);
         }
-        function validViewerStart(data) {
-          return activeRoundViewer()
-            && validRunning(data)
-            && data.startedBy == get(sessionPath()).data.playerId;
-        }
         function validIdle(data) {
           return validCommon(data)
             && data.state == 'idle'
@@ -295,23 +534,19 @@ service cloud.firestore {
             && request.resource.data.viewerStartConsumed == false)
           || (validRunning(request.resource.data)
             && request.resource.data.generation == 1
-            && ((organizer() && request.resource.data.startedBy == 'organizer')
-              || validViewerStart(request.resource.data)));
+            && organizer() && request.resource.data.startedBy == 'organizer');
         allow update: if request.resource.data.generation == resource.data.generation + 1
           && (
             // Un seul démarrage est possible pendant un round. La transaction
             // cliente et cette précondition serveur arbitrent les concurrents.
             (resource.data.roundNumber == tournament().roundNumber
               && resource.data.state == 'idle'
-              && ((organizer() && validRunning(request.resource.data)
-                  && request.resource.data.startedBy == 'organizer')
-                || (resource.data.viewerStartConsumed == false
-                  && validViewerStart(request.resource.data))))
+              && organizer() && validRunning(request.resource.data)
+              && request.resource.data.startedBy == 'organizer')
             // Un nouveau round peut remplacer atomiquement le document précédent.
             || (resource.data.roundNumber < tournament().roundNumber
-              && ((organizer() && validRunning(request.resource.data)
-                  && request.resource.data.startedBy == 'organizer')
-                || validViewerStart(request.resource.data)))
+              && organizer() && validRunning(request.resource.data)
+              && request.resource.data.startedBy == 'organizer')
             // Seul l'Organisateur peut remettre le round courant à l'état initial.
             || (organizer()
               && resource.data.roundNumber == tournament().roundNumber
@@ -321,6 +556,14 @@ service cloud.firestore {
           );
         allow delete: if false;
       }
+    }
+
+    // Lecture d'historique via collectionGroup : uniquement les matchs où le
+    // playerId permanent du compte figure explicitement dans le résultat.
+    match /{path=**}/matches/{matchId} {
+      allow get, list: if registeredAccount()
+        && currentPlayerId() in resource.data.playerIds;
+      allow create, update, delete: if false;
     }
 
     match /{document=**} {
