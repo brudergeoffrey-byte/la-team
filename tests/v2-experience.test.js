@@ -5,6 +5,10 @@ for(const field of ["v2xName","v2xDate","v2xTime","v2xCapacity","v2xCourts","v2x
 for(const feature of ["createPlayerAccount","registerPlayerSpark","cancelRegistrationSpark","subscribeEvents","subscribeRegistrations","addGuestSpark","createParticipants"]){assert.ok(cloud.includes(feature),`parcours Firestore réel : ${feature}`);}
 assert.doesNotMatch(source,/laTeam\.v2\.demoExperience/);assert.match(source,/registration_\$\{runtime\.context\.user\.uid\}/);assert.match(source,/prepareV2EventRoster/);assert.match(source,/DOMContentLoaded.*landing/);assert.match(html,/font-size:18px/);
 for(const marker of ["Bienvenue 👋","SE CONNECTER","CRÉER MON COMPTE","Gérez votre club avec La Team","CRÉER MON CLUB","facultatif"]){assert.ok(source.includes(marker),`entrée authentification explicite : ${marker}`);}
+for(const field of ["v2xFirstName","v2xDisplayName","v2xEmail","v2xPassword","v2xPasswordConfirm"]){assert.ok(source.includes(field),`champ compte Joueur : ${field}`);}
+for(const marker of ["Nom ou nom d’affichage","Confirmer le mot de passe","Mot de passe oublié ?","sendPasswordReset","Les deux mots de passe ne correspondent pas."]){assert.ok(source.includes(marker),`parcours Auth complet : ${marker}`);}
+assert.match(cloud,/if\(selectedClub\)[\s\S]*clubs[\s\S]*players/,"le rattachement Club du nouveau Joueur reste facultatif");
+assert.match(html,/\.v2x \.v2x-form button\.secondary\{color:#0b5265;background:#e7f4f8;border:2px solid #1687a5\}/,"bouton secondaire contrasté sur carte blanche");
 assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openViewer[\s\S]*history\.pushState/,"entrée Viewer inscrite dans l’historique V2");
