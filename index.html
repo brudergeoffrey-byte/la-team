@@ -3075,7 +3075,7 @@ function viewerScoreOptions(maximum,selected=0){let html="";for(let value=0;valu
 function syncViewerProposal(side){if(viewerSnapshot?.endMode!=="points")return;const left=document.getElementById("viewerProposalA"),right=document.getElementById("viewerProposalB"),total=viewerSnapshot.maxPoints;if(side==="A")right.value=total-Number(left.value);else left.value=total-Number(right.value);}
 async function proposeViewerScore(courtNumber,playerId){
   const left=document.getElementById("viewerProposalA"),right=document.getElementById("viewerProposalB"),feedback=document.getElementById("viewerScoreFeedback");
-  try{const scoreA=Number(left.value),scoreB=Number(right.value);await window.LaTeamV2Cloud.submitScoreProposal(viewerSnapshot.code,{clubId:viewerSnapshot.clubId,tournamentId:viewerSnapshot.code,roundNumber:viewerSnapshot.roundNumber,courtNumber,proposedByParticipantId:viewerSnapshot.participantIds[playerId],engineIndex:playerId,scoreA,scoreB});feedback.textContent="✓ Score proposé à l’Organisateur";left.disabled=true;right.disabled=true;}catch(error){feedback.textContent="Proposition impossible. Vérifiez le score et la connexion.";}
+  try{const scoreA=Number(left.value),scoreB=Number(right.value),result=await window.LaTeamV2Cloud.submitScoreProposal(viewerSnapshot.code,{clubId:viewerSnapshot.clubId,tournamentId:viewerSnapshot.code,roundNumber:viewerSnapshot.roundNumber,courtNumber,proposedByParticipantId:viewerSnapshot.participantIds[playerId],engineIndex:playerId,scoreA,scoreB});feedback.textContent=result.updated?"✓ Proposition corrigée":"✓ Score proposé — vous pouvez le corriger avant validation";}catch(error){feedback.textContent="Proposition impossible. Vérifiez le score et la connexion.";}
 }
 
 function renderViewer(){

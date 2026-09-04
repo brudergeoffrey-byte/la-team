@@ -104,8 +104,12 @@ const publicTournament={schemaVersion:5,code:"K7F2",clubId:"clubA",ownerUid:"own
   await assertSucceeds(setDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),proposal));
   await assertFails(setDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-fake-player"),{...proposal,proposalId:"proposal-fake-player",proposedByParticipantId:"participant-c"}));
   await assertFails(setDoc(doc(viewer2,"tournaments/K7F2/scoreProposals/proposal-forged"),{...proposal,proposalId:"proposal-forged",proposedByUid:"viewer2",engineIndex:7}));
-  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),{scoreA:20,updatedAt:now+1}));
-  await assertSucceeds(updateDoc(doc(dbFor("organizerA"),"tournaments/K7F2/scoreProposals/proposal-a"),{status:"accepted",updatedAt:now+1}));
+  await assertSucceeds(updateDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),{scoreA:11,scoreB:9,updatedAt:now+1}));
+  await assertFails(updateDoc(doc(viewer2,"tournaments/K7F2/scoreProposals/proposal-a"),{scoreA:10,scoreB:10,updatedAt:now+2}));
+  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),{courtNumber:2,updatedAt:now+2}));
+  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),{proposedByUid:"viewer2",updatedAt:now+2}));
+  await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),{status:"accepted",updatedAt:now+2}));
+  await assertSucceeds(updateDoc(doc(dbFor("organizerA"),"tournaments/K7F2/scoreProposals/proposal-a"),{status:"accepted",updatedAt:now+2}));
   const ownerTimer={state:"idle",roundNumber:1,durationMinutes:10,roundStartedAt:null,startedBy:null,viewerStartConsumed:true,generation:2,updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(dbFor("ownerA"),"tournaments/K7F2/roundTimer/current"),ownerTimer));
   await assertFails(setDoc(doc(viewer,"tournaments/K7F2/roundTimer/current"),{...timer,generation:3}));

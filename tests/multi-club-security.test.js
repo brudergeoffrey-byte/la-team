@@ -37,5 +37,6 @@ for(const marker of ["match /players/{playerId}","match /seasons/{seasonId}","ma
   assert.ok(rules.includes(marker),`schéma V2 présent : ${marker}`);
 }
 assert.match(rules,/match \/standings\/\{playerId\}[\s\S]*allow create, update, delete: if false/,"statistiques officielles écrites uniquement par le serveur");
+assert.match(rules,/resource\.data\.proposedByUid == request\.auth\.uid[\s\S]*validProposal\(request\.resource\.data\)[\s\S]*hasOnly\(\['scoreA','scoreB','updatedAt'\]\)/,"un joueur corrige uniquement les scores de sa propre proposition en attente");
 assert.match(rules,/ownsLinkedPlayer\(request\.resource\.data\)/,"liaison playerId protégée par ownerUid");
 console.log("MULTI_CLUB_SECURITY_OK — isolation A/B, rôles, anti-escalade, V2 et Viewer validés");
