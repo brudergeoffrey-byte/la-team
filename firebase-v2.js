@@ -84,9 +84,8 @@
   async function linkGuestRegistration(clubId,eventId,registrationId,playerId){await organizer(clubId);return (await functions.httpsCallable("linkGuestRegistration")({clubId,eventId,registrationId,playerId})).data;}
   async function createParticipants(clubId,eventId,registrations){await organizer(clubId);const rows=root.LaTeamClubV2.participantsFromRegistrations(registrations),batch=db.batch(),base=db.collection("clubs").doc(clubId).collection("events").doc(eventId).collection("participants");rows.forEach(row=>batch.set(base.doc(row.participantId),row));await batch.commit();return rows;}
   async function submitScoreProposal(publicCode,input){
-    await ready();if(!auth.currentUser)await auth.signInAnonymously();const key=`la-team-score-proposal:${publicCode}:${input.roundNumber}:${input.courtNumber}:${auth.currentUser.uid}`,savedId=localStorage.getItem(key),collection=db.collection("tournaments").doc(publicCode).collection("scoreProposals");
-    if(savedId){const ref=collection.doc(savedId),saved=await ref.get();if(saved.exists&&saved.data().status==="pending"&&saved.data().proposedByUid===auth.currentUser.uid){await ref.update({scoreA:Number(input.scoreA),scoreB:Number(input.scoreB),updatedAt:Date.now()});return {...saved.data(),scoreA:Number(input.scoreA),scoreB:Number(input.scoreB),updated:true};}}
-    const row=root.LaTeamClubV2.scoreProposal({...input,publicCode,proposedByUid:auth.currentUser.uid});await collection.doc(row.proposalId).set(row);localStorage.setItem(key,row.proposalId);return row;
+    await ready();if(!auth.currentUser)await auth.signInAnonymously();const row=root.LaTeamClubV2.scoreProposal({...input,publicCode,proposedByUid:auth.currentUser.uid});
+    await db.collection("tournaments").doc(publicCode).collection("scoreProposals").doc(row.proposalId).set(row);return row;
   }
   async function listScoreProposals(publicCode){await account();const snapshot=await db.collection("tournaments").doc(publicCode).collection("scoreProposals").where("status","==","pending").get();return snapshot.docs.map(doc=>doc.data());}
   async function subscribeScoreProposals(publicCode,callback){

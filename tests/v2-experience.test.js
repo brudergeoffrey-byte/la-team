@@ -1,9 +1,8 @@
 "use strict";
 const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),root=path.resolve(__dirname,".."),html=fs.readFileSync(path.join(root,"index.html"),"utf8"),source=fs.readFileSync(path.join(root,"v2-experience.js"),"utf8"),cloud=fs.readFileSync(path.join(root,"firebase-v2.js"),"utf8");
-for(const marker of ["Bienvenue","JE SUIS JOUEUR","JE SUIS CLUB / ORGANISATEUR","ESPACE PERSONNEL","GESTION DU CLUB","ACCÈS VIEWER","Je m’inscris, je joue, je progresse","⌂ Accueil","▣ Événements","♛ Classement","↗ Statistiques","● Profil","⌂ Tableau","♟ Joueurs","♛ Championnat","••• Plus","Créer un événement","Bonjour ${p.displayName}","S’INSCRIRE","✓ INSCRIT","Mes statistiques","PRÉPARER LE TOURNOI","OUVRIR LE MODULE TOURNOI","AUCUN PAIEMENT"]){assert.ok((html+source).includes(marker),`expérience V2 présente : ${marker}`);}
+for(const marker of ["Le padel.","Ensemble.","Rejoindre un tournoi","Créer et gérer","Suivre en direct","TOURNOIS À VENIR","Pourquoi La Team ?","Organisation simple","En temps réel","Équitable","Sur tous vos écrans","ESPACE JOUEUR","ESPACE ORGANISATEUR","ACCÈS VIEWER","⌂ Accueil","▣ Mes matchs","♛ Classement","↗ Statistiques","● Profil","⌂ Tableau de bord","♟ Joueurs","▦ Matchs & terrains","⚙ Paramètres","Créer un événement","Bonjour ${p.displayName}","S’INSCRIRE","✓ INSCRIT","Mes statistiques","PRÉPARER LE TOURNOI","OUVRIR LE MODULE TOURNOI","AUCUN PAIEMENT"]){assert.ok((html+source).includes(marker),`expérience V2 présente : ${marker}`);}
 for(const field of ["v2xName","v2xDate","v2xTime","v2xCapacity","v2xCourts","v2xFormat","v2xEndMode","v2xOpen"]){assert.ok(source.includes(field),`champ événement : ${field}`);}
 for(const feature of ["createPlayerAccount","ensurePlayerAccount","registerPlayerSpark","cancelRegistrationSpark","subscribeEvents","subscribeRegistrations","addGuestSpark","createParticipants"]){assert.ok(cloud.includes(feature),`parcours Firestore réel : ${feature}`);}
-assert.match(cloud,/la-team-score-proposal:[\s\S]*saved\.data\(\)\.status==="pending"[\s\S]*ref\.update\(\{scoreA:/,"une proposition Joueur en attente peut être corrigée sans créer un nouveau résultat");
 assert.doesNotMatch(source,/laTeam\.v2\.demoExperience/);assert.match(source,/registration_\$\{runtime\.context\.user\.uid\}/);assert.match(source,/prepareV2EventRoster/);assert.match(source,/DOMContentLoaded.*landing/);assert.match(html,/font-size:18px/);
 for(const marker of ["Bienvenue 👋","SE CONNECTER","CRÉER MON COMPTE","Gérez votre club avec La Team","CRÉER MON CLUB","facultatif"]){assert.ok(source.includes(marker),`entrée authentification explicite : ${marker}`);}
 for(const field of ["v2xFirstName","v2xDisplayName","v2xEmail","v2xPassword","v2xPasswordConfirm"]){assert.ok(source.includes(field),`champ compte Joueur : ${field}`);}
@@ -26,7 +25,8 @@ assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur 
 assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openViewer[\s\S]*history\.pushState/,"entrée Viewer inscrite dans l’historique V2");
 assert.match(source,/popstate[\s\S]*landing/,"retour navigateur vers l’accueil V2");
-assert.match(source,/v2x-entry-stack[\s\S]*v2x-entries[\s\S]*v2x-viewer-link/,"les trois portes partagent le même conteneur");
-assert.match(html,/\.v2x-entry-stack\{width:min\(650px,100%\)\}[\s\S]*\.v2x-entry-stack \.v2x-viewer-link\{[^}]*width:100%/,"Viewer aligné sur le conteneur desktop et mobile");
+assert.match(source,/v2x-entry-stack[\s\S]*v2x-entries[\s\S]*v2x-entry viewer/,"les trois portes partagent la même grille commerciale");
+assert.match(html,/\.v2x-landing \.v2x-entries\{[^}]*grid-template-columns:repeat\(3,1fr\)/,"les trois portes occupent efficacement la largeur desktop");
+assert.match(html,/padel-hero-v2\.jpg/,"la nouvelle photographie premium remplace l’ancien fond");
 assert.doesNotMatch(source,/openPlayer[\s\S]{0,500}authForm\("JOUEUR",false\)/,"aucun formulaire Joueur implicite");
 console.log("V2_EXPERIENCE_OK — comptes réels, événements, inscriptions temps réel, invités et préparation tournoi validés");
