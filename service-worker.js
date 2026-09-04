@@ -1,4 +1,5 @@
-const CACHE_VERSION = "la-team-shell-v33-test";
+const CACHE_VERSION = "la-team-shell-v34-test";
+const LA_TEAM_CACHE_PREFIXES = ["la-team-shell-", "la-team-cache-", "lateam-"];
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -28,15 +29,23 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(CACHE_VERSION)
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key.startsWith("la-team-shell-") && key !== CACHE_VERSION).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_VERSION && LA_TEAM_CACHE_PREFIXES.some(prefix => key.startsWith(prefix))).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener("message", event => {
+  if(event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", event => {

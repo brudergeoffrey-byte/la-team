@@ -42,8 +42,9 @@ assert.ok(html.includes('navigator.serviceWorker.register("/service-worker.js", 
 assert.deepEqual(firebase.hosting.rewrites,[{source:"**",destination:"/index.html"}],"fallback de navigation Firebase Hosting");
 assert.equal(JSON.stringify(manifest).includes("/la-team/"),false,"aucun chemin GitHub Pages dans le manifeste");
 assert.ok(html.includes("Hors connexion"));
-assert.ok(html.includes("Nouvelle version disponible — elle sera installée au prochain redémarrage."));
-assert.ok(!swSource.includes("skipWaiting"),"aucune activation forcée pendant un tournoi");
+assert.ok(html.includes("NOUVELLE VERSION DISPONIBLE · METTRE À JOUR"));
+assert.ok(html.includes("applyPwaUpdate"),"mise à jour PWA explicitement applicable");
+assert.ok(swSource.includes("skipWaiting"),"la nouvelle version ne reste pas bloquée en attente sur un ancien iPad");
 assert.ok(!swSource.includes("localStorage"),"aucune donnée utilisateur dans le cache applicatif");
 assert.ok(!swSource.includes("indexedDB"),"aucune donnée utilisateur dans le cache applicatif");
 
@@ -71,12 +72,12 @@ const caches={
   async delete(name){return stores.delete(name);},
   async match(key){for(const cache of stores.values()){const hit=await cache.match(key);if(hit)return hit;}}
 };
-let online=true;
+let online=true,skipWaitingCount=0,claimCount=0;
 const context={
   URL,Promise,
   caches,
   fetch:async request=>{if(!online)throw new Error("offline");return new FakeResponse(`network:${request.url||request}`);},
-  self:{location:{origin:"https://example.test"},clients:{async claim(){}},addEventListener(type,handler){listeners[type]=handler;}}
+  self:{location:{origin:"https://example.test"},async skipWaiting(){skipWaitingCount++;},clients:{async claim(){claimCount++;}},addEventListener(type,handler){listeners[type]=handler;}}
 };
 
 async function dispatchLifecycle(type){
@@ -93,6 +94,8 @@ async function navigate(pathname="/"){
 (async()=>{
   vm.createContext(context);vm.runInContext("(function(){"+swSource+"\n})()",context);
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
+  assert.equal(skipWaitingCount,1,"le nouveau worker est activé sans rester bloqué derrière l’ancien");
+  assert.equal(claimCount,1,"les pages ouvertes sont revendiquées par la nouvelle version");
 
   const first=await navigate();
   assert.equal(first.body,"network:https://example.test/","Safari iPhone → installation → lancement à la racine");
@@ -105,10 +108,12 @@ async function navigate(pathname="/"){
 
   // Une mise à jour change uniquement le cache applicatif, jamais les données du tournoi.
   const userData=new Map([["la-team-autosave-v1","tournoi-32-8"],["la-team-saves-index-v1","sauvegarde"]]);
-  const updatedSource=swSource.replace("la-team-shell-v33-test","la-team-shell-v34-test");
+  stores.set("la-team-cache-v12",new FakeCache());
+  stores.set("lateam-v1",new FakeCache());
+  const updatedSource=swSource.replace("la-team-shell-v34-test","la-team-shell-v35-test");
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v34-test"],"ancien cache applicatif nettoyé");
+  assert.deepEqual([...stores.keys()],["la-team-shell-v35-test"],"anciens caches applicatifs nettoyés, y compris les générations historiques");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 
@@ -116,6 +121,9 @@ async function navigate(pathname="/"){
   assert.ok((await navigate()).body,"réouverture hors ligne après mise à jour");
   online=true;
   assert.equal((await navigate()).body,"network:https://example.test/","retour du réseau");
+
+  listeners.message({data:{type:"SKIP_WAITING"}});
+  assert.equal(skipWaitingCount,3,"le bouton de mise à jour peut aussi activer explicitement un worker en attente");
 
   console.log("PWA_OK — installation, cache hors ligne, rechargement, mise à jour sûre et conservation des données validés");
 })().catch(error=>{console.error(error);process.exitCode=1;});

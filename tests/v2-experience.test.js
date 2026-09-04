@@ -2,13 +2,17 @@
 const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),root=path.resolve(__dirname,".."),html=fs.readFileSync(path.join(root,"index.html"),"utf8"),source=fs.readFileSync(path.join(root,"v2-experience.js"),"utf8"),cloud=fs.readFileSync(path.join(root,"firebase-v2.js"),"utf8");
 for(const marker of ["Bienvenue","JE SUIS JOUEUR","JE SUIS CLUB / ORGANISATEUR","ESPACE PERSONNEL","GESTION DU CLUB","ACCÈS VIEWER","Je m’inscris, je joue, je progresse","⌂ Accueil","▣ Événements","♛ Classement","↗ Statistiques","● Profil","⌂ Tableau","♟ Joueurs","♛ Championnat","••• Plus","Créer un événement","Bonjour ${p.displayName}","S’INSCRIRE","✓ INSCRIT","Mes statistiques","PRÉPARER LE TOURNOI","OUVRIR LE MODULE TOURNOI","AUCUN PAIEMENT"]){assert.ok((html+source).includes(marker),`expérience V2 présente : ${marker}`);}
 for(const field of ["v2xName","v2xDate","v2xTime","v2xCapacity","v2xCourts","v2xFormat","v2xEndMode","v2xOpen"]){assert.ok(source.includes(field),`champ événement : ${field}`);}
-for(const feature of ["createPlayerAccount","registerPlayerSpark","cancelRegistrationSpark","subscribeEvents","subscribeRegistrations","addGuestSpark","createParticipants"]){assert.ok(cloud.includes(feature),`parcours Firestore réel : ${feature}`);}
+for(const feature of ["createPlayerAccount","ensurePlayerAccount","registerPlayerSpark","cancelRegistrationSpark","subscribeEvents","subscribeRegistrations","addGuestSpark","createParticipants"]){assert.ok(cloud.includes(feature),`parcours Firestore réel : ${feature}`);}
 assert.doesNotMatch(source,/laTeam\.v2\.demoExperience/);assert.match(source,/registration_\$\{runtime\.context\.user\.uid\}/);assert.match(source,/prepareV2EventRoster/);assert.match(source,/DOMContentLoaded.*landing/);assert.match(html,/font-size:18px/);
 for(const marker of ["Bienvenue 👋","SE CONNECTER","CRÉER MON COMPTE","Gérez votre club avec La Team","CRÉER MON CLUB","facultatif"]){assert.ok(source.includes(marker),`entrée authentification explicite : ${marker}`);}
 for(const field of ["v2xFirstName","v2xDisplayName","v2xEmail","v2xPassword","v2xPasswordConfirm"]){assert.ok(source.includes(field),`champ compte Joueur : ${field}`);}
 for(const marker of ["Nom ou nom d’affichage","Confirmer le mot de passe","Mot de passe oublié ?","sendPasswordReset","Les deux mots de passe ne correspondent pas."]){assert.ok(source.includes(marker),`parcours Auth complet : ${marker}`);}
 assert.match(cloud,/if\(selectedClub\)[\s\S]*clubs[\s\S]*players/,"le rattachement Club du nouveau Joueur reste facultatif");
-assert.match(cloud,/linkWithCredential[\s\S]{0,500}getIdToken\?\.\(true\)[\s\S]{0,700}batch\.commit/,"la migration anonyme renouvelle le jeton avant Firestore");
+assert.match(cloud,/linkWithCredential[\s\S]{0,500}getIdToken\?\.\(true\)[\s\S]{0,200}ensurePlayerAccount/,"la migration anonyme renouvelle le jeton avant réparation Firestore");
+assert.match(cloud,/async function ensurePlayerAccount[\s\S]{0,250}getIdToken\?\.\(true\)[\s\S]{0,1800}batch\.commit/,"la réparation renouvelle aussi le jeton avant son lot Firestore");
+assert.match(cloud,/existing\.createdAt\|\|now/,"la réparation conserve la date immuable d’un compte Club existant");
+assert.match(cloud,/selectedClub\|\|String\(existing\.defaultClubId/,"la réparation conserve le Club d’un compte existant");
+assert.match(source,/signIn\([\s\S]{0,180}ensurePlayerAccount/,"la reconnexion répare automatiquement un profil Joueur absent");
 assert.match(html,/\.v2x \.v2x-form button\.secondary\{color:#0b5265;background:#e7f4f8;border:2px solid #1687a5\}/,"bouton secondaire contrasté sur carte blanche");
 assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");

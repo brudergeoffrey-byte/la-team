@@ -365,7 +365,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .pwa-status{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;margin:-8px 2px 12px;}
 .pwa-pill{width:auto;min-height:0;margin:0;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800;}
 .pwa-offline{background:rgba(255,174,66,.12);border:1px solid rgba(255,174,66,.28);color:#ffd18a;}
-.pwa-update{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);color:#cce5ff;}
+.pwa-update{background:#b7fa3c;border:1px solid #d7ff8d;color:#09242b;cursor:pointer;}
 .pwa-install{background:rgba(184,243,74,.13);border:1px solid rgba(184,243,74,.28);color:#eaffc4;}
 .edit-score{background:rgba(88,166,255,.13)!important;border:1px solid rgba(88,166,255,.28)!important;color:#cce5ff!important;}
 .organizer-tools{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 14px}.organizer-tools button{width:auto;min-height:42px;margin:0;padding:8px 11px;font-size:12px;}
@@ -476,7 +476,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   </div>
   <div id="pwaStatus" class="pwa-status" aria-live="polite">
     <span id="offlineStatus" class="pwa-pill pwa-offline hidden">Hors connexion</span>
-    <span id="updateStatus" class="pwa-pill pwa-update hidden">Nouvelle version disponible — elle sera installée au prochain redémarrage.</span>
+    <button id="updateStatus" type="button" class="pwa-pill pwa-update hidden" onclick="applyPwaUpdate()">NOUVELLE VERSION DISPONIBLE · METTRE À JOUR</button>
     <button id="installPwaBtn" type="button" class="pwa-pill pwa-install hidden" onclick="installPwa()">Installer La Team</button>
   </div>
 
@@ -776,8 +776,8 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="/club-v2.js?v=2"></script>
 <script src="/club-journey-v2.js"></script>
 <script src="/commerce-v2.js"></script>
-<script src="/firebase-v2.js?v=4"></script>
-<script src="/v2-experience.js?v=7"></script>
+<script src="/firebase-v2.js?v=5"></script>
+<script src="/v2-experience.js?v=8"></script>
 <script>
 const STATE_VERSION = 2;
 
@@ -3101,6 +3101,7 @@ function onViewerError(message){
 
 /* -------------------- PWA / installation -------------------- */
 let deferredInstallPrompt = null;
+let pwaRegistration = null;
 
 function isStandalonePwa(){
   const displayStandalone = typeof window.matchMedia === "function"
@@ -3116,6 +3117,12 @@ function updateNetworkStatus(){
 
 function showPwaUpdateNotice(){
   updateStatusEl?.classList.remove("hidden");
+}
+
+function applyPwaUpdate(){
+  const waiting=pwaRegistration?.waiting;
+  if(waiting) waiting.postMessage({type:"SKIP_WAITING"});
+  else window.location.reload();
 }
 
 async function installPwa(){
@@ -3158,6 +3165,7 @@ function setupPwa(){
   if(typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
   navigator.serviceWorker.register("/service-worker.js", {scope:"/", updateViaCache:"none"})
     .then(registration => {
+      pwaRegistration=registration;
       if(registration.waiting && navigator.serviceWorker.controller) showPwaUpdateNotice();
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
@@ -3165,9 +3173,13 @@ function setupPwa(){
           if(worker.state === "installed" && navigator.serviceWorker.controller) showPwaUpdateNotice();
         });
       });
+      registration.update().catch(()=>{});
       window.addEventListener?.("online", () => registration.update().catch(()=>{}));
+      window.addEventListener?.("pageshow", () => registration.update().catch(()=>{}));
+      document.addEventListener?.("visibilitychange", () => {if(document.visibilityState==="visible") registration.update().catch(()=>{});});
     })
     .catch(()=>{});
+  navigator.serviceWorker.addEventListener?.("controllerchange", showPwaUpdateNotice);
 }
 
 /* -------------------- INIT -------------------- */
