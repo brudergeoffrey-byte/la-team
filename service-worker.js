@@ -1,30 +1,30 @@
-const CACHE_VERSION = "la-team-shell-v29-test";
+const CACHE_VERSION = "la-team-shell-v30-test";
 const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./offline.html",
-  "./preproduction-config.js",
-  "./firebase-sharing.js",
-  "./organizer-accounts.js",
-  "./player-experience.js",
-  "./organizer-lock.js",
-  "./tournament-timer.js",
-  "./court-timers.js",
-  "./round-timer.js",
-  "./firebase-client.js",
-  "./club-v2.js",
-  "./club-journey-v2.js",
-  "./commerce-v2.js",
-  "./v2-experience.js",
-  "./firebase-v2.js",
-  "./vendor/qrcode.min.js",
-  "./vendor/qrcode-LICENSE.txt",
-  "./bg.jpg",
-  "./icons/icon-180.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/offline.html",
+  "/preproduction-config.js",
+  "/firebase-sharing.js",
+  "/organizer-accounts.js",
+  "/player-experience.js",
+  "/organizer-lock.js",
+  "/tournament-timer.js",
+  "/court-timers.js",
+  "/round-timer.js",
+  "/firebase-client.js",
+  "/club-v2.js",
+  "/club-journey-v2.js",
+  "/commerce-v2.js",
+  "/v2-experience.js",
+  "/firebase-v2.js",
+  "/vendor/qrcode.min.js",
+  "/vendor/qrcode-LICENSE.txt",
+  "/bg.jpg",
+  "/icons/icon-180.png",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-maskable-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -51,10 +51,10 @@ self.addEventListener("fetch", event => {
       fetch(request)
         .then(response => {
           const copy = response.clone();
-          caches.open(CACHE_VERSION).then(cache => cache.put("./index.html", copy));
+          caches.open(CACHE_VERSION).then(cache => cache.put("/index.html", copy));
           return response;
         })
-        .catch(async () => (await caches.match(request)) || (await caches.match("./index.html")) || caches.match("./offline.html"))
+        .catch(async () => (await caches.match(request)) || (await caches.match("/index.html")) || caches.match("/offline.html"))
     );
     return;
   }

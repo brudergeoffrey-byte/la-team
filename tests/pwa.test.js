@@ -9,9 +9,11 @@ const root=path.resolve(__dirname,"..");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const swSource=fs.readFileSync(path.join(root,"service-worker.js"),"utf8");
 const manifest=JSON.parse(fs.readFileSync(path.join(root,"manifest.webmanifest"),"utf8"));
+const firebase=JSON.parse(fs.readFileSync(path.join(root,"firebase.json"),"utf8"));
 
-assert.equal(manifest.start_url,"/la-team/");
-assert.equal(manifest.scope,"/la-team/");
+assert.equal(manifest.id,"/");
+assert.equal(manifest.start_url,"/");
+assert.equal(manifest.scope,"/");
 assert.equal(manifest.display,"standalone");
 assert.equal(manifest.theme_color,"#071d24");
 assert.ok(manifest.icons.some(icon=>icon.sizes==="192x192"&&icon.purpose==="any"));
@@ -20,7 +22,7 @@ assert.ok(manifest.icons.some(icon=>icon.sizes==="512x512"&&icon.purpose==="mask
 
 for(const file of ["offline.html","bg.jpg","firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","firebase-client.js","club-v2.js","club-journey-v2.js","commerce-v2.js","v2-experience.js","firebase-v2.js","vendor/qrcode.min.js","vendor/qrcode-LICENSE.txt","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"]){
   assert.ok(fs.existsSync(path.join(root,file)),`ressource PWA présente : ${file}`);
-  assert.ok(swSource.includes(`"./${file}"`),`ressource précachée : ${file}`);
+  assert.ok(swSource.includes(`"/${file}"`),`ressource précachée : ${file}`);
 }
 
 function pngSize(file){
@@ -33,10 +35,12 @@ assert.deepEqual(pngSize("icons/icon-192.png"),[192,192]);
 assert.deepEqual(pngSize("icons/icon-512.png"),[512,512]);
 assert.deepEqual(pngSize("icons/icon-maskable-512.png"),[512,512]);
 
-assert.ok(html.includes('rel="manifest" href="./manifest.webmanifest"'));
-assert.ok(html.includes('rel="apple-touch-icon" href="./icons/icon-180.png"'));
+assert.ok(html.includes('rel="manifest" href="/manifest.webmanifest?v=2"'));
+assert.ok(html.includes('rel="apple-touch-icon" href="/icons/icon-180.png"'));
 assert.ok(html.includes('apple-mobile-web-app-capable'));
-assert.ok(html.includes('navigator.serviceWorker.register("./service-worker.js", {scope:"./"'));
+assert.ok(html.includes('navigator.serviceWorker.register("/service-worker.js", {scope:"/"'));
+assert.deepEqual(firebase.hosting.rewrites,[{source:"**",destination:"/index.html"}],"fallback de navigation Firebase Hosting");
+assert.equal(JSON.stringify(manifest).includes("/la-team/"),false,"aucun chemin GitHub Pages dans le manifeste");
 assert.ok(html.includes("Hors connexion"));
 assert.ok(html.includes("Nouvelle version disponible — elle sera installée au prochain redémarrage."));
 assert.ok(!swSource.includes("skipWaiting"),"aucune activation forcée pendant un tournoi");
@@ -80,9 +84,9 @@ async function dispatchLifecycle(type){
   listeners[type]({waitUntil(promise){pending=promise;}});
   await pending;
 }
-async function navigate(){
+async function navigate(pathname="/"){
   let responsePromise;
-  listeners.fetch({request:{method:"GET",mode:"navigate",url:"https://example.test/la-team/"},respondWith(promise){responsePromise=promise;}});
+  listeners.fetch({request:{method:"GET",mode:"navigate",url:`https://example.test${pathname}`},respondWith(promise){responsePromise=promise;}});
   return responsePromise;
 }
 
@@ -91,7 +95,9 @@ async function navigate(){
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
 
   const first=await navigate();
-  assert.equal(first.body,"network:https://example.test/la-team/","première ouverture en ligne");
+  assert.equal(first.body,"network:https://example.test/","Safari iPhone → installation → lancement à la racine");
+  assert.equal((await navigate("/joueur/evenements")).body,"network:https://example.test/joueur/evenements","route interne légitime");
+  assert.equal((await navigate("/la-team/")).body,"network:https://example.test/la-team/","ancienne icône tolérée par le fallback Hosting");
 
   online=false;
   assert.ok((await navigate()).body,"deuxième ouverture hors ligne");
@@ -99,17 +105,17 @@ async function navigate(){
 
   // Une mise à jour change uniquement le cache applicatif, jamais les données du tournoi.
   const userData=new Map([["la-team-autosave-v1","tournoi-32-8"],["la-team-saves-index-v1","sauvegarde"]]);
-  const updatedSource=swSource.replace("la-team-shell-v29-test","la-team-shell-v30-test");
+  const updatedSource=swSource.replace("la-team-shell-v30-test","la-team-shell-v31-test");
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v30-test"],"ancien cache applicatif nettoyé");
+  assert.deepEqual([...stores.keys()],["la-team-shell-v31-test"],"ancien cache applicatif nettoyé");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 
   online=false;
   assert.ok((await navigate()).body,"réouverture hors ligne après mise à jour");
   online=true;
-  assert.equal((await navigate()).body,"network:https://example.test/la-team/","retour du réseau");
+  assert.equal((await navigate()).body,"network:https://example.test/","retour du réseau");
 
   console.log("PWA_OK — installation, cache hors ligne, rechargement, mise à jour sûre et conservation des données validés");
 })().catch(error=>{console.error(error);process.exitCode=1;});

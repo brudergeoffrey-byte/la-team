@@ -5,6 +5,9 @@
     "public": ".",
     "predeploy": ["node scripts/verify-hosting.cjs"],
     "ignore": ["firebase.json", ".firebaserc", ".git", ".git/**", "**/.*", "**/node_modules/**", "functions/**", "tests/**", "scripts/**", "*.md", "package*.json", "firestore.rules", "firestore.indexes.json", "*-debug.log"],
+    "rewrites": [
+      {"source":"**","destination":"/index.html"}
+    ],
     "headers": [
       {"source":"/index.html","headers":[{"key":"Cache-Control","value":"no-cache, no-store, must-revalidate"}]},
       {"source":"/service-worker.js","headers":[{"key":"Cache-Control","value":"no-cache, no-store, must-revalidate"}]}

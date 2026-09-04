@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="La Team V2 TEST" />
-<link rel="manifest" href="./manifest.webmanifest" />
-<link rel="apple-touch-icon" href="./icons/icon-180.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+<link rel="manifest" href="/manifest.webmanifest?v=2" />
+<link rel="apple-touch-icon" href="/icons/icon-180.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
 <title>La Team V2 — TEST</title>
 
 <style>
@@ -36,7 +36,7 @@ body{
 
   background:
     linear-gradient(135deg, rgba(31,122,90,0.30), rgba(11,59,111,0.30)),
-    url("./bg.jpg?v=9"),
+    url("/bg.jpg?v=9"),
     url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'>\
 <defs>\
@@ -750,21 +750,21 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
 </div>
 
-<script src="./preproduction-config.js"></script>
-<script src="./firebase-sharing.js"></script>
-<script src="./organizer-accounts.js"></script>
-<script src="./player-experience.js"></script>
-<script src="./organizer-lock.js"></script>
-<script src="./tournament-timer.js"></script>
-<script src="./court-timers.js"></script>
-<script src="./round-timer.js"></script>
-<script src="./vendor/qrcode.min.js"></script>
-<script src="./firebase-client.js"></script>
-<script src="./club-v2.js?v=2"></script>
-<script src="./club-journey-v2.js"></script>
-<script src="./commerce-v2.js"></script>
-<script src="./firebase-v2.js?v=3"></script>
-<script src="./v2-experience.js?v=4"></script>
+<script src="/preproduction-config.js"></script>
+<script src="/firebase-sharing.js"></script>
+<script src="/organizer-accounts.js"></script>
+<script src="/player-experience.js"></script>
+<script src="/organizer-lock.js"></script>
+<script src="/tournament-timer.js"></script>
+<script src="/court-timers.js"></script>
+<script src="/round-timer.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+<script src="/firebase-client.js"></script>
+<script src="/club-v2.js?v=2"></script>
+<script src="/club-journey-v2.js"></script>
+<script src="/commerce-v2.js"></script>
+<script src="/firebase-v2.js?v=3"></script>
+<script src="/v2-experience.js?v=4"></script>
 <script>
 const STATE_VERSION = 2;
 
@@ -3140,7 +3140,7 @@ function setupPwa(){
   }
 
   if(typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("./service-worker.js", {scope:"./", updateViaCache:"none"})
+  navigator.serviceWorker.register("/service-worker.js", {scope:"/", updateViaCache:"none"})
     .then(registration => {
       if(registration.waiting && navigator.serviceWorker.controller) showPwaUpdateNotice();
       registration.addEventListener("updatefound", () => {
