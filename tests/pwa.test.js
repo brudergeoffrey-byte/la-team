@@ -113,10 +113,12 @@ async function navigate(pathname="/"){
   stores.set("la-team-cache-v12",new FakeCache());
   stores.set("lateam-v1",new FakeCache());
   stores.set("ancien-cache-inconnu",new FakeCache());
-  const updatedSource=swSource.replace("la-team-shell-v38-premium-test","la-team-shell-v39-test");
+  const currentVersion=swSource.match(/const CACHE_VERSION = "([^"]+)";/)[1];
+  const nextVersion=`${currentVersion}-next`;
+  const updatedSource=swSource.replace(currentVersion,nextVersion);
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v39-test"],"tous les anciens caches de cet hébergement dédié sont nettoyés");
+  assert.deepEqual([...stores.keys()],[nextVersion],"tous les anciens caches de cet hébergement dédié sont nettoyés");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 
