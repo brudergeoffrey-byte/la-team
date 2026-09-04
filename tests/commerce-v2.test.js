@@ -1,0 +1,17 @@
+"use strict";
+const assert=require("node:assert/strict"),commerce=require("../commerce-v2");
+const event={eventId:"event-a",clubId:"club-a",capacity:2,registrationStatus:"open",...commerce.eventCommerce({priceCents:1500,holdMinutes:15})};let state={event,reservations:[],processedWebhookIds:[]};
+const book=(id,key,playerId=null)=>commerce.reserve(state,{reservationId:id,idempotencyKey:key,uid:`uid-${id}`,playerId,displayName:id},1000);
+let result=book("a","key-a","player-a");state=result.state;assert.equal(result.reservation.status,"held");
+result=commerce.reserve(state,{reservationId:"different",idempotencyKey:"key-a",uid:"uid-a",displayName:"A"},1001);assert.equal(result.replayed,true);assert.equal(result.reservation.reservationId,"a");
+state=book("b","key-b").state;result=book("c","key-c");state=result.state;assert.equal(result.reservation.status,"waiting");
+assert.throws(()=>commerce.applyPaymentEvent(state,{webhookId:"bad",reservationId:"a",status:"paid",amountCents:1,currency:"EUR"},1100),/Montant/);
+state=commerce.applyPaymentEvent(state,{webhookId:"stripe-1",reservationId:"a",status:"paid",amountCents:1500,currency:"eur"},1200).state;
+result=commerce.applyPaymentEvent(state,{webhookId:"stripe-1",reservationId:"a",status:"paid",amountCents:1500,currency:"EUR"},1300);assert.equal(result.replayed,true);
+state=commerce.applyPaymentEvent(state,{webhookId:"stripe-2",reservationId:"a",status:"refunded",amountCents:1500,currency:"EUR"},1400).state;
+state=commerce.expireAndPromote(state,901001);assert.equal(state.reservations.find(row=>row.reservationId==="c").status,"held");
+state=commerce.applyPaymentEvent(state,{webhookId:"stripe-3",reservationId:"c",status:"paid",amountCents:1500,currency:"EUR"},901100).state;
+const participants=commerce.prepareParticipants(state,index=>`p${index}`);assert.equal(participants.length,1);assert.equal(participants[0].playerId,null);
+const free={event:{...event,capacity:1,...commerce.eventCommerce({priceCents:0})},reservations:[],processedWebhookIds:[]};
+const freeBooked=commerce.reserve(free,{reservationId:"free",idempotencyKey:"free-key",uid:"u",playerId:"p",displayName:"Joueur"},2000);assert.equal(freeBooked.reservation.status,"confirmed");assert.equal(freeBooked.reservation.paymentStatus,"paid");
+console.log("COMMERCE_V2_OK — capacité, attente, paiement simulé, webhook, remboursement et préparation validés");

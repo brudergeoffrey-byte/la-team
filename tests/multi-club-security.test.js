@@ -33,7 +33,7 @@ assert.match(rules,/clubAdmin\(clubId\) && !clubOwner\(clubId\)[\s\S]*request\.r
 assert.match(rules,/allow get: if isValidCode\(code\)/,"Viewer lit la projection exacte");
 assert.match(rules,/allow list: if false/,"Viewer ne liste pas les tournois publics");
 assert.doesNotMatch(rules,/function activeRoundViewer/,"Viewer sans droit sur le timer global");
-for(const marker of ["match /players/{playerId}","match /seasons/{seasonId}","match /standings/{playerId}","match /events/{eventId}","match /registrations/{registrationId}","match /participants/{participantId}","match /scoreProposals/{proposalId}","match /auditLog/{auditId}"]){
+for(const marker of ["match /players/{playerId}","match /seasons/{seasonId}","match /standings/{playerId}","match /events/{eventId}","match /registrations/{registrationId}","match /reservations/{reservationId}","match /paymentAttempts/{paymentId}","match /webhookEvents/{webhookId}","match /participants/{participantId}","match /scoreProposals/{proposalId}","match /auditLog/{auditId}"]){
   assert.ok(rules.includes(marker),`schéma V2 présent : ${marker}`);
 }
 assert.match(rules,/match \/standings\/\{playerId\}[\s\S]*allow create, update, delete: if false/,"statistiques officielles écrites uniquement par le serveur");

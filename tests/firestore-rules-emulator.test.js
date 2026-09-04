@@ -59,6 +59,10 @@ const publicTournament={schemaVersion:5,code:"K7F2",clubId:"clubA",ownerUid:"own
   await assertSucceeds(setDoc(doc(dbFor("organizerA"),"clubs/clubA/events/event-a"),event));
   const registration={schemaVersion:2,registrationId:"reg-a",eventId:"event-a",clubId:"clubA",type:"registered",playerId:"player_a",displayName:"Élise",normalizedName:"elise",status:"registered",linkedPlayerId:null,linkedByUid:null,linkedAt:null,registeredByUid:"playerA",createdAt:now,updatedAt:now};
   await assertFails(setDoc(doc(playerDb,"clubs/clubA/events/event-a/registrations/reg-a"),registration));
+  const reservation={reservationId:"reservation-a",clubId:"clubA",eventId:"event-a",uid:"playerA",status:"confirmed",paymentStatus:"paid",priceCents:1500,currency:"EUR"};
+  await assertFails(setDoc(doc(playerDb,"clubs/clubA/events/event-a/reservations/reservation-a"),reservation));
+  await assertFails(setDoc(doc(dbFor("ownerA"),"clubs/clubA/events/event-a/paymentAttempts/payment-a"),{status:"paid"}));
+  await assertFails(setDoc(doc(dbFor("ownerA"),"clubs/clubA/events/event-a/webhookEvents/webhook-a"),{status:"processed"}));
   await assertFails(setDoc(doc(dbFor("outsider"),"clubs/clubA/events/event-a/registrations/guest-x"),{...registration,registrationId:"guest-x",type:"guest",playerId:null,registeredByUid:"outsider"}));
   const guest={...registration,registrationId:"guest-a",type:"guest",playerId:null,displayName:"Invité",normalizedName:"invite",registeredByUid:"organizerA"};
   await assertFails(setDoc(doc(dbFor("organizerA"),"clubs/clubA/events/event-a/registrations/guest-a"),guest));

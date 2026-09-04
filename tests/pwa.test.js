@@ -18,7 +18,7 @@ assert.ok(manifest.icons.some(icon=>icon.sizes==="192x192"&&icon.purpose==="any"
 assert.ok(manifest.icons.some(icon=>icon.sizes==="512x512"&&icon.purpose==="any"));
 assert.ok(manifest.icons.some(icon=>icon.sizes==="512x512"&&icon.purpose==="maskable"));
 
-for(const file of ["offline.html","bg.jpg","firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","firebase-client.js","club-v2.js","firebase-v2.js","vendor/qrcode.min.js","vendor/qrcode-LICENSE.txt","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"]){
+for(const file of ["offline.html","bg.jpg","firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","firebase-client.js","club-v2.js","commerce-v2.js","firebase-v2.js","vendor/qrcode.min.js","vendor/qrcode-LICENSE.txt","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"]){
   assert.ok(fs.existsSync(path.join(root,file)),`ressource PWA présente : ${file}`);
   assert.ok(swSource.includes(`"./${file}"`),`ressource précachée : ${file}`);
 }

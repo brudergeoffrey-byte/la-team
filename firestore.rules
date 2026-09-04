@@ -326,6 +326,21 @@ service cloud.firestore {
           allow create, update, delete: if false;
         }
 
+        // Réservations commerciales et paiements sont exclusivement pilotés par
+        // les fonctions serveur. Même un owner ne peut pas fabriquer un paiement.
+        match /reservations/{reservationId} {
+          allow get: if activeMember(clubId)
+            || (registeredAccount() && resource.data.uid == request.auth.uid);
+          allow list: if activeMember(clubId);
+          allow create, update, delete: if false;
+        }
+        match /paymentAttempts/{paymentId} {
+          allow read, create, update, delete: if false;
+        }
+        match /webhookEvents/{webhookId} {
+          allow read, create, update, delete: if false;
+        }
+
         match /participants/{participantId} {
           function validParticipant(data) {
             return data.keys().hasOnly(['schemaVersion','participantId','registrationId','playerId','displayNameSnapshot','type','engineIndex'])
