@@ -45,6 +45,7 @@
     await ready();if(!root.LaTeamAccounts.validEmail(email)||!root.LaTeamAccounts.validPassword(password)||!String(displayName||"").trim())throw new Error("Vérifiez le prénom, l’e-mail et le mot de passe.");
     const normalizedEmail=root.LaTeamAccounts.normalizeEmail(email),credential=root.firebase.auth.EmailAuthProvider.credential(normalizedEmail,password);let user=auth.currentUser;
     if(user?.isAnonymous)user=(await user.linkWithCredential(credential)).user;else if(!user)user=(await auth.createUserWithEmailAndPassword(normalizedEmail,password)).user;else if(user.email!==normalizedEmail)throw new Error("Un autre compte est déjà connecté.");
+    await user.getIdToken?.(true);
     const selectedClub=String(clubId||"").trim(),profile=root.LaTeamClubV2.playerProfile({ownerUid:user.uid,displayName}),now=Date.now(),batch=db.batch();
     batch.set(db.collection("players").doc(profile.playerId),profile);batch.set(db.collection("users").doc(user.uid),{schemaVersion:2,email:normalizedEmail,displayName:profile.displayName,defaultClubId:selectedClub,playerId:profile.playerId,createdAt:now,updatedAt:now});if(selectedClub){const clubPlayer=root.LaTeamClubV2.clubPlayer({player:profile,clubId:selectedClub,joinedWithCode:String(joinCode||"").toUpperCase()});batch.set(db.collection("clubs").doc(selectedClub).collection("players").doc(profile.playerId),clubPlayer);}await batch.commit();return {user,profile,clubId:selectedClub};
   }

@@ -219,7 +219,12 @@
       "auth/email-already-in-use":"Cette adresse e-mail est déjà utilisée. Essayez de vous connecter.",
       "auth/credential-already-in-use":"Cette adresse est déjà liée à un compte. Essayez de vous connecter.",
       "auth/invalid-credential":"E-mail ou mot de passe incorrect.",
+      "auth/user-not-found":"Aucun compte ne correspond à cette adresse e-mail.",
+      "auth/wrong-password":"E-mail ou mot de passe incorrect.",
       "auth/invalid-email":"Adresse e-mail invalide.",
+      "auth/unauthorized-domain":"Ce domaine n’est pas autorisé dans Firebase Authentication.",
+      "auth/invalid-api-key":"La configuration Firebase de cette application est invalide.",
+      "auth/app-not-authorized":"Cette application Web n’est pas autorisée par Firebase.",
       "auth/weak-password":"Choisissez un mot de passe d’au moins 8 caractères.",
       "auth/password-does-not-meet-requirements":"Ce mot de passe ne respecte pas les règles de sécurité. Utilisez au moins 8 caractères.",
       "auth/operation-not-allowed":"La création de compte est momentanément indisponible. Réessayez plus tard.",
@@ -227,11 +232,13 @@
       "auth/user-token-expired":"Votre session a expiré. Reconnectez-vous puis réessayez.",
       "auth/too-many-requests":"Trop de tentatives. Réessayez plus tard.",
       "auth/network-request-failed":"Connexion indisponible. Réessayez lorsque le réseau revient.",
-      "permission-denied":"Le compte est créé, mais Firebase a refusé la création du club. Reconnectez-vous puis réessayez.",
+      "auth/internal-error":"Firebase Authentication a rencontré une erreur temporaire. Réessayez.",
+      "permission-denied":"Le compte est créé, mais Firebase a refusé l’enregistrement du profil ou du club. Reconnectez-vous puis réessayez.",
+      "failed-precondition":"Le compte est créé, mais le profil ne peut pas encore être enregistré.",
       "unauthenticated":"Votre session a expiré. Reconnectez-vous puis réessayez.",
       "unavailable":"Firebase est temporairement indisponible. Réessayez dans un instant."
     };
-    return Object.assign(new Error(messages[error?.code]||"Impossible de terminer cette opération."),{code:error?.code||"auth/error"});
+    return Object.assign(new Error(messages[error?.code]||"Une erreur Firebase inattendue est survenue. Réessayez ou reconnectez-vous."),{code:error?.code||"auth/error"});
   }
 
   async function observeOrganizerAuth(callback){

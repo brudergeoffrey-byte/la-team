@@ -35,6 +35,7 @@ assert.match(client,/legacy-owner-mismatch/,"un ancien autosave d’une autre id
 assert.match(client,/friendlyError:authError/,"les erreurs Auth et Firestore sont traduites sans détail sensible");
 assert.match(client,/signInWithEmailAndPassword/);
 assert.match(client,/sendPasswordResetEmail/);
+for(const code of ["auth/user-not-found","auth/wrong-password","auth/unauthorized-domain","auth/invalid-api-key","auth/app-not-authorized","failed-precondition"]){assert.ok(client.includes(code),`message Auth explicite : ${code}`);}
 assert.match(client,/setPersistence/);
 assert.match(client,/loadClubTournament/);
 assert.match(client,/savePrivateTournament/);
