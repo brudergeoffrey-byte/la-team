@@ -1,4 +1,4 @@
-const CACHE_VERSION = "la-team-shell-v23-test";
+const CACHE_VERSION = "la-team-shell-v24-test";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const APP_SHELL = [
   "./round-timer.js",
   "./firebase-client.js",
   "./club-v2.js",
+  "./club-journey-v2.js",
   "./commerce-v2.js",
   "./firebase-v2.js",
   "./vendor/qrcode.min.js",
