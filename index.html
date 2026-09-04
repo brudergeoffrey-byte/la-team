@@ -763,8 +763,8 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="./club-v2.js"></script>
 <script src="./club-journey-v2.js"></script>
 <script src="./commerce-v2.js"></script>
-<script src="./v2-experience.js?v=3"></script>
 <script src="./firebase-v2.js"></script>
+<script src="./v2-experience.js?v=4"></script>
 <script>
 const STATE_VERSION = 2;
 
@@ -2020,6 +2020,17 @@ async function createClubEvent(){const status=document.getElementById("v2Workspa
 async function registerMyProfile(eventId){const status=document.getElementById("v2WorkspaceStatus");try{const result=await window.LaTeamV2Cloud.registerPlayer(state.clubId,eventId,{type:"registered",playerId:window.v2PlayerProfile.playerId});status.textContent=result.status==="waiting"?"Liste d’attente : événement complet.":"✓ Inscription confirmée.";}catch(error){status.textContent=error.message;}}
 async function addGuestToEvent(eventId){const displayName=prompt("Nom de l’invité :");if(!displayName)return;const status=document.getElementById("v2WorkspaceStatus");try{const result=await window.LaTeamV2Cloud.addGuest(state.clubId,eventId,displayName);status.textContent=result.status==="waiting"?"Invité ajouté à la liste d’attente.":"✓ Invité inscrit.";}catch(error){status.textContent=error.message;}}
 async function useEventRoster(eventId){const status=document.getElementById("v2WorkspaceStatus");try{const registrations=await window.LaTeamV2Cloud.listRegistrations(state.clubId,eventId),confirmed=registrations.filter(row=>row.status==="registered");if(confirmed.length<4)throw new Error("Il faut au moins 4 inscrits confirmés.");const event=window.v2EventsData.find(row=>row.eventId===eventId);playerCountEl.value=String(Math.min(32,confirmed.length));createInputs();confirmed.slice(0,32).forEach((row,index)=>document.getElementById(`p${index}`).value=row.displayName);state.pendingParticipants=window.LaTeamClubV2.participantsFromRegistrations(confirmed.slice(0,32));state.eventId=eventId;state.seasonId=event?.seasonId||null;updateCourtChoiceUI();status.textContent=`✓ ${Math.min(32,confirmed.length)} inscrits chargés. ${registrations.filter(row=>row.status==="waiting").length} en attente.`;}catch(error){status.textContent=error.message;}}
+function prepareV2EventRoster(event,registrations){
+  const confirmed=registrations.filter(row=>row.status==="registered");
+  if(confirmed.length<4)throw new Error("Il faut au moins 4 inscrits confirmés.");
+  playerCountEl.value=String(Math.min(32,confirmed.length));createInputs();
+  confirmed.slice(0,32).forEach((row,index)=>document.getElementById(`p${index}`).value=row.displayName);
+  state.pendingParticipants=window.LaTeamClubV2.participantsFromRegistrations(confirmed.slice(0,32));
+  state.eventId=event.eventId;state.seasonId=event.seasonId||null;state.clubId=event.clubId;
+  courtCountEl.value=String(Math.min(event.courtCount||Math.floor(confirmed.length/4),Math.floor(confirmed.length/4)));
+  endModeEl.value=event.endMode||"points";timerMinutesEl.value=String(event.roundDurationMinutes||15);
+  updateCourtChoiceUI();selectGameMode(event.format||"ladder");
+}
 async function recoverCloudTournament(tournamentId){
   try{state=await window.LaTeamCloud.loadClubTournament(state.clubId,tournamentId);normalizeLoadedState();writeAutoSave();showGame();renderMatch();renderRanking();renderRecapInGame();}catch(error){alert("Impossible de récupérer ce tournoi.");}
 }
@@ -2951,6 +2962,9 @@ async function enableTournamentSharing(){
   button.disabled=true; shareStatusEl.textContent="Connexion sécurisée…";
   try{
     await window.LaTeamCloud.createSharedTournament();
+    if(state.clubId&&state.eventId&&state.sharedTournament?.code&&window.LaTeamV2Cloud?.linkEventTournament){
+      await window.LaTeamV2Cloud.linkEventTournament(state.clubId,state.eventId,state.sharedTournament.code);
+    }
     writeAutoSave(); renderSharePanel();
   }catch(error){ shareStatusEl.textContent="Impossible de préparer le QR pour le moment. Vérifiez la connexion puis réessayez."; button.classList.remove("hidden"); }
   finally{ button.disabled=false; }

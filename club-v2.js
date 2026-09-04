@@ -42,18 +42,19 @@
     if(!clean(ownerUid)||!clean(displayName))throw new Error("Profil joueur incomplet");
     return {schemaVersion:SCHEMA_VERSION,playerId,publicId,ownerUid:clean(ownerUid),displayName:clean(displayName,80),normalizedName:normalizeName(displayName),status:"active",createdAt:timestamp(now),updatedAt:timestamp(now)};
   }
-  function clubPlayer({player,clubId,now=Date.now()}){
-    return {schemaVersion:SCHEMA_VERSION,clubId:clean(clubId),playerId:player.playerId,ownerUid:player.ownerUid,displayName:player.displayName,normalizedName:player.normalizedName,membershipStatus:"active",joinedAt:timestamp(now),updatedAt:timestamp(now)};
+  function clubPlayer({player,clubId,joinedWithCode=null,now=Date.now()}){
+    return {schemaVersion:SCHEMA_VERSION,clubId:clean(clubId),playerId:player.playerId,ownerUid:player.ownerUid,displayName:player.displayName,normalizedName:player.normalizedName,membershipStatus:"active",joinedWithCode:joinedWithCode?clean(joinedWithCode,20):null,joinedAt:timestamp(now),updatedAt:timestamp(now)};
   }
   function season({seasonId=immutableId("season"),clubId,name,label,startsAt,endsAt,scoring={},now=Date.now()}){
     if(timestamp(endsAt)<=timestamp(startsAt))throw new Error("La saison doit se terminer après son début");
     return {schemaVersion:SCHEMA_VERSION,seasonId,clubId:clean(clubId),name:clean(name,80),label:clean(label,80),startsAt:timestamp(startsAt),endsAt:timestamp(endsAt),timezone:"Europe/Brussels",status:"draft",scoring:scoringConfig(scoring),scoringVersion:Number(scoring.scoringVersion||SCORING_VERSION),createdAt:timestamp(now),updatedAt:timestamp(now)};
   }
-  function event({eventId=immutableId("event"),clubId,seasonId=null,tournamentId=null,name,startsAt,plannedEndsAt=null,capacity=32,now=Date.now()}){
+  function event({eventId=immutableId("event"),clubId,seasonId=null,tournamentId=null,name,startsAt,plannedEndsAt=null,capacity=32,format="ladder",courtCount=Math.max(1,Math.floor(capacity/4)),endMode="points",roundDurationMinutes=15,now=Date.now()}){
     if(!Number.isInteger(capacity)||capacity<4||capacity>256)throw new Error("Capacité invalide");
     const start=timestamp(startsAt),end=plannedEndsAt===null?null:timestamp(plannedEndsAt);
     if(end!==null&&end<=start)throw new Error("La fin prévue doit suivre le début");
-    return {schemaVersion:SCHEMA_VERSION,eventId,clubId:clean(clubId),seasonId:seasonId?clean(seasonId):null,tournamentId:tournamentId?clean(tournamentId):null,competitionType:seasonId?"championship":"friendly",name:clean(name,100),startsAt:start,plannedEndsAt:end,actualEndedAt:null,timezone:"Europe/Brussels",capacity,registrationStatus:"open",status:"draft",createdAt:timestamp(now),updatedAt:timestamp(now)};
+    if(!["ladder","americano"].includes(format)||!Number.isInteger(courtCount)||courtCount<1||courtCount>8||!["points","time"].includes(endMode))throw new Error("Configuration d’événement invalide");
+    return {schemaVersion:SCHEMA_VERSION,eventId,clubId:clean(clubId),seasonId:seasonId?clean(seasonId):null,tournamentId:tournamentId?clean(tournamentId):null,competitionType:seasonId?"championship":"friendly",name:clean(name,100),startsAt:start,plannedEndsAt:end,actualEndedAt:null,timezone:"Europe/Brussels",capacity,format,courtCount,endMode,roundDurationMinutes:Number(roundDurationMinutes),registeredCount:0,waitingCount:0,guestCount:0,registrationStatus:"open",status:"registration",createdAt:timestamp(now),updatedAt:timestamp(now)};
   }
   function registration({registrationId=immutableId("registration"),eventId,clubId,type="registered",playerId=null,displayName,registeredByUid,status="registered",now=Date.now()}){
     if(!["registered","guest"].includes(type))throw new Error("Type d’inscription invalide");

@@ -191,7 +191,7 @@ service cloud.firestore {
       allow get: if activeMember(clubId);
       allow list: if signedIn() && request.auth.uid in resource.data.memberUids;
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['schemaVersion','clubId','name','ownerUid','memberUids','status','plan','subscriptionStatus','trialEndsAt','billingCustomerId','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['schemaVersion','clubId','name','ownerUid','memberUids','status','plan','subscriptionStatus','trialEndsAt','billingCustomerId','playerJoinCode','createdAt','updatedAt'])
         && request.resource.data.schemaVersion == 1
         && request.resource.data.clubId == clubId
         && request.resource.data.ownerUid == request.auth.uid
@@ -205,7 +205,8 @@ service cloud.firestore {
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.clubId == resource.data.clubId
         && request.resource.data.schemaVersion == resource.data.schemaVersion
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','memberUids','status','updatedAt']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','memberUids','status','playerJoinCode','updatedAt'])
+        && (!request.resource.data.keys().hasAny(['playerJoinCode']) || request.resource.data.playerJoinCode.matches('^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$'));
       allow delete: if clubOwner(clubId);
 
       match /members/{uid} {
@@ -233,7 +234,7 @@ service cloud.firestore {
 
       match /players/{playerId} {
         function validClubPlayer(data) {
-          return data.keys().hasOnly(['schemaVersion','clubId','playerId','ownerUid','displayName','normalizedName','membershipStatus','joinedAt','updatedAt'])
+          return data.keys().hasOnly(['schemaVersion','clubId','playerId','ownerUid','displayName','normalizedName','membershipStatus','joinedWithCode','joinedAt','updatedAt'])
             && data.schemaVersion == 2 && data.clubId == clubId && data.playerId == playerId
             && data.ownerUid is string && data.displayName is string && data.normalizedName is string
             && data.membershipStatus in ['active','disabled'];
@@ -241,9 +242,17 @@ service cloud.firestore {
         allow get: if activeMember(clubId)
           || (registeredAccount() && currentPlayerId() == playerId && resource.data.ownerUid == request.auth.uid);
         allow list: if activeMember(clubId);
-        allow create: if clubAdmin(clubId) && validClubPlayer(request.resource.data)
-          && exists(/databases/$(database)/documents/players/$(playerId))
-          && get(/databases/$(database)/documents/players/$(playerId)).data.ownerUid == request.resource.data.ownerUid;
+        allow create: if validClubPlayer(request.resource.data) && (
+          (clubAdmin(clubId)
+            && exists(/databases/$(database)/documents/players/$(playerId))
+            && get(/databases/$(database)/documents/players/$(playerId)).data.ownerUid == request.resource.data.ownerUid)
+          || (signedIn()
+            && request.resource.data.ownerUid == request.auth.uid
+            && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.playerId == playerId
+            && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.defaultClubId == clubId
+            && getAfter(/databases/$(database)/documents/players/$(playerId)).data.ownerUid == request.auth.uid
+            && request.resource.data.joinedWithCode is string
+            && request.resource.data.joinedWithCode == get(/databases/$(database)/documents/clubs/$(clubId)).data.playerJoinCode));
         allow update: if clubAdmin(clubId) && validClubPlayer(request.resource.data)
           && request.resource.data.clubId == resource.data.clubId
           && request.resource.data.playerId == resource.data.playerId
@@ -289,10 +298,17 @@ service cloud.firestore {
 
       match /events/{eventId} {
         function validEvent(data) {
-          return data.keys().hasOnly(['schemaVersion','eventId','clubId','seasonId','tournamentId','competitionType','name','startsAt','plannedEndsAt','actualEndedAt','timezone','capacity','registrationStatus','status','createdAt','updatedAt'])
+          let sparkFields = ['format','courtCount','endMode','roundDurationMinutes','registeredCount','waitingCount','guestCount'];
+          let legacy = !data.keys().hasAny(sparkFields);
+          let spark = data.keys().hasAll(sparkFields)
+            && data.format in ['ladder','americano'] && data.courtCount is int && data.courtCount >= 1 && data.courtCount <= 8
+            && data.endMode in ['points','time'] && data.roundDurationMinutes is int && data.roundDurationMinutes >= 1 && data.roundDurationMinutes <= 180
+            && data.registeredCount is int && data.registeredCount >= 0 && data.registeredCount <= data.capacity
+            && data.waitingCount is int && data.waitingCount >= 0 && data.guestCount is int && data.guestCount >= 0;
+          return data.keys().hasAll(['schemaVersion','eventId','clubId','seasonId','tournamentId','competitionType','name','startsAt','plannedEndsAt','actualEndedAt','timezone','capacity','registrationStatus','status','createdAt','updatedAt'])
             && data.schemaVersion == 2 && data.eventId == eventId && data.clubId == clubId
             && data.name is string && data.startsAt is int && data.capacity is int
-            && data.capacity >= 4 && data.capacity <= 256
+            && data.capacity >= 4 && data.capacity <= 256 && (legacy || spark)
             && data.competitionType in ['friendly','championship']
             && ((data.competitionType == 'friendly' && data.seasonId == null)
               || (data.competitionType == 'championship' && data.seasonId is string))
@@ -301,9 +317,72 @@ service cloud.firestore {
         }
         allow read: if activeMember(clubId) || registeredClubPlayer(clubId);
         allow create: if activeMember(clubId) && validEvent(request.resource.data);
-        allow update: if activeMember(clubId) && validEvent(request.resource.data)
-          && request.resource.data.clubId == resource.data.clubId
-          && request.resource.data.eventId == resource.data.eventId;
+        function validPlayerCounterTransition() {
+          let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+          let field = "registration_" + request.auth.uid;
+          return signedIn() && exists(userPath)
+            && get(userPath).data.defaultClubId == clubId
+            && request.resource.data[field].playerId == get(userPath).data.playerId
+            && request.resource.data[field].registeredByUid == request.auth.uid
+            && request.resource.data[field].registrationId == "player_" + get(userPath).data.playerId
+            && request.resource.data[field].eventId == eventId
+            && request.resource.data[field].clubId == clubId
+            && request.resource.data[field].type == 'registered'
+            && request.resource.data[field].displayName is string
+            && request.resource.data[field].normalizedName is string
+            && request.resource.data[field].createdAt == resource.data[field].createdAt
+            && request.resource.data[field].updatedAt == request.resource.data.updatedAt
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([field,'registeredCount','waitingCount','updatedAt'])
+            && request.resource.data.guestCount == resource.data.guestCount
+            && field in resource.data
+            && ((resource.data[field].status == 'cancelled'
+                && request.resource.data[field].status == 'registered'
+                && resource.data.registrationStatus == 'open'
+                && resource.data.registeredCount < resource.data.capacity
+                && request.resource.data.registeredCount == resource.data.registeredCount + 1
+                && request.resource.data.waitingCount == resource.data.waitingCount)
+              || (resource.data[field].status == 'cancelled'
+                && request.resource.data[field].status == 'waiting'
+                && resource.data.registrationStatus == 'open'
+                && resource.data.registeredCount >= resource.data.capacity
+                && request.resource.data.registeredCount == resource.data.registeredCount
+                && request.resource.data.waitingCount == resource.data.waitingCount + 1)
+              || (field in resource.data && resource.data[field].status == 'registered'
+                && request.resource.data[field].status == 'cancelled'
+                && request.resource.data.registeredCount == resource.data.registeredCount - 1
+                && request.resource.data.waitingCount == resource.data.waitingCount)
+              || (field in resource.data && resource.data[field].status == 'waiting'
+                && request.resource.data[field].status == 'cancelled'
+                && request.resource.data.registeredCount == resource.data.registeredCount
+                && request.resource.data.waitingCount == resource.data.waitingCount - 1));
+        }
+        function initializePlayerRegistration() {
+          let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+          let field = "registration_" + request.auth.uid;
+          return signedIn() && exists(userPath) && !(field in resource.data)
+            && get(userPath).data.defaultClubId == clubId
+            && request.resource.data[field].playerId == get(userPath).data.playerId
+            && request.resource.data[field].registeredByUid == request.auth.uid
+            && request.resource.data[field].registrationId == "player_" + get(userPath).data.playerId
+            && request.resource.data[field].eventId == eventId
+            && request.resource.data[field].clubId == clubId
+            && request.resource.data[field].type == 'registered'
+            && request.resource.data[field].displayName is string
+            && request.resource.data[field].normalizedName is string
+            && request.resource.data[field].status == 'cancelled'
+            && request.resource.data[field].updatedAt == request.resource.data.updatedAt
+            && request.resource.data.registeredCount == resource.data.registeredCount
+            && request.resource.data.waitingCount == resource.data.waitingCount
+            && request.resource.data.guestCount == resource.data.guestCount
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([field,'updatedAt']);
+        }
+        allow update: if request.resource.data.clubId == resource.data.clubId
+          && request.resource.data.eventId == resource.data.eventId
+          && (validPlayerCounterTransition()
+            || (activeMember(clubId) && validEvent(request.resource.data)));
+        allow update: if request.resource.data.clubId == resource.data.clubId
+          && request.resource.data.eventId == resource.data.eventId
+          && initializePlayerRegistration();
         allow delete: if clubAdmin(clubId) && resource.data.status == 'draft';
 
         match /registrations/{registrationId} {
@@ -315,15 +394,60 @@ service cloud.firestore {
               && data.status in ['registered','waiting','cancelled'];
           }
           function ownRegistration(data) {
-            return registeredAccount() && data.type == 'registered'
-              && data.playerId == currentPlayerId() && data.registeredByUid == request.auth.uid;
+            let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+            return signedIn() && exists(userPath)
+              && get(userPath).data.playerId is string && data.type == 'registered'
+              && data.playerId == get(userPath).data.playerId
+              && data.registeredByUid == request.auth.uid;
           }
-          allow get: if activeMember(clubId) || ownRegistration(resource.data);
+          function eventBefore() {
+            return get(/databases/$(database)/documents/clubs/$(clubId)/events/$(eventId)).data;
+          }
+          function eventAfter() {
+            return getAfter(/databases/$(database)/documents/clubs/$(clubId)/events/$(eventId)).data;
+          }
+          function countersIncremented(status) {
+            let before = eventBefore();
+            let after = eventAfter();
+            return after.updatedAt == request.resource.data.updatedAt
+              && ((status == 'registered'
+                  && before.registeredCount < before.capacity
+                  && after.registeredCount == before.registeredCount + 1
+                  && after.waitingCount == before.waitingCount)
+                || (status == 'waiting'
+                  && before.registeredCount >= before.capacity
+                  && after.registeredCount == before.registeredCount
+                  && after.waitingCount == before.waitingCount + 1));
+          }
+          function countersDecremented(status) {
+            let before = eventBefore();
+            let after = eventAfter();
+            return after.updatedAt == request.resource.data.updatedAt
+              && ((status == 'registered'
+                  && after.registeredCount == before.registeredCount - 1
+                  && after.waitingCount == before.waitingCount)
+                || (status == 'waiting'
+                  && after.registeredCount == before.registeredCount
+                  && after.waitingCount == before.waitingCount - 1));
+          }
+          allow get: if activeMember(clubId)
+            || (registeredClubPlayer(clubId) && registrationId == "player_" + currentPlayerId());
           allow list: if activeMember(clubId);
-          // Création, capacité/liste d'attente, désinscription et rattachement explicite
-          // passent par des fonctions transactionnelles. Les clients ne contournent
-          // jamais ces invariants en écrivant directement.
-          allow create, update, delete: if false;
+          // La transaction client et cette règle valident ensemble la capacité et
+          // les compteurs. Aucun client ne peut écrire une inscription isolément.
+          allow create: if validRegistration(request.resource.data)
+            && countersIncremented(request.resource.data.status)
+            && activeMember(clubId) && request.resource.data.type == 'guest'
+            && request.resource.data.registeredByUid == request.auth.uid;
+          allow update: if validRegistration(request.resource.data)
+            && ownRegistration(resource.data) && ownRegistration(request.resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])
+            && request.resource.data.updatedAt > resource.data.updatedAt
+            && ((resource.data.status == 'cancelled' && request.resource.data.status in ['registered','waiting']
+                && countersIncremented(request.resource.data.status))
+              || (resource.data.status in ['registered','waiting'] && request.resource.data.status == 'cancelled'
+                && countersDecremented(resource.data.status)));
+          allow delete: if false;
         }
 
         // Réservations commerciales et paiements sont exclusivement pilotés par
