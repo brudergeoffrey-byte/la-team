@@ -110,10 +110,10 @@ async function navigate(pathname="/"){
   const userData=new Map([["la-team-autosave-v1","tournoi-32-8"],["la-team-saves-index-v1","sauvegarde"]]);
   stores.set("la-team-cache-v12",new FakeCache());
   stores.set("lateam-v1",new FakeCache());
-  const updatedSource=swSource.replace("la-team-shell-v34-test","la-team-shell-v35-test");
+  const updatedSource=swSource.replace("la-team-shell-v35-test","la-team-shell-v36-test");
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v35-test"],"anciens caches applicatifs nettoyés, y compris les générations historiques");
+  assert.deepEqual([...stores.keys()],["la-team-shell-v36-test"],"anciens caches applicatifs nettoyés, y compris les générations historiques");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 

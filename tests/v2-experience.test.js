@@ -10,9 +10,11 @@ for(const marker of ["Nom ou nom d’affichage","Confirmer le mot de passe","Mot
 assert.match(cloud,/if\(selectedClub\)[\s\S]*clubs[\s\S]*players/,"le rattachement Club du nouveau Joueur reste facultatif");
 assert.match(cloud,/linkWithCredential[\s\S]{0,500}getIdToken\?\.\(true\)[\s\S]{0,200}ensurePlayerAccount/,"la migration anonyme renouvelle le jeton avant réparation Firestore");
 assert.match(cloud,/async function ensurePlayerAccount[\s\S]{0,250}getIdToken\?\.\(true\)[\s\S]{0,1800}batch\.commit/,"la réparation renouvelle aussi le jeton avant son lot Firestore");
-assert.match(cloud,/existing\.createdAt\|\|now/,"la réparation conserve la date immuable d’un compte Club existant");
+assert.match(cloud,/existingDoc\.exists\)batch\.update\(userRef,mutableUser\)/,"la réparation d’un compte existant ne renvoie aucun champ immuable");
 assert.match(cloud,/selectedClub\|\|String\(existing\.defaultClubId/,"la réparation conserve le Club d’un compte existant");
 assert.match(source,/signIn\([\s\S]{0,180}ensurePlayerAccount/,"la reconnexion répare automatiquement un profil Joueur absent");
+assert.match(source,/Compte connecté[\s\S]*TERMINER MON PROFIL/,"un échec de réparation n’est plus masqué par un retour à l’accueil");
+assert.match(source,/async function openPlayer[\s\S]*if\(!runtime\.context\.playerId\)[\s\S]*ensurePlayerAccount/,"un compte connecté incomplet est réparé à l’ouverture Joueur");
 assert.match(html,/\.v2x \.v2x-form button\.secondary\{color:#0b5265;background:#e7f4f8;border:2px solid #1687a5\}/,"bouton secondaire contrasté sur carte blanche");
 assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");
