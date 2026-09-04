@@ -15,6 +15,10 @@ assert.match(cloud,/selectedClub\|\|String\(existing\.defaultClubId/,"la répara
 assert.match(source,/signIn\([\s\S]{0,180}ensurePlayerAccount/,"la reconnexion répare automatiquement un profil Joueur absent");
 assert.match(source,/Compte connecté[\s\S]*TERMINER MON PROFIL/,"un échec de réparation n’est plus masqué par un retour à l’accueil");
 assert.match(source,/async function openPlayer[\s\S]*if\(!runtime\.context\.playerId\)[\s\S]*ensurePlayerAccount/,"un compte connecté incomplet est réparé à l’ouverture Joueur");
+for(const marker of ["v2TournamentNav","Tableau","Événements","Joueurs","Championnat","Plus"]){assert.ok((html+source).includes(marker),`navigation Club conservée dans le module tournoi : ${marker}`);}
+assert.match(source,/prepare\(id\)[\s\S]*tournamentNav\(true\)[\s\S]*showSetup/,"la navigation Club reste visible pendant la préparation");
+assert.match(source,/openLegacyTournament[\s\S]*tournamentNav\(true\)/,"la navigation Club reste visible dans le module Tournoi");
+assert.match(source,/returnFromTournament[\s\S]*openClub\(true\)/,"retour du tournoi vers les rubriques Club");
 assert.match(html,/\.v2x \.v2x-form button\.secondary\{color:#0b5265;background:#e7f4f8;border:2px solid #1687a5\}/,"bouton secondaire contrasté sur carte blanche");
 assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");

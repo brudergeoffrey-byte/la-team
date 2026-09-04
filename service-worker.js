@@ -1,4 +1,4 @@
-const CACHE_VERSION = "la-team-shell-v35-test";
+const CACHE_VERSION = "la-team-shell-v36-test";
 const LA_TEAM_CACHE_PREFIXES = ["la-team-shell-", "la-team-cache-", "lateam-"];
 const APP_SHELL = [
   "/",
