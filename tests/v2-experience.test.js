@@ -15,7 +15,7 @@ assert.match(cloud,/selectedClub\|\|String\(existing\.defaultClubId/,"la répara
 assert.match(source,/signIn\([\s\S]{0,180}ensurePlayerAccount/,"la reconnexion répare automatiquement un profil Joueur absent");
 assert.match(source,/Compte connecté[\s\S]*TERMINER MON PROFIL/,"un échec de réparation n’est plus masqué par un retour à l’accueil");
 assert.match(source,/async function openPlayer[\s\S]*if\(!runtime\.context\.playerId\)[\s\S]*ensurePlayerAccount/,"un compte connecté incomplet est réparé à l’ouverture Joueur");
-for(const marker of ["v2TournamentNav","Tableau","Événements","Joueurs","Championnat","Plus"]){assert.ok((html+source).includes(marker),`navigation Club conservée dans le module tournoi : ${marker}`);}
+for(const marker of ["v2TournamentNav","Accueil","Tournois","Mon club","Joueurs","← Retour","v2x-persistent-nav"]){assert.ok((html+source).includes(marker),`navigation principale conservée dans le module tournoi : ${marker}`);}
 assert.match(source,/prepare\(id\)[\s\S]*tournamentNav\(true\)[\s\S]*showSetup/,"la navigation Club reste visible pendant la préparation");
 assert.match(source,/openLegacyTournament[\s\S]*tournamentNav\(true\)/,"la navigation Club reste visible dans le module Tournoi");
 assert.match(source,/returnFromTournament[\s\S]*openClub\(true\)/,"retour du tournoi vers les rubriques Club");

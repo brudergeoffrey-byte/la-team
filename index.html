@@ -560,6 +560,32 @@ body,.v2x{
   .v2x .v2x-section,.v2x .v2x-card,.v2x .v2x-detail,.v2x .v2x-form{border-radius:18px;}
   .v2x-kpis>div,.v2x-player-kpis>div{padding:12px 9px;}
 }
+/* The photographic canvas never changes between V2 routes. */
+.v2x-landing,.v2x-auth{
+  background:transparent!important;
+  background-image:none!important;
+}
+.v2x-public-nav{
+  position:sticky;top:0;z-index:60;width:min(1280px,100%);margin:0 auto;
+  padding:0 18px;background:rgba(3,22,29,.82);border:1px solid var(--premium-border);
+  border-radius:0 0 18px 18px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+.v2x-public-nav>div button.active{color:var(--lime);}
+.v2x-main-back{border-left:1px solid rgba(255,255,255,.14)!important;padding-left:18px!important;}
+.v2x-persistent-nav+.v2x-landing>.v2x-back{display:none;}
+.v2x-header{margin-top:14px;background:rgba(3,22,29,.58);}
+@media(max-width:900px){
+  .v2x-public-nav{grid-template-columns:auto 1fr;padding:0 10px;gap:10px;min-height:58px;border-radius:0;}
+  .v2x-public-nav>div{display:flex;justify-content:flex-end;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none;}
+  .v2x-public-nav>div::-webkit-scrollbar{display:none;}
+  .v2x-public-nav>div button{display:block;flex:0 0 auto;padding:8px 7px;font-size:11px;}
+  .v2x-public-nav>small{display:none;}
+  .v2x-main-back{padding-left:10px!important;}
+}
+@media(max-width:390px){
+  .v2x-public-nav .v2x-landing-brand strong{font-size:12px;white-space:nowrap;}
+  .v2x-public-nav>div button{font-size:10px;padding-inline:5px;}
+}
 </style>
 </head>
 
@@ -581,11 +607,11 @@ body,.v2x{
 <div class="container">
 
   <nav id="v2TournamentNav" class="v2-tournament-nav hidden" aria-label="Navigation Club pendant le tournoi">
-    <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">⌂ Tableau</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('events')">▣ Événements</button>
+    <button onclick="LaTeamV2Experience.landing()">⌂ Accueil</button>
+    <button onclick="LaTeamV2Experience.returnFromTournament('more')">▣ Tournois</button>
+    <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">● Mon club</button>
     <button onclick="LaTeamV2Experience.returnFromTournament('players')">♟ Joueurs</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('championships')">♛ Championnat</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('more')">••• Plus</button>
+    <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">← Retour</button>
   </nav>
 
   <div class="topbar">
