@@ -9,6 +9,7 @@ const {computeStandings}=require("./src/scoring");
 initializeApp();
 
 const REGION="europe-west1";
+const FUNCTION_OPTIONS=Object.freeze({region:REGION,maxInstances:3});
 const ORGANIZER_ROLES=new Set(["owner","admin","organizer"]);
 
 function text(value,max=120){return String(value||"").trim().replace(/\s+/g," ").slice(0,max);}
@@ -20,7 +21,7 @@ async function memberRole(db,clubId,uid){
 }
 function registrationId(db,clubId,eventId){return db.collection(`clubs/${clubId}/events/${eventId}/registrations`).doc();}
 
-exports.registerForEvent=onCall({region:REGION},async request=>{
+exports.registerForEvent=onCall(FUNCTION_OPTIONS,async request=>{
   const uid=requireAuth(request),db=getFirestore(),clubId=text(request.data?.clubId,80),eventId=text(request.data?.eventId,80),type=request.data?.type;
   if(!clubId||!eventId||!["registered","guest"].includes(type))throw new HttpsError("invalid-argument","Inscription invalide.");
   const eventRef=db.doc(`clubs/${clubId}/events/${eventId}`),registrations=db.collection(`clubs/${clubId}/events/${eventId}/registrations`),ref=registrationId(db,clubId,eventId);
@@ -51,7 +52,7 @@ exports.registerForEvent=onCall({region:REGION},async request=>{
   });
 });
 
-exports.cancelEventRegistration=onCall({region:REGION},async request=>{
+exports.cancelEventRegistration=onCall(FUNCTION_OPTIONS,async request=>{
   const uid=requireAuth(request),db=getFirestore(),clubId=text(request.data?.clubId,80),eventId=text(request.data?.eventId,80),id=text(request.data?.registrationId,100),registrations=db.collection(`clubs/${clubId}/events/${eventId}/registrations`),ref=registrations.doc(id);
   const role=await memberRole(db,clubId,uid),organizer=ORGANIZER_ROLES.has(role);
   let promotedRegistrationId=null;
@@ -59,7 +60,7 @@ exports.cancelEventRegistration=onCall({region:REGION},async request=>{
   return {status:"cancelled",promotedRegistrationId};
 });
 
-exports.linkGuestRegistration=onCall({region:REGION},async request=>{
+exports.linkGuestRegistration=onCall(FUNCTION_OPTIONS,async request=>{
   const uid=requireAuth(request),db=getFirestore(),clubId=text(request.data?.clubId,80),eventId=text(request.data?.eventId,80),id=text(request.data?.registrationId,100),playerId=text(request.data?.playerId,100);
   if(!ORGANIZER_ROLES.has(await memberRole(db,clubId,uid)))throw new HttpsError("permission-denied","Accès organisateur requis.");
   const ref=db.doc(`clubs/${clubId}/events/${eventId}/registrations/${id}`),playerRef=db.doc(`clubs/${clubId}/players/${playerId}`);
@@ -89,5 +90,5 @@ async function rebuild(event){
     await batch.commit();
 }
 
-exports.rebuildSeasonStandings=onDocumentWritten({document:"clubs/{clubId}/tournaments/{tournamentId}/matches/{matchId}",region:REGION},rebuild);
-exports.rebuildSeasonStandingsForByes=onDocumentWritten({document:"clubs/{clubId}/tournaments/{tournamentId}/roundSummaries/{roundNumber}",region:REGION},rebuild);
+exports.rebuildSeasonStandings=onDocumentWritten({...FUNCTION_OPTIONS,document:"clubs/{clubId}/tournaments/{tournamentId}/matches/{matchId}"},rebuild);
+exports.rebuildSeasonStandingsForByes=onDocumentWritten({...FUNCTION_OPTIONS,document:"clubs/{clubId}/tournaments/{tournamentId}/roundSummaries/{roundNumber}"},rebuild);

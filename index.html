@@ -7,11 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="La Team" />
+<meta name="apple-mobile-web-app-title" content="La Team V2 TEST" />
 <link rel="manifest" href="./manifest.webmanifest" />
 <link rel="apple-touch-icon" href="./icons/icon-180.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
-<title>La Team</title>
+<title>La Team V2 — TEST</title>
 
 <style>
 :root{
@@ -65,6 +65,7 @@ body{
   background-position: center;
   background-attachment: fixed;
 }
+.test-environment{position:sticky;top:0;z-index:1000;padding:7px 12px;text-align:center;background:#ffcc55;color:#10252b;font-size:12px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 
 .container{ max-width: 980px; margin:auto; padding: 16px; }
 h1,h2{ text-align:center; margin:10px 0 14px; }
@@ -427,6 +428,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 </head>
 
 <body>
+<div id="testEnvironmentBanner" class="test-environment">⚠ La Team V2 — environnement TEST · aucune donnée de production</div>
 <div class="container">
 
   <div class="topbar">
@@ -539,6 +541,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <div class="eyebrow">Nouveau tournoi</div>
     <h1 class="screen-title">Prêts à jouer ?</h1>
     <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
+    <button id="demoDataBtn" class="secondary hidden" onclick="createDemoData()">Créer des données de démonstration</button>
     <div id="clubWorkspace" class="auth-note hidden"><strong id="clubWorkspaceName"></strong><div id="cloudTournaments" class="cloud-tournaments"></div></div>
     <details id="v2Workspace" class="card hidden">
       <summary>Club · joueurs, saisons et événements</summary>
@@ -741,6 +744,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
 </div>
 
+<script src="./preproduction-config.js"></script>
 <script src="./firebase-sharing.js"></script>
 <script src="./organizer-accounts.js"></script>
 <script src="./player-experience.js"></script>
@@ -1405,6 +1409,10 @@ function createInputs(){
 
   setupRegisteredPlayers=Array.from({length:safeN},(_,index)=>setupRegisteredPlayers[index]||null);
   for(let i=0;i<safeN;i++){const registered=setupRegisteredPlayers[i];playersDiv.innerHTML += `<div class="player-entry"><input placeholder="Joueur ${i+1}" id="p${i}" value="${registered?escapePublic(registered.displayName):""}"><button id="playerType_${i}" type="button" class="secondary ${registered?"registered":""}" onclick="choosePlayerType(${i})">${registered?"✓ Enregistré":"Invité"}</button></div>`;}
+}
+function createDemoData(){
+  const names=["Alex Martin","Alex Dupont","Geoffrey Van den Berg","Thomas Delcourt","Nicolas Fontaine","Élise Vandermeulen","Marc-Antoine Petit","Sarah De Smet","Julie Bernard","Karim El Amrani","Laura Vandenbosch","Pierre Laurent"];
+  playerCountEl.value=String(names.length);setupRegisteredPlayers=[];createInputs();names.forEach((name,index)=>{document.getElementById(`p${index}`).value=name;});gameModeEl.value="ladder";selectGameMode("ladder");updateCourtChoiceUI();courtCountEl.value="3";endModeEl.value="time";timerDurationEl.value="10";updateTimerSetupUI();document.getElementById("v2WorkspaceStatus").textContent="✓ Démonstration locale prête : 12 joueurs, dont deux Alex, 3 terrains, King, mode Temps. Aucune donnée Firebase créée.";window.scrollTo({top:document.getElementById("players").offsetTop-90,behavior:"smooth"});
 }
 async function choosePlayerType(index){
   if(setupRegisteredPlayers[index]){if(confirm("Repasser ce joueur en Invité ?")){setupRegisteredPlayers[index]=null;document.getElementById(`playerType_${index}`).textContent="Invité";document.getElementById(`playerType_${index}`).classList.remove("registered");}return;}
@@ -3125,6 +3133,7 @@ function setupPwa(){
 
 /* -------------------- INIT -------------------- */
 (function init(){
+  if(window.LA_TEAM_ENV?.demoEnabled)document.getElementById("demoDataBtn")?.classList.remove("hidden");
   const viewerCode=window.LaTeamCloud?.init({
     getState:()=>state,
     onShareStatus,

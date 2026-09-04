@@ -1,9 +1,10 @@
-const CACHE_VERSION = "la-team-shell-v21";
+const CACHE_VERSION = "la-team-shell-v22-test";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./offline.html",
+  "./preproduction-config.js",
   "./firebase-sharing.js",
   "./organizer-accounts.js",
   "./player-experience.js",

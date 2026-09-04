@@ -1,5 +1,13 @@
 {
   "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
   "functions": { "source": "functions" },
+  "hosting": {
+    "public": ".",
+    "ignore": ["firebase.json", ".firebaserc", "**/.*", "**/node_modules/**", "functions/**", "tests/**", "*.md", "package*.json", "firestore.rules", "firestore.indexes.json", "*-debug.log"],
+    "headers": [
+      {"source":"/index.html","headers":[{"key":"Cache-Control","value":"no-cache, no-store, must-revalidate"}]},
+      {"source":"/service-worker.js","headers":[{"key":"Cache-Control","value":"no-cache, no-store, must-revalidate"}]}
+    ]
+  },
   "emulators": { "auth": { "port": 9099 }, "firestore": { "port": 8088 }, "ui": { "enabled": false } }
 }

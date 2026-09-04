@@ -7,13 +7,8 @@
 
   const SCHEMA_VERSION = 5;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const FIREBASE_CONFIG = Object.freeze({
-    apiKey: "AIzaSyBxKmQ9lrj-5wWNtzhemqSi7h_rFqfykrY",
-    authDomain: "la-team-df6ad.firebaseapp.com",
-    projectId: "la-team-df6ad",
-    storageBucket: "la-team-df6ad.firebasestorage.app",
-    messagingSenderId: "437998380267",
-    appId: "1:437998380267:web:112ca4c51b5c2feed8caae"
+  const FIREBASE_CONFIG = Object.freeze((typeof globalThis!=="undefined"&&globalThis.LA_TEAM_ENV?.firebaseConfig)||{
+    apiKey:"PREPRODUCTION_NOT_CONFIGURED",authDomain:"la-team-v2-test-unconfigured.firebaseapp.com",projectId:"la-team-v2-test-unconfigured",storageBucket:"la-team-v2-test-unconfigured.firebasestorage.app",messagingSenderId:"000000000000",appId:"1:000000000000:web:preproduction"
   });
 
   function randomCode(randomValues){
