@@ -8,4 +8,5 @@ for(const source of [configSource,html,JSON.stringify(manifest),JSON.stringify(f
 assert.match(html,/La Team V2 — environnement TEST · aucune donnée de production/);assert.match(html,/Créer des données de démonstration/);assert.match(html,/function createDemoData\(\)/);
 assert.equal(manifest.name,"La Team V2 — TEST");assert.equal(rc.projects.preproduction,"la-team-v2-test");assert.ok(firebase.hosting.ignore.includes("functions/**"));assert.ok(firebase.hosting.ignore.includes("tests/**"));
 assert.ok(firebase.hosting.ignore.includes(".git/**"),"métadonnées Git explicitement exclues du Hosting");
+assert.ok(firebase.hosting.ignore.includes("scripts/**"));assert.ok(firebase.hosting.predeploy.includes("node scripts/verify-hosting.cjs"),"contrôle de liste blanche obligatoire avant Hosting");
 console.log("PREPRODUCTION_ENV_OK — identité TEST, démonstration locale et isolation Firebase production validées");

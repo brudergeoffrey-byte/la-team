@@ -18,7 +18,7 @@ assert.ok(manifest.icons.some(icon=>icon.sizes==="192x192"&&icon.purpose==="any"
 assert.ok(manifest.icons.some(icon=>icon.sizes==="512x512"&&icon.purpose==="any"));
 assert.ok(manifest.icons.some(icon=>icon.sizes==="512x512"&&icon.purpose==="maskable"));
 
-for(const file of ["offline.html","bg.jpg","firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","firebase-client.js","club-v2.js","club-journey-v2.js","commerce-v2.js","firebase-v2.js","vendor/qrcode.min.js","vendor/qrcode-LICENSE.txt","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"]){
+for(const file of ["offline.html","bg.jpg","firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","firebase-client.js","club-v2.js","club-journey-v2.js","commerce-v2.js","v2-experience.js","firebase-v2.js","vendor/qrcode.min.js","vendor/qrcode-LICENSE.txt","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"]){
   assert.ok(fs.existsSync(path.join(root,file)),`ressource PWA présente : ${file}`);
   assert.ok(swSource.includes(`"./${file}"`),`ressource précachée : ${file}`);
 }
@@ -99,10 +99,10 @@ async function navigate(){
 
   // Une mise à jour change uniquement le cache applicatif, jamais les données du tournoi.
   const userData=new Map([["la-team-autosave-v1","tournoi-32-8"],["la-team-saves-index-v1","sauvegarde"]]);
-  const updatedSource=swSource.replace("la-team-shell-v24-test","la-team-shell-v25-test");
+  const updatedSource=swSource.replace("la-team-shell-v25-test","la-team-shell-v26-test");
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v25-test"],"ancien cache applicatif nettoyé");
+  assert.deepEqual([...stores.keys()],["la-team-shell-v26-test"],"ancien cache applicatif nettoyé");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 
