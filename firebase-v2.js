@@ -4,7 +4,7 @@
   async function ready(){
     if(!root.firebase?.apps?.length&&root.LaTeamCloud?.observeOrganizerAuth)await root.LaTeamCloud.observeOrganizerAuth(()=>{});
     if(!root.firebase?.apps?.length)throw new Error("Firebase n’est pas encore initialisé.");
-    db=root.firebase.firestore();auth=root.firebase.auth();functions=root.firebase.functions("europe-west1");
+    db=root.firebase.firestore();auth=root.firebase.auth();functions=root.firebase.app().functions("europe-west1");
     if(!auth.currentUser)await new Promise(resolve=>{const stop=auth.onAuthStateChanged(()=>{stop();resolve();},()=>resolve());});
     return {db,auth};
   }
