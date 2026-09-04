@@ -45,6 +45,8 @@ assert.ok(html.includes("Hors connexion"));
 assert.ok(html.includes("NOUVELLE VERSION DISPONIBLE · METTRE À JOUR"));
 assert.ok(html.includes("applyPwaUpdate"),"mise à jour PWA explicitement applicable");
 assert.ok(swSource.includes("skipWaiting"),"la nouvelle version ne reste pas bloquée en attente sur un ancien iPad");
+assert.ok(!swSource.includes("?."),"le Service Worker reste analysable par les anciens Safari avec support PWA");
+for(const marker of ["v2CompatLanding","JE SUIS JOUEUR","JE SUIS CLUB / ORGANISATEUR","ACCÈS VIEWER","Navigateur trop ancien","iOS/iPadOS 13.4"]){assert.ok(html.includes(marker),`accueil V2 statique de compatibilité : ${marker}`);}
 assert.ok(!swSource.includes("localStorage"),"aucune donnée utilisateur dans le cache applicatif");
 assert.ok(!swSource.includes("indexedDB"),"aucune donnée utilisateur dans le cache applicatif");
 
@@ -110,10 +112,11 @@ async function navigate(pathname="/"){
   const userData=new Map([["la-team-autosave-v1","tournoi-32-8"],["la-team-saves-index-v1","sauvegarde"]]);
   stores.set("la-team-cache-v12",new FakeCache());
   stores.set("lateam-v1",new FakeCache());
-  const updatedSource=swSource.replace("la-team-shell-v36-test","la-team-shell-v37-test");
+  stores.set("ancien-cache-inconnu",new FakeCache());
+  const updatedSource=swSource.replace("la-team-shell-v37-test","la-team-shell-v38-test");
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v37-test"],"anciens caches applicatifs nettoyés, y compris les générations historiques");
+  assert.deepEqual([...stores.keys()],["la-team-shell-v38-test"],"tous les anciens caches de cet hébergement dédié sont nettoyés");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 

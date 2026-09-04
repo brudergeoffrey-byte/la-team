@@ -392,6 +392,7 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .v2-tournament-nav button{min-height:42px;margin:0;padding:8px 5px;background:transparent;color:var(--ink-soft);font-size:12px}
 .v2-tournament-nav button:first-child{background:rgba(184,243,74,.16);color:var(--lime)}
 @media(max-width:700px){.v2-tournament-nav{position:fixed;z-index:55;left:7px;right:7px;top:auto;bottom:7px;margin:0;gap:2px}.v2-tournament-nav button{min-height:48px;padding:6px 2px;font-size:10px;line-height:1.15}.container.v2-module-open{padding-bottom:78px}}
+.v2-compat-landing{position:fixed;inset:0;z-index:999;background:#03141b;color:#fff;overflow:auto;padding:28px 18px;font-family:Arial,sans-serif}.v2-compat-inner{max-width:720px;margin:auto}.v2-compat-brand{font-weight:900;color:#b8f34a;letter-spacing:.12em}.v2-compat-landing h1{font-size:40px;line-height:1.02;margin:52px 0 12px}.v2-compat-landing>div>p{color:#c4d1d5}.v2-compat-choices{display:grid;gap:12px;margin-top:28px}.v2-compat-choice{display:block;padding:20px;border-radius:14px;background:#0878ed;color:#fff;text-decoration:none;font-weight:900}.v2-compat-choice.club{background:#299a4a}.v2-compat-choice.viewer{background:#12343d;border:1px solid #557079}.v2-compat-choice small{display:block;margin-top:5px;font-weight:400}.v2-compat-warning{margin-top:24px;padding:14px;border:1px solid #d9a93a;border-radius:12px;background:#3a2d0d;color:#fff3cb}.v2-compat-warning strong{display:block;margin-bottom:5px;color:#ffd261}
 .v2x-entry-stack .v2x-viewer-link{align-self:stretch;width:100%;margin-left:0;margin-right:0}
 .v2x-auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
 .v2x-auth-actions button{margin:0}
@@ -452,6 +453,19 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 
 <body>
 <div id="testEnvironmentBanner" class="test-environment">⚠ La Team V2 — environnement TEST · aucune donnée de production</div>
+<div id="v2CompatLanding" class="v2-compat-landing">
+  <div class="v2-compat-inner">
+    <div class="v2-compat-brand">🎾 LA TEAM V2 · TEST</div>
+    <h1>Bienvenue sur La Team V2</h1>
+    <p>Choisissez votre espace.</p>
+    <div class="v2-compat-choices">
+      <span class="v2-compat-choice">JE SUIS JOUEUR<small>Événements, inscriptions et statistiques</small></span>
+      <span class="v2-compat-choice club">JE SUIS CLUB / ORGANISATEUR<small>Gestion du club et des tournois</small></span>
+      <span class="v2-compat-choice viewer">ACCÈS VIEWER<small>Suivre un tournoi en direct</small></span>
+    </div>
+    <div class="v2-compat-warning"><strong>Navigateur trop ancien</strong>La nouvelle interface est affichée, mais les espaces sécurisés nécessitent iOS/iPadOS 13.4 ou une version plus récente. Mettez l’appareil à jour ou utilisez un appareil récent.</div>
+  </div>
+</div>
 <div class="container">
 
   <nav id="v2TournamentNav" class="v2-tournament-nav hidden" aria-label="Navigation Club pendant le tournoi">
@@ -789,7 +803,7 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
 <script src="/club-journey-v2.js"></script>
 <script src="/commerce-v2.js"></script>
 <script src="/firebase-v2.js?v=6"></script>
-<script src="/v2-experience.js?v=10"></script>
+<script src="/v2-experience.js?v=11"></script>
 <script>
 const STATE_VERSION = 2;
 

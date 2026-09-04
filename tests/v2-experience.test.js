@@ -19,6 +19,7 @@ for(const marker of ["v2TournamentNav","Tableau","Événements","Joueurs","Champ
 assert.match(source,/prepare\(id\)[\s\S]*tournamentNav\(true\)[\s\S]*showSetup/,"la navigation Club reste visible pendant la préparation");
 assert.match(source,/openLegacyTournament[\s\S]*tournamentNav\(true\)/,"la navigation Club reste visible dans le module Tournoi");
 assert.match(source,/returnFromTournament[\s\S]*openClub\(true\)/,"retour du tournoi vers les rubriques Club");
+assert.match(source,/v2CompatLanding[\s\S]*classList\.add\("hidden"\)/,"l’accueil statique disparaît seulement après démarrage réussi de la V2 moderne");
 assert.match(html,/\.v2x \.v2x-form button\.secondary\{color:#0b5265;background:#e7f4f8;border:2px solid #1687a5\}/,"bouton secondaire contrasté sur carte blanche");
 assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur non connecté dirigé vers ses actions d’authentification");
 assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");

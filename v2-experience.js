@@ -5,7 +5,7 @@ const runtime={role:null,context:null,club:null,profile:null,events:[],registrat
 const menus={JOUEUR:[["home","⌂ Accueil","openPlayer()"],["events","▣ Événements","playerEvents()"],["ranking","♛ Classement","playerRanking()"],["stats","↗ Statistiques","playerStats()"],["profile","● Profil","playerProfile()"]],CLUB:[["dashboard","⌂ Tableau","openClub()"],["events","▣ Événements","clubEvents()"],["players","♟ Joueurs","players()"],["championships","♛ Championnat","clubChampionships()"],["more","••• Plus","clubMore()"]]};
 function mount(){let e=document.getElementById("v2Experience");if(!e){e=document.createElement("div");e.id="v2Experience";e.className="v2x hidden";document.body.appendChild(e);}return e;}
 function tournamentNav(visible){document.getElementById("v2TournamentNav")?.classList.toggle("hidden",!visible);document.querySelector(".container")?.classList.toggle("v2-module-open",visible);}
-function show(html){tournamentNav(false);const e=mount();e.innerHTML=html;e.classList.remove("hidden");e.scrollTop=0;}
+function show(html){document.getElementById("v2CompatLanding")?.classList.add("hidden");tournamentNav(false);const e=mount();e.innerHTML=html;e.classList.remove("hidden");e.scrollTop=0;}
 function value(id){return document.getElementById(id)?.value.trim()||"";}
 function message(text,error=false){const e=document.getElementById("v2xStatus");if(e){e.textContent=text;e.classList.toggle("error",error);}}
 function nav(role,active){return `<nav class="v2x-nav" aria-label="Navigation ${role}">${menus[role].map(([id,label,fn])=>`<button class="${id===active?"active":""}" onclick="LaTeamV2Experience.${fn}">${label}</button>`).join("")}</nav>`;}
