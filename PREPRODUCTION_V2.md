@@ -44,14 +44,14 @@ Le recalcul actuel relit les résultats de la saison pour garantir l'idempotence
 5. Quotas API conservateurs, suivi quotidien pendant les premiers essais et suppression des artefacts obsolètes.
 6. Projet et compte de facturation dédiés à la préproduction si possible, sans accès croisé à la production.
 
-## Étapes distantes non exécutées
+## État distant de la préproduction
 
-1. Autoriser Firebase CLI avec le compte propriétaire.
-2. Créer un nouveau projet Firebase avec un identifiant disponible.
-3. Créer Firestore en `europe-west1` — le choix de région est important et doit être confirmé.
-4. Activer Authentication anonyme et E-mail/Mot de passe uniquement dans ce projet.
-5. Créer l'application Web et remplacer les valeurs `PREPRODUCTION_NOT_CONFIGURED`.
-6. Déployer Hosting, index et règles vers l'alias explicite `preproduction`.
-7. Décider séparément de Blaze, des garde-fous et du déploiement Functions.
+1. Firebase CLI est autorisé avec le compte propriétaire.
+2. Le projet Spark `la-team-v2-test` et son application Web dédiée existent.
+3. Firestore `(default)` existe en `europe-west1`, avec les règles fermées par défaut.
+4. La configuration SDK publique est intégrée localement et l'alias `preproduction` cible uniquement ce projet.
+5. Authentication reste à activer séparément dans ce projet.
+6. Hosting, index et règles V2 ne sont pas déployés.
+7. Blaze et le déploiement Functions nécessitent une décision séparée avec garde-fous.
 
-Aucune de ces étapes distantes n'a encore été exécutée.
+Firebase Production `la-team-df6ad` reste hors de cette configuration.

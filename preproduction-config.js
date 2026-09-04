@@ -1,19 +1,19 @@
 (function(root){
   "use strict";
-  // Cette branche ne contient volontairement aucune référence au projet Firebase
-  // de production. Remplacer uniquement ces valeurs après création du projet TEST.
+  // Configuration publique dédiée au projet Firebase de préproduction.
+  // Aucune référence au projet Firebase de production n'est autorisée ici.
   root.LA_TEAM_ENV=Object.freeze({
     name:"preproduction",
     label:"La Team V2 — TEST",
     demoEnabled:true,
-    firebaseConfigured:false,
+    firebaseConfigured:true,
     firebaseConfig:Object.freeze({
-      apiKey:"PREPRODUCTION_NOT_CONFIGURED",
-      authDomain:"la-team-v2-test-unconfigured.firebaseapp.com",
-      projectId:"la-team-v2-test-unconfigured",
-      storageBucket:"la-team-v2-test-unconfigured.firebasestorage.app",
-      messagingSenderId:"000000000000",
-      appId:"1:000000000000:web:preproduction"
+      apiKey:"AIzaSyAZLFFj8duKPck7bp0B-MSb3ti64o0L4ao",
+      authDomain:"la-team-v2-test.firebaseapp.com",
+      projectId:"la-team-v2-test",
+      storageBucket:"la-team-v2-test.firebasestorage.app",
+      messagingSenderId:"935053612201",
+      appId:"1:935053612201:web:e963c7fcce2bbf222305b8"
     })
   });
 })(typeof window!=="undefined"?window:globalThis);
