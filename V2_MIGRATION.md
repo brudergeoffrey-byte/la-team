@@ -17,6 +17,8 @@ Les nouveaux espaces sont :
 - `clubs/{clubId}/tournaments/{tournamentId}/auditLog/{auditId}` : corrections historiques immuables ;
 - `tournaments/{publicCode}/scoreProposals/{proposalId}` : propositions Viewer séparées des résultats officiels.
 
+Les inscriptions passent par des fonctions appelables transactionnelles : `registerForEvent`, `cancelEventRegistration` et `linkGuestRegistration`. Elles attribuent atomiquement une place ou la liste d’attente, empêchent les doublons et interdisent toute écriture cliente directe sur les inscriptions. Le rattachement ultérieur d’un invité conserve son type et son historique ; il ajoute seulement `linkedPlayerId`, `linkedByUid` et `linkedAt` après décision explicite d’un Organisateur.
+
 ## Identités
 
 `uid`, `playerId`, `publicId`, `participantId` et `engineIndex` ont des rôles distincts. Un invité possède un `participantId` et un `engineIndex`, mais jamais de `playerId` permanent. Le moteur ne reçoit que les participants triés par `engineIndex` ; sa logique n’est pas modifiée.
@@ -36,6 +38,10 @@ Chaque saison porte `scoringVersion` et une copie complète de son barème. La v
 Une correction d’un ancien round ne régénère jamais silencieusement les déplacements déjà joués. Elle modifie uniquement les statistiques officielles et crée une entrée dans `auditLog`.
 
 Les propositions de score utilisent chacune un identifiant immuable. En cas de coupure, le SDK les garde en attente ; au retour du réseau elles ne remplacent jamais un résultat officiel. Si plusieurs propositions existent pour un terrain, l’Organisateur choisit celle à accepter ou saisit son propre score. Une acceptation ne devient officielle qu’après écriture séparée du résultat validé et de sa révision.
+
+La projection Viewer V2 utilise `schemaVersion: 5` et une liste `participantIds` alignée sur les indices moteur. Ces identifiants ne révèlent aucun `playerId` permanent. Les règles vérifient ensemble l’UID anonyme de la session Viewer, son `engineIndex`, le `participantId`, le round courant et l’appartenance au terrain avant d’autoriser une proposition. Les schémas publics 1 à 4 restent lisibles pour préserver les anciens QR codes.
+
+Les documents de club préparent uniquement les champs commerciaux `plan`, `subscriptionStatus`, `trialEndsAt` et `billingCustomerId`. Les clients ne peuvent pas les modifier et aucune facturation n’est activée.
 
 ## État de production
 

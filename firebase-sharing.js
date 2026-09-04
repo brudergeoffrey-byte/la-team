@@ -5,7 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function(){
   "use strict";
 
-  const SCHEMA_VERSION = 4;
+  const SCHEMA_VERSION = 5;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const FIREBASE_CONFIG = Object.freeze({
     apiKey: "AIzaSyBxKmQ9lrj-5wWNtzhemqSi7h_rFqfykrY",
@@ -86,6 +86,7 @@
       endMode:appState.endMode==="time"?"time":"points",
       roundDurationMinutes:appState.endMode==="time"?Number(appState.roundDurationMinutes)||10:null,
       players:appState.players.map((player,id)=>({id,name:String(player.name||`J${id+1}`)})),
+      participantIds:appState.players.map((_,id)=>String(appState.participants?.[id]?.participantId||`engine_${id}`)),
       currentRound:{
         rest:[...(round.rest||[])],
         courts:(round.courts||[]).map((court,index)=>publicCourt(appState,court,index,results[index]))
@@ -97,10 +98,11 @@
 
   function validateViewerSnapshot(snapshot){
     const baseKeys=["schemaVersion","code","ownerUid","revision","updatedAt","status","mode","roundNumber","maxPoints","players","currentRound","ranking","previousResults"];
-    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:snapshot?.schemaVersion===3?[...baseKeys,"endMode","roundDurationMinutes"]:snapshot?.schemaVersion===4?[...baseKeys,"clubId","endMode","roundDurationMinutes"]:baseKeys;
+    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:snapshot?.schemaVersion===3?[...baseKeys,"endMode","roundDurationMinutes"]:snapshot?.schemaVersion===4?[...baseKeys,"clubId","endMode","roundDurationMinutes"]:snapshot?.schemaVersion===5?[...baseKeys,"clubId","endMode","roundDurationMinutes","participantIds"]:baseKeys;
     return Boolean(snapshot && Object.keys(snapshot).length===keys.length && Object.keys(snapshot).every(key=>keys.includes(key))
-      && [1,2,3,4].includes(snapshot.schemaVersion)
-      && (snapshot.schemaVersion!==4 || (typeof snapshot.clubId==="string"&&snapshot.clubId.length>=4))
+      && [1,2,3,4,5].includes(snapshot.schemaVersion)
+      && (![4,5].includes(snapshot.schemaVersion) || (typeof snapshot.clubId==="string"&&snapshot.clubId.length>=4))
+      && (snapshot.schemaVersion!==5 || (Array.isArray(snapshot.participantIds)&&snapshot.participantIds.length===snapshot.players.length&&snapshot.participantIds.every(id=>typeof id==="string"&&id.length>0)))
       && /^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/.test(snapshot.code)
       && ["americano","ladder"].includes(snapshot.mode)
       && ["live","finished"].includes(snapshot.status)
@@ -109,7 +111,7 @@
       && Array.isArray(snapshot.currentRound?.courts)
       && (snapshot.schemaVersion===1 || (["points","time"].includes(snapshot.endMode)
         && (snapshot.endMode!=="time" || (snapshot.roundDurationMinutes>=1
-          && ([3,4].includes(snapshot.schemaVersion) || snapshot.roundEndsAt>0))))));
+          && ([3,4,5].includes(snapshot.schemaVersion) || snapshot.roundEndsAt>0))))));
   }
 
   function playerMatch(snapshot,playerId){

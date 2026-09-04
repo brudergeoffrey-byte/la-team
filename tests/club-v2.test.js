@@ -10,6 +10,9 @@ assert.equal(JSON.stringify(profile).includes("email"),false,"profil sportif ind
 
 const permanent=model.registration({registrationId:"reg-a",eventId:"event-a",clubId:"club-a",type:"registered",playerId:"player_a",displayName:"Élise",registeredByUid:"uid-a",now});
 const guest=model.registration({registrationId:"reg-b",eventId:"event-a",clubId:"club-a",type:"guest",displayName:"Invité",registeredByUid:"organizer-a",now});
+assert.equal(model.registrationStatus(31,32),"registered");
+assert.equal(model.registrationStatus(32,32),"waiting");
+assert.equal(guest.linkedPlayerId,null,"aucun rattachement automatique d’un invité");
 const participants=model.participantsFromRegistrations([permanent,guest],{randomValues:[[1,2,3,4],[5,6,7,8]]});
 assert.equal(participants[0].playerId,"player_a");
 assert.equal(participants[1].playerId,null,"invité sans identité permanente");
@@ -24,6 +27,10 @@ assert.throws(()=>model.scoringConfig({winPoints:1,lossPoints:3}),/victoire/i);
 
 const event=model.event({eventId:"event-a",clubId:"club-a",seasonId:"season-a",name:"Soirée 1",startsAt:now,now});
 assert.equal(event.seasonId,"season-a");
+assert.equal(event.competitionType,"championship");
+const friendly=model.event({eventId:"event-friendly",clubId:"club-a",name:"Amical",startsAt:now,plannedEndsAt:now+6*3600000,now});
+assert.equal(friendly.competitionType,"friendly");
+assert.equal(friendly.seasonId,null);
 const match=model.officialMatch({matchId:"match-a",clubId:"club-a",tournamentId:"tour-a",eventId:"event-a",seasonId:"season-a",roundNumber:1,courtNumber:1,teamA:["pa","pb"],teamB:["pc","pd"],teamAPlayerIds:["player_a"],teamBPlayerIds:["player_c","player_d"],scoreA:12,scoreB:8,validatedByUid:"organizer-a",now});
 assert.deepEqual(match.playerIds,["player_a","player_c","player_d"]);
 assert.equal(match.revision,1);

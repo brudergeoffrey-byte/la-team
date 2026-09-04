@@ -126,11 +126,28 @@ service cloud.firestore {
         && hasCommonPublicShape(data, code);
     }
 
+    function hasV2ClubPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'clubId', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'mode', 'roundNumber', 'maxPoints', 'endMode',
+          'roundDurationMinutes', 'players', 'participantIds', 'currentRound', 'ranking',
+          'previousResults'
+        ])
+        && data.schemaVersion == 5
+        && data.clubId is string && data.clubId.size() >= 4
+        && data.participantIds is list && data.participantIds.size() == data.players.size()
+        && data.endMode in ['points', 'time']
+        && (data.endMode == 'points' || (data.roundDurationMinutes is int
+          && data.roundDurationMinutes >= 1 && data.roundDurationMinutes <= 180))
+        && hasCommonPublicShape(data, code);
+    }
+
     function hasValidPublicShape(data, code) {
       return hasLegacyPublicShape(data, code)
         || hasTimedPublicShape(data, code)
         || hasCourtTimerPublicShape(data, code)
-        || hasClubPublicShape(data, code);
+        || hasClubPublicShape(data, code)
+        || hasV2ClubPublicShape(data, code);
     }
 
     match /users/{uid} {
@@ -174,16 +191,21 @@ service cloud.firestore {
       allow get: if activeMember(clubId);
       allow list: if signedIn() && request.auth.uid in resource.data.memberUids;
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['schemaVersion','clubId','name','ownerUid','memberUids','status','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['schemaVersion','clubId','name','ownerUid','memberUids','status','plan','subscriptionStatus','trialEndsAt','billingCustomerId','createdAt','updatedAt'])
         && request.resource.data.schemaVersion == 1
         && request.resource.data.clubId == clubId
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.memberUids == [request.auth.uid]
-        && request.resource.data.status == 'active';
+        && request.resource.data.status == 'active'
+        && (!request.resource.data.keys().hasAny(['plan']) || request.resource.data.plan == 'free')
+        && (!request.resource.data.keys().hasAny(['subscriptionStatus']) || request.resource.data.subscriptionStatus == 'inactive')
+        && (!request.resource.data.keys().hasAny(['trialEndsAt']) || request.resource.data.trialEndsAt == null)
+        && (!request.resource.data.keys().hasAny(['billingCustomerId']) || request.resource.data.billingCustomerId == null);
       allow update: if clubAdmin(clubId)
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.clubId == resource.data.clubId
-        && request.resource.data.schemaVersion == resource.data.schemaVersion;
+        && request.resource.data.schemaVersion == resource.data.schemaVersion
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','memberUids','status','updatedAt']);
       allow delete: if clubOwner(clubId);
 
       match /members/{uid} {
@@ -267,10 +289,13 @@ service cloud.firestore {
 
       match /events/{eventId} {
         function validEvent(data) {
-          return data.keys().hasOnly(['schemaVersion','eventId','clubId','seasonId','tournamentId','name','startsAt','plannedEndsAt','actualEndedAt','timezone','capacity','registrationStatus','status','createdAt','updatedAt'])
+          return data.keys().hasOnly(['schemaVersion','eventId','clubId','seasonId','tournamentId','competitionType','name','startsAt','plannedEndsAt','actualEndedAt','timezone','capacity','registrationStatus','status','createdAt','updatedAt'])
             && data.schemaVersion == 2 && data.eventId == eventId && data.clubId == clubId
             && data.name is string && data.startsAt is int && data.capacity is int
             && data.capacity >= 4 && data.capacity <= 256
+            && data.competitionType in ['friendly','championship']
+            && ((data.competitionType == 'friendly' && data.seasonId == null)
+              || (data.competitionType == 'championship' && data.seasonId is string))
             && data.registrationStatus in ['open','closed']
             && data.status in ['draft','registration','live','finished'];
         }
@@ -283,7 +308,7 @@ service cloud.firestore {
 
         match /registrations/{registrationId} {
           function validRegistration(data) {
-            return data.keys().hasOnly(['schemaVersion','registrationId','eventId','clubId','type','playerId','displayName','normalizedName','status','registeredByUid','createdAt','updatedAt'])
+            return data.keys().hasOnly(['schemaVersion','registrationId','eventId','clubId','type','playerId','displayName','normalizedName','status','linkedPlayerId','linkedByUid','linkedAt','registeredByUid','createdAt','updatedAt'])
               && data.schemaVersion == 2 && data.registrationId == registrationId
               && data.eventId == eventId && data.clubId == clubId
               && data.type in ['registered','guest']
@@ -295,17 +320,10 @@ service cloud.firestore {
           }
           allow get: if activeMember(clubId) || ownRegistration(resource.data);
           allow list: if activeMember(clubId);
-          allow create: if validRegistration(request.resource.data)
-            && (activeMember(clubId) || ownRegistration(request.resource.data));
-          allow update: if validRegistration(request.resource.data)
-            && request.resource.data.clubId == resource.data.clubId
-            && request.resource.data.eventId == resource.data.eventId
-            && request.resource.data.playerId == resource.data.playerId
-            && request.resource.data.type == resource.data.type
-            && (activeMember(clubId)
-              || (ownRegistration(resource.data)
-                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])));
-          allow delete: if false;
+          // Création, capacité/liste d'attente, désinscription et rattachement explicite
+          // passent par des fonctions transactionnelles. Les clients ne contournent
+          // jamais ces invariants en écrivant directement.
+          allow create, update, delete: if false;
         }
 
         match /participants/{participantId} {
@@ -326,8 +344,14 @@ service cloud.firestore {
 
       match /tournaments/{tournamentId} {
         function validPrivate(data) {
-          return data.keys().hasOnly(['schemaVersion','tournamentId','clubId','ownerUid','createdByUid','publicCode','status','roundNumber','updatedAt','state'])
-            && data.schemaVersion == 1 && data.tournamentId == tournamentId
+          return ((data.schemaVersion == 1
+              && data.keys().hasOnly(['schemaVersion','tournamentId','clubId','ownerUid','createdByUid','publicCode','status','roundNumber','updatedAt','state']))
+            || (data.schemaVersion == 2
+              && data.keys().hasOnly(['schemaVersion','tournamentId','clubId','ownerUid','createdByUid','publicCode','eventId','seasonId','competitionType','status','roundNumber','updatedAt','state'])
+              && data.competitionType in ['friendly','championship']
+              && ((data.competitionType == 'friendly' && data.seasonId == null)
+                || (data.competitionType == 'championship' && data.seasonId is string))))
+            && data.tournamentId == tournamentId
             && data.clubId == clubId && data.ownerUid == get(/databases/$(database)/documents/clubs/$(clubId)).data.ownerUid
             && data.createdByUid is string && data.status in ['live','finished']
             && data.roundNumber is int && data.roundNumber >= 1 && data.state is map;
@@ -411,7 +435,7 @@ service cloud.firestore {
       allow create: if isValidCode(code)
         && request.auth != null
         && ((request.resource.data.schemaVersion < 4 && request.resource.data.ownerUid == request.auth.uid)
-          || (request.resource.data.schemaVersion == 4
+          || (request.resource.data.schemaVersion in [4, 5]
             && activeMember(request.resource.data.clubId)
             && request.resource.data.ownerUid == get(/databases/$(database)/documents/clubs/$(request.resource.data.clubId)).data.ownerUid))
         && hasValidPublicShape(request.resource.data, code);
@@ -420,7 +444,7 @@ service cloud.firestore {
       // aucun droit. Le propriétaire et le schéma ne peuvent pas être changés.
       allow update: if request.auth != null
         && ((resource.data.schemaVersion < 4 && resource.data.ownerUid == request.auth.uid)
-          || (resource.data.schemaVersion == 4 && activeMember(resource.data.clubId)))
+          || (resource.data.schemaVersion in [4, 5] && activeMember(resource.data.clubId)))
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.code == resource.data.code
         && request.resource.data.revision > resource.data.revision
@@ -428,7 +452,7 @@ service cloud.firestore {
 
       allow delete: if request.auth != null
         && ((resource.data.schemaVersion < 4 && resource.data.ownerUid == request.auth.uid)
-          || (resource.data.schemaVersion == 4 && clubAdmin(resource.data.clubId)));
+          || (resource.data.schemaVersion in [4, 5] && clubAdmin(resource.data.clubId)));
 
       match /viewerSessions/{uid} {
         allow get: if request.auth != null && request.auth.uid == uid;
@@ -458,6 +482,8 @@ service cloud.firestore {
             && data.courtNumber is int && data.courtNumber >= 1
             && data.courtNumber <= proposalTournament().currentRound.courts.size()
             && data.engineIndex == proposalSession().playerId
+            && proposalTournament().schemaVersion == 5
+            && data.proposedByParticipantId == proposalTournament().participantIds[data.engineIndex]
             && (data.engineIndex in proposalTournament().currentRound.courts[data.courtNumber - 1].teamA
               || data.engineIndex in proposalTournament().currentRound.courts[data.courtNumber - 1].teamB)
             && data.proposedByUid == request.auth.uid
@@ -466,7 +492,7 @@ service cloud.firestore {
             && data.scoreA != data.scoreB && data.status == 'pending';
         }
         function proposalOrganizer() {
-          return request.auth != null && proposalTournament().schemaVersion == 4
+          return request.auth != null && proposalTournament().schemaVersion in [4, 5]
             && activeMember(proposalTournament().clubId);
         }
         allow get: if request.auth != null && (resource.data.proposedByUid == request.auth.uid || proposalOrganizer());
@@ -495,7 +521,7 @@ service cloud.firestore {
         function organizer() {
           return request.auth != null
             && ((tournament().schemaVersion < 4 && tournament().ownerUid == request.auth.uid)
-              || (tournament().schemaVersion == 4 && activeMember(tournament().clubId)));
+              || (tournament().schemaVersion in [4, 5] && activeMember(tournament().clubId)));
         }
         function validCommon(data) {
           return timerId == 'current'

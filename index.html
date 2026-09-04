@@ -343,6 +343,8 @@ button.danger{background:rgba(255,123,123,.11);border:1px solid rgba(255,123,123
 .round-cockpit{position:sticky;top:69px;z-index:12;padding:14px;margin:10px 0 14px;border:1px solid rgba(184,243,74,.28);border-radius:18px;background:rgba(7,29,36,.95);box-shadow:0 15px 38px rgba(0,0,0,.3);backdrop-filter:blur(18px)}
 .cockpit-head{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}.cockpit-round{color:var(--lime);font-size:13px;font-weight:950;letter-spacing:.13em}.cockpit-progress{font-size:14px;font-weight:850;color:var(--ink-soft);margin-top:3px}.cockpit-clock{font-size:clamp(34px,9vw,54px);font-weight:950;font-variant-numeric:tabular-nums;letter-spacing:.04em;line-height:1;text-align:right}.cockpit-clock.warning{color:var(--gold)}.cockpit-clock.ended{color:var(--red);font-size:clamp(24px,7vw,40px)}
 .cockpit-alert{margin:9px 0 0;padding:9px 11px;border-radius:11px;background:rgba(255,200,90,.1);color:#ffe0a3;font-weight:850;font-size:13px}.cockpit-alert.ready{background:rgba(184,243,74,.12);color:#eaffc4}.movement-overview{margin:10px 0 14px;padding:13px;border:1px solid var(--line);border-radius:15px;background:rgba(4,24,29,.5)}.movement-overview-title{color:var(--lime);font-size:11px;font-weight:950;letter-spacing:.12em;margin-bottom:8px}.movement-flow{display:flex;gap:5px;align-items:center;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}.movement-flow span{flex:0 0 auto;padding:7px 9px;border-radius:9px;background:rgba(67,223,189,.1);font-size:12px;font-weight:900}.movement-flow b{color:var(--ink-soft)}
+.score-proposal{margin:10px 0;padding:11px;border:1px solid rgba(184,243,74,.45);border-radius:13px;background:rgba(184,243,74,.1);color:#efffd5;font-weight:850}.score-proposal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.score-proposal-actions button{margin:0}.viewer-score-proposal{margin-top:14px;padding:12px;border-radius:14px;background:rgba(67,223,189,.09)}.viewer-score-proposal .score-row{margin:9px 0}.viewer-score-feedback{min-height:20px;color:var(--lime);font-weight:800;font-size:13px}
+.player-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.player-entry button{width:auto;margin:0;white-space:nowrap}.player-entry button.registered{border-color:var(--lime);color:var(--lime)}
 .round-ready{padding:13px 15px;margin:10px 0;border-radius:15px;background:linear-gradient(120deg,rgba(184,243,74,.16),rgba(67,223,189,.12));border:1px solid rgba(184,243,74,.3);font-size:13px;font-weight:800;}
 .court-card.validated{border-color:rgba(67,223,189,.38);background:linear-gradient(145deg,rgba(21,72,75,.98),rgba(12,46,52,.98));}
 .court-card.validated::before{background:var(--lime)!important;}
@@ -404,13 +406,18 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
   .row{flex-direction:row;}
   .secondary-actions{display:grid;grid-template-columns:1fr 1fr;}
   .secondary-actions .danger-action{grid-column:1/-1;}
-  .team{font-size:17px;overflow-wrap:anywhere;}
+  .team{font-size:18px;line-height:1.32;overflow-wrap:anywhere;}
   th,td{padding:9px 5px;font-size:12px;}
   .hide-mobile{display:none;}
   .round-cockpit{top:65px;padding:11px;margin-inline:-2px}.cockpit-head{gap:8px}.cockpit-progress{font-size:12px}.cockpit-alert{font-size:12px}.court-status-grid{grid-template-columns:repeat(4,minmax(0,1fr));padding:7px 0 0;margin:0;background:transparent;}
   .court-status{font-size:10px;padding:7px 3px;min-height:38px;}
   .event-strip{align-items:start}.round-state strong{font-size:16px}
   .home-shell{margin-top:2vh}.entry-grid{grid-template-columns:1fr}.entry-card{min-height:260px;padding:20px}.entry-card h2{font-size:22px}.viewer-shell{margin-top:4px}.viewer-hero{padding:18px}.viewer-court{font-size:clamp(42px,15vw,64px);margin-bottom:14px}.viewer-matchup{font-size:clamp(18px,5.4vw,23px);overflow-wrap:anywhere}
+}
+
+@media (max-width:390px){
+  .matchup,.viewer-matchup{grid-template-columns:1fr;gap:7px}.versus,.viewer-matchup>div:nth-child(2){font-size:13px;letter-spacing:.16em;color:var(--lime)}
+  .team,.viewer-matchup{font-size:19px;line-height:1.34}.score-proposal-actions{grid-template-columns:1fr}
 }
 
 @media (min-width:900px){#courts{grid-template-columns:repeat(4,minmax(0,1fr));}.court-card{padding:14px!important}.team{font-size:14px}.score-row select{min-height:50px;font-size:21px}}
@@ -533,6 +540,14 @@ td{border-bottom:1px solid rgba(255,255,255,.06);font-weight:650;}
     <h1 class="screen-title">Prêts à jouer ?</h1>
     <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
     <div id="clubWorkspace" class="auth-note hidden"><strong id="clubWorkspaceName"></strong><div id="cloudTournaments" class="cloud-tournaments"></div></div>
+    <details id="v2Workspace" class="card hidden">
+      <summary>Club · joueurs, saisons et événements</summary>
+      <div class="small">Fondation V2 additive. Un tournoi peut rester amical ou compter pour une saison.</div>
+      <label for="v2ProfileName">Mon profil joueur permanent</label><input id="v2ProfileName" maxlength="80" placeholder="Nom affiché" /><button class="secondary" onclick="createMyPlayerProfile()">Créer / afficher mon profil</button><div id="v2ProfileStatus" class="small"></div>
+      <hr class="sep"><h3>Nouvelle saison</h3><input id="v2SeasonName" placeholder="Championnat HighT5" maxlength="80" /><input id="v2SeasonLabel" placeholder="Saison 2026/2027" maxlength="80" /><div class="row"><input id="v2SeasonStart" type="date" aria-label="Début de saison" /><input id="v2SeasonEnd" type="date" aria-label="Fin de saison" /></div><button class="secondary" onclick="createClubSeason()">Créer la saison</button>
+      <hr class="sep"><h3>Nouvel événement</h3><input id="v2EventName" placeholder="King du jeudi" maxlength="100" /><div class="row"><input id="v2EventStart" type="datetime-local" aria-label="Début événement" /><input id="v2EventEnd" type="datetime-local" aria-label="Fin événement, même après minuit" /></div><input id="v2EventCapacity" type="number" min="4" max="256" value="32" aria-label="Capacité" /><select id="v2EventSeason"><option value="">Tournoi amical</option></select><button class="secondary" onclick="createClubEvent()">Créer l’événement</button>
+      <div id="v2WorkspaceStatus" class="small" aria-live="polite"></div><div id="v2Events"></div>
+    </details>
 
     <section class="step">
       <h2 class="step-title"><span class="step-number">1</span> Combien sommes-nous ?</h2>
@@ -782,7 +797,10 @@ let state = {
   clubId: null,
   cloudTournamentId: null,
   tournamentStatus: "live",
-  sharedTournament: null
+  sharedTournament: null,
+  participants: [],
+  eventId: null,
+  seasonId: null
 };
 
 const SAVES_INDEX_KEY = "la-team-saves-index-v1";
@@ -869,6 +887,9 @@ let timerInterval = null;
 let audioContext = null;
 let viewerAlertsEnabled = false;
 let viewerRoundTimer = null;
+let scoreProposals = [];
+let proposalWatchCode = null;
+let setupRegisteredPlayers = [];
 
 /* -------------------- HELPERS -------------------- */
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -1382,9 +1403,13 @@ function createInputs(){
 
   const safeN = clamp(n, 1, 32);
 
-  for(let i=0;i<safeN;i++){
-    playersDiv.innerHTML += `<input placeholder="Joueur ${i+1}" id="p${i}">`;
-  }
+  setupRegisteredPlayers=Array.from({length:safeN},(_,index)=>setupRegisteredPlayers[index]||null);
+  for(let i=0;i<safeN;i++){const registered=setupRegisteredPlayers[i];playersDiv.innerHTML += `<div class="player-entry"><input placeholder="Joueur ${i+1}" id="p${i}" value="${registered?escapePublic(registered.displayName):""}"><button id="playerType_${i}" type="button" class="secondary ${registered?"registered":""}" onclick="choosePlayerType(${i})">${registered?"✓ Enregistré":"Invité"}</button></div>`;}
+}
+async function choosePlayerType(index){
+  if(setupRegisteredPlayers[index]){if(confirm("Repasser ce joueur en Invité ?")){setupRegisteredPlayers[index]=null;document.getElementById(`playerType_${index}`).textContent="Invité";document.getElementById(`playerType_${index}`).classList.remove("registered");}return;}
+  const query=prompt("Rechercher un joueur enregistré (nom ou début du nom) :");if(!query)return;
+  try{const matches=await window.LaTeamV2Cloud.searchClubPlayers(state.clubId,query);if(!matches.length){alert("Aucun joueur enregistré trouvé. Il peut jouer comme Invité.");return;}const choice=prompt(matches.map((row,i)=>`${i+1}. ${row.displayName} · ${row.playerId}`).join("\n")+"\n\nNuméro du joueur à sélectionner :"),selected=matches[Number(choice)-1];if(!selected)return;setupRegisteredPlayers[index]=selected;document.getElementById(`p${index}`).value=selected.displayName;document.getElementById(`playerType_${index}`).textContent="✓ Enregistré";document.getElementById(`playerType_${index}`).classList.add("registered");}catch(error){alert("Recherche indisponible. Le joueur peut rester Invité.");}
 }
 
 function updateCourtChoiceUI(){
@@ -1962,7 +1987,22 @@ async function refreshOrganizerWorkspace(){
   const club=organizerClubs.find(c=>c.id===state.clubId),items=await window.LaTeamCloud.listClubTournaments(state.clubId);
   document.getElementById("clubWorkspace").classList.remove("hidden");document.getElementById("clubWorkspaceName").textContent=`Club : ${club.name}`;
   document.getElementById("cloudTournaments").innerHTML=items.length?items.map(item=>`<div class="cloud-tournament"><span><b>${escapePublic(item.status==="live"?"Tournoi en cours":"Tournoi terminé")}</b><br><span class="small">Round ${item.roundNumber} · ${new Date(item.updatedAt).toLocaleString()}</span></span><button class="secondary" onclick="recoverCloudTournament('${escapePublic(item.id)}')">Reprendre</button></div>`).join(""):"<span class=\"small\">Aucun tournoi synchronisé pour ce club.</span>";
+  await refreshClubV2Workspace();
 }
+async function refreshClubV2Workspace(){
+  const panel=document.getElementById("v2Workspace");if(!panel||!state.clubId||!window.LaTeamV2Cloud)return;panel.classList.remove("hidden");
+  try{const [seasons,events,profile]=await Promise.all([window.LaTeamV2Cloud.listSeasons(state.clubId),window.LaTeamV2Cloud.listEvents(state.clubId),window.LaTeamV2Cloud.getMyPlayerProfile()]);window.v2Seasons=seasons;window.v2EventsData=events;window.v2PlayerProfile=profile;
+    document.getElementById("v2ProfileStatus").textContent=profile?`ID joueur : ${profile.publicId} · ${profile.displayName}`:"Aucun profil joueur permanent (facultatif pour jouer).";
+    document.getElementById("v2EventSeason").innerHTML='<option value="">Tournoi amical</option>'+seasons.map(row=>`<option value="${escapePublic(row.seasonId)}">${escapePublic(row.name)} · ${escapePublic(row.label)}</option>`).join("");
+    document.getElementById("v2Events").innerHTML=events.length?events.map(row=>`<div class="cloud-tournament"><span><b>${escapePublic(row.name)}</b><br><span class="small">${new Date(row.startsAt).toLocaleString()} · ${row.capacity} places · ${row.competitionType==="championship"?"Championnat":"Amical"}</span></span><div><button class="secondary" onclick="addGuestToEvent('${escapePublic(row.eventId)}')">+ Invité</button>${profile?`<button class="secondary" onclick="registerMyProfile('${escapePublic(row.eventId)}')">M’inscrire</button>`:""}<button class="secondary" onclick="useEventRoster('${escapePublic(row.eventId)}')">Utiliser les inscrits</button></div></div>`).join(""):"<p class=\"small\">Aucun événement.</p>";
+  }catch(error){document.getElementById("v2WorkspaceStatus").textContent="Les données Club V2 seront disponibles avec les règles et fonctions V2.";}
+}
+async function createMyPlayerProfile(){const status=document.getElementById("v2WorkspaceStatus");try{if(window.v2PlayerProfile)throw new Error("Votre profil existe déjà.");const profile=await window.LaTeamV2Cloud.createPlayerProfile(document.getElementById("v2ProfileName").value);await window.LaTeamV2Cloud.addPlayerToClub(state.clubId,profile);status.textContent="✓ Profil joueur créé et rattaché au club.";await refreshClubV2Workspace();}catch(error){status.textContent=error.message;}}
+async function createClubSeason(){const status=document.getElementById("v2WorkspaceStatus");try{const startsAt=new Date(document.getElementById("v2SeasonStart").value+"T00:00:00").getTime(),endsAt=new Date(document.getElementById("v2SeasonEnd").value+"T23:59:59").getTime();await window.LaTeamV2Cloud.createSeason(state.clubId,{name:document.getElementById("v2SeasonName").value,label:document.getElementById("v2SeasonLabel").value,startsAt,endsAt});status.textContent="✓ Saison créée. Son barème restera figé après activation.";await refreshClubV2Workspace();}catch(error){status.textContent=error.message;}}
+async function createClubEvent(){const status=document.getElementById("v2WorkspaceStatus");try{const startsAt=new Date(document.getElementById("v2EventStart").value).getTime(),endValue=document.getElementById("v2EventEnd").value,plannedEndsAt=endValue?new Date(endValue).getTime():null,seasonId=document.getElementById("v2EventSeason").value||null;await window.LaTeamV2Cloud.createEvent(state.clubId,{name:document.getElementById("v2EventName").value,startsAt,plannedEndsAt,capacity:Number(document.getElementById("v2EventCapacity").value),seasonId});status.textContent="✓ Événement créé en Europe/Brussels.";await refreshClubV2Workspace();}catch(error){status.textContent=error.message;}}
+async function registerMyProfile(eventId){const status=document.getElementById("v2WorkspaceStatus");try{const result=await window.LaTeamV2Cloud.registerPlayer(state.clubId,eventId,{type:"registered",playerId:window.v2PlayerProfile.playerId});status.textContent=result.status==="waiting"?"Liste d’attente : événement complet.":"✓ Inscription confirmée.";}catch(error){status.textContent=error.message;}}
+async function addGuestToEvent(eventId){const displayName=prompt("Nom de l’invité :");if(!displayName)return;const status=document.getElementById("v2WorkspaceStatus");try{const result=await window.LaTeamV2Cloud.addGuest(state.clubId,eventId,displayName);status.textContent=result.status==="waiting"?"Invité ajouté à la liste d’attente.":"✓ Invité inscrit.";}catch(error){status.textContent=error.message;}}
+async function useEventRoster(eventId){const status=document.getElementById("v2WorkspaceStatus");try{const registrations=await window.LaTeamV2Cloud.listRegistrations(state.clubId,eventId),confirmed=registrations.filter(row=>row.status==="registered");if(confirmed.length<4)throw new Error("Il faut au moins 4 inscrits confirmés.");const event=window.v2EventsData.find(row=>row.eventId===eventId);playerCountEl.value=String(Math.min(32,confirmed.length));createInputs();confirmed.slice(0,32).forEach((row,index)=>document.getElementById(`p${index}`).value=row.displayName);state.pendingParticipants=window.LaTeamClubV2.participantsFromRegistrations(confirmed.slice(0,32));state.eventId=eventId;state.seasonId=event?.seasonId||null;updateCourtChoiceUI();status.textContent=`✓ ${Math.min(32,confirmed.length)} inscrits chargés. ${registrations.filter(row=>row.status==="waiting").length} en attente.`;}catch(error){status.textContent=error.message;}}
 async function recoverCloudTournament(tournamentId){
   try{state=await window.LaTeamCloud.loadClubTournament(state.clubId,tournamentId);normalizeLoadedState();writeAutoSave();showGame();renderMatch();renderRanking();renderRecapInGame();}catch(error){alert("Impossible de récupérer ce tournoi.");}
 }
@@ -2129,6 +2169,12 @@ function startNewTournament(){
     const name = (document.getElementById("p"+i)?.value || ("J"+(i+1))).trim();
     state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
   }
+  state.participants=Array.isArray(state.pendingParticipants)&&state.pendingParticipants.length===state.players.length
+    ? state.pendingParticipants.map((row,engineIndex)=>({...row,engineIndex,displayNameSnapshot:state.players[engineIndex].name}))
+    : state.players.map((player,engineIndex)=>{const registered=setupRegisteredPlayers[engineIndex];return {schemaVersion:2,participantId:`participant_${state.timerTournamentId}_${engineIndex}`,registrationId:`present_${engineIndex}`,playerId:registered?.playerId||null,displayNameSnapshot:player.name,type:registered?"registered":"guest",engineIndex};});
+  state.pendingParticipants=null;
+  setupRegisteredPlayers=[];
+  state.officialRevisions={};
 
   state.totalRounds = null;
   state.tournamentStatus = "live";
@@ -2182,8 +2228,27 @@ function ensureRoundResults(){
     state.results[state.matchIndex] = [];
 }
 
+function pendingProposal(courtNumber){return scoreProposals.find(row=>row.status==="pending"&&Number(row.roundNumber)===state.matchIndex+1&&Number(row.courtNumber)===courtNumber)||null;}
+function organizerProposalCard(courtIndex){
+  const proposal=pendingProposal(courtIndex+1);if(!proposal)return "";
+  return `<div class="score-proposal">T${courtIndex+1} — Score proposé : ${proposal.scoreA}–${proposal.scoreB}<div class="score-proposal-actions"><button onclick="acceptScoreProposal('${escapePublic(proposal.proposalId)}',${courtIndex},${proposal.scoreA},${proposal.scoreB})">✓ VALIDER</button><button class="secondary" onclick="prepareProposedScore(${courtIndex},${proposal.scoreA},${proposal.scoreB})">✎ MODIFIER</button></div></div>`;
+}
+function watchOrganizerProposals(){
+  const code=state.sharedTournament?.code;if(!code||proposalWatchCode===code||!window.LaTeamV2Cloud?.subscribeScoreProposals)return;
+  proposalWatchCode=code;window.LaTeamV2Cloud.subscribeScoreProposals(code,rows=>{scoreProposals=rows;renderMatch();}).catch(()=>{proposalWatchCode=null;});
+}
+function prepareProposedScore(courtIndex,a,b){const left=document.getElementById(`scoreA_${courtIndex}`),right=document.getElementById(`scoreB_${courtIndex}`);if(left)left.value=a;if(right)right.value=b;state.courtScores[courtIndex]={a,b};scrollToCourt(courtIndex);}
+async function acceptScoreProposal(proposalId,courtIndex,a,b){prepareProposedScore(courtIndex,a,b);validateCourt(courtIndex);try{await window.LaTeamV2Cloud.reviewScoreProposal(state.sharedTournament.code,proposalId,"accepted");}catch(error){alert("Le score est validé localement, mais la proposition reste à synchroniser.");}}
+
+async function persistOfficialCourt(courtIndex,a,b,teamA,teamB){
+  if(!state.clubId||!state.cloudTournamentId||!state.eventId||!window.LaTeamV2Cloud)return;
+  const participants=state.participants||[],ids=team=>team.map(index=>participants[index]?.participantId).filter(Boolean),playerIds=team=>team.map(index=>participants[index]?.playerId).filter(Boolean),key=`r${state.matchIndex+1}c${courtIndex+1}`,revision=Number(state.officialRevisions?.[key]||0)+1;
+  try{await window.LaTeamV2Cloud.saveOfficialMatch(state.clubId,state.cloudTournamentId,{matchId:`${state.cloudTournamentId}_${key}`,eventId:state.eventId,seasonId:state.seasonId||null,roundNumber:state.matchIndex+1,courtNumber:courtIndex+1,teamA:ids(teamA),teamB:ids(teamB),teamAPlayerIds:playerIds(teamA),teamBPlayerIds:playerIds(teamB),scoreA:a,scoreB:b,revision});state.officialRevisions[key]=revision;writeAutoSave();}catch(error){autosaveText.textContent="🟠 Score conservé hors connexion — validation championnat à resynchroniser";}
+}
+
 /* -------------------- Match display -------------------- */
 function renderMatch(){
+  watchOrganizerProposals();
   if(state.mode === "americano" && state.matchIndex >= state.schedule.length){
     state.schedule.push(generateNextAmericanoRound(state.n, state.courts, state.schedule));
   }
@@ -2228,7 +2293,7 @@ function renderMatch(){
   document.getElementById("cockpitRound").textContent=`ROUND ${state.matchIndex+1}`;
   roundStateEl.textContent = `${validatedCount}/${match.courts.length} terrains validés`;
   courtStatusGridEl.innerHTML = match.courts.map((_,idx)=>
-    `<button class="court-status ${state.validatedCourts[idx]?"done":"waiting"}" onclick="scrollToCourt(${idx})">T${idx+1}</button>`
+    `<button class="court-status ${state.validatedCourts[idx]?"done":pendingProposal(idx+1)?"proposed":"waiting"}" onclick="scrollToCourt(${idx})">T${idx+1}${pendingProposal(idx+1)?" · !":""}</button>`
   ).join("");
   const roundComplete = validatedCount === match.courts.length;
   const missingCourts=state.validatedCourts.map((done,index)=>done?null:index+1).filter(Boolean);
@@ -2279,6 +2344,7 @@ function renderMatch(){
         <div class="team">${playerName(B[0])}<br>+ ${playerName(B[1])}</div>
       </div>
       ${duplicateBadge}
+      ${organizerProposalCard(idx)}
       <div class="score-row">
           <select id="scoreA_${idx}" ${disabled?"disabled":""}
             onchange="onScoreChange(${idx},'A')" aria-label="Score équipe 1 terrain ${idx+1}">
@@ -2392,6 +2458,7 @@ function validateCourt(courtIndex){
   }
 
   state.validatedCourts[courtIndex] = true;
+  persistOfficialCourt(courtIndex,a,b,teamA,teamB);
 
   writeAutoSave();
   renderRanking();
@@ -2399,6 +2466,8 @@ function validateCourt(courtIndex){
   renderRecapInGame();
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
+  const nextMissing=state.validatedCourts.findIndex(done=>!done);
+  if(nextMissing>=0){document.getElementById("cockpitAlert").textContent=`PROCHAIN SCORE : T${nextMissing+1}`;if(window.matchMedia?.("(min-width: 700px)").matches)setTimeout(()=>scrollToCourt(nextMissing),80);}
 }
 
 function applyResult(teamA, teamB, scoreA, scoreB){
@@ -2929,6 +2998,13 @@ function viewerMovementLabel(destination){
   return `${destination.outcome==="win"?"↑ Monte":"↓ Descend"} Terrain ${destination.court}`;
 }
 
+function viewerScoreOptions(maximum,selected=0){let html="";for(let value=0;value<=maximum;value++)html+=`<option value="${value}"${value===selected?" selected":""}>${value}</option>`;return html;}
+function syncViewerProposal(side){if(viewerSnapshot?.endMode!=="points")return;const left=document.getElementById("viewerProposalA"),right=document.getElementById("viewerProposalB"),total=viewerSnapshot.maxPoints;if(side==="A")right.value=total-Number(left.value);else left.value=total-Number(right.value);}
+async function proposeViewerScore(courtNumber,playerId){
+  const left=document.getElementById("viewerProposalA"),right=document.getElementById("viewerProposalB"),feedback=document.getElementById("viewerScoreFeedback");
+  try{const scoreA=Number(left.value),scoreB=Number(right.value);await window.LaTeamV2Cloud.submitScoreProposal(viewerSnapshot.code,{clubId:viewerSnapshot.clubId,tournamentId:viewerSnapshot.code,roundNumber:viewerSnapshot.roundNumber,courtNumber,proposedByParticipantId:viewerSnapshot.participantIds[playerId],engineIndex:playerId,scoreA,scoreB});feedback.textContent="✓ Score proposé à l’Organisateur";left.disabled=true;right.disabled=true;}catch(error){feedback.textContent="Proposition impossible. Vérifiez le score et la connexion.";}
+}
+
 function renderViewer(){
   const snapshot=viewerSnapshot;
   const playerId=Number(localStorage.getItem(viewerIdentityKey()));
@@ -2948,7 +3024,7 @@ function renderViewer(){
       <div class="viewer-court">TERRAIN ${match.court}</div>
       <div class="viewer-matchup"><div>${escapePublic(viewerName(snapshot,match.player))}<br>${escapePublic(viewerName(snapshot,match.partner))}</div><div>VS</div><div>${match.opponents.map(id=>escapePublic(viewerName(snapshot,id))).join("<br>")}</div></div>
       ${snapshot.endMode==="time"?'<div class="viewer-personal-timer"><div class="timer-status">TEMPS RESTANT</div><div id="viewerPersonalClock" class="viewer-personal-clock">Pas démarré</div></div>':''}
-      ${match.score?`<div class="viewer-finished">✓ MATCH TERMINÉ</div><div class="viewer-score-final">${ownScore} — ${opponentScore}</div><div class="viewer-preparing">Prochain round en préparation…</div>`:""}
+      ${match.score?`<div class="viewer-finished">✓ MATCH TERMINÉ</div><div class="viewer-score-final">${ownScore} — ${opponentScore}</div><div class="viewer-preparing">Prochain round en préparation…</div>`:`<div class="viewer-score-proposal"><strong>Proposer le score</strong><div class="score-row"><select id="viewerProposalA" onchange="syncViewerProposal('A')" aria-label="Score équipe gauche">${viewerScoreOptions(snapshot.endMode==="time"?31:snapshot.maxPoints,0)}</select><span class="score-separator">—</span><select id="viewerProposalB" onchange="syncViewerProposal('B')" aria-label="Score équipe droite">${viewerScoreOptions(snapshot.endMode==="time"?31:snapshot.maxPoints,snapshot.endMode==="points"?snapshot.maxPoints:0)}</select></div><button onclick="proposeViewerScore(${match.court},${playerId})">PROPOSER</button><div id="viewerScoreFeedback" class="viewer-score-feedback" aria-live="polite"></div></div>`}
       ${destination?`<div class="viewer-movement">${destination}</div>`:snapshot.mode==="ladder"&&!match.score?`<div class="viewer-movement">${match.court===1?"Si victoire → reste T1 👑":`Si victoire → T${match.court-1} ↑`}<br>${match.court===snapshot.currentRound.courts.length?`Si défaite → reste T${match.court}`:`Si défaite → T${match.court+1} ↓`}</div>`:""}`;
   }
   if(isNewRound){ my.classList.remove("viewer-new"); void my.offsetWidth; my.classList.add("viewer-new"); }

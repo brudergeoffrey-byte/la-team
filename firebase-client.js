@@ -4,7 +4,8 @@
   const SDK_URLS=[
     `https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app-compat.js`,
     `https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-auth-compat.js`,
-    `https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore-compat.js`
+    `https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore-compat.js`,
+    `https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-functions-compat.js`
   ];
   const PENDING_KEY="la-team-publication-pending-v1";
   let api=null, sdkPromise=null, db=null, auth=null, publishTimer=null, privateTimer=null, viewerUnsubscribe=null,timerUnsubscribe=null,authUnsubscribe=null;

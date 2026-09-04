@@ -4,7 +4,7 @@
   "scripts": {
     "test": "for f in tests/*.test.js; do case \"$f\" in *emulator*) continue;; esac; node \"$f\" || exit 1; done",
     "test:rules": "firebase emulators:exec --only firestore --project demo-la-team \"node tests/firestore-rules-emulator.test.js\"",
-    "test:backend": "firebase emulators:exec --only firestore,functions --project demo-la-team \"node tests/functions-emulator.test.js\""
+    "test:backend": "firebase emulators:exec --only auth,firestore,functions --project demo-la-team \"node tests/functions-emulator.test.js && node tests/registration-functions-emulator.test.js\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "5.0.2",

@@ -1,9 +1,9 @@
 (function(root){
   "use strict";
-  let db=null,auth=null;
+  let db=null,auth=null,functions=null,proposalStop=null;
   async function ready(){
     if(!root.firebase?.apps?.length)throw new Error("Firebase n’est pas encore initialisé.");
-    db=root.firebase.firestore();auth=root.firebase.auth();
+    db=root.firebase.firestore();auth=root.firebase.auth();functions=root.firebase.functions("europe-west1");
     if(!auth.currentUser)await new Promise(resolve=>{const stop=auth.onAuthStateChanged(()=>{stop();resolve();},()=>resolve());});
     return {db,auth};
   }
@@ -35,19 +35,25 @@
     return snapshot.docs.map(doc=>doc.data());
   }
   async function createSeason(clubId,input){await organizer(clubId);const row=root.LaTeamClubV2.season({...input,clubId});await db.collection("clubs").doc(clubId).collection("seasons").doc(row.seasonId).set(row);return row;}
+  async function listSeasons(clubId){await organizer(clubId);const rows=await db.collection("clubs").doc(clubId).collection("seasons").orderBy("startsAt","desc").limit(50).get();return rows.docs.map(doc=>doc.data());}
   async function createEvent(clubId,input){await organizer(clubId);const row=root.LaTeamClubV2.event({...input,clubId});await db.collection("clubs").doc(clubId).collection("events").doc(row.eventId).set(row);return row;}
+  async function listEvents(clubId){await organizer(clubId);const rows=await db.collection("clubs").doc(clubId).collection("events").orderBy("startsAt","desc").limit(100).get();return rows.docs.map(doc=>doc.data());}
   async function registerPlayer(clubId,eventId,input){
-    const user=await account(),row=root.LaTeamClubV2.registration({...input,clubId,eventId,registeredByUid:user.uid});
-    await db.collection("clubs").doc(clubId).collection("events").doc(eventId).collection("registrations").doc(row.registrationId).set(row);return row;
+    await account();const result=await functions.httpsCallable("registerForEvent")({clubId,eventId,...input});return result.data;
   }
   async function addGuest(clubId,eventId,displayName){const {user}=await organizer(clubId);return registerPlayer(clubId,eventId,{type:"guest",displayName,registeredByUid:user.uid});}
   async function listRegistrations(clubId,eventId){await organizer(clubId);const result=await db.collection("clubs").doc(clubId).collection("events").doc(eventId).collection("registrations").where("status","in",["registered","waiting"]).get();return result.docs.map(doc=>doc.data());}
+  async function cancelRegistration(clubId,eventId,registrationId){await account();return (await functions.httpsCallable("cancelEventRegistration")({clubId,eventId,registrationId})).data;}
+  async function linkGuestRegistration(clubId,eventId,registrationId,playerId){await organizer(clubId);return (await functions.httpsCallable("linkGuestRegistration")({clubId,eventId,registrationId,playerId})).data;}
   async function createParticipants(clubId,eventId,registrations){await organizer(clubId);const rows=root.LaTeamClubV2.participantsFromRegistrations(registrations),batch=db.batch(),base=db.collection("clubs").doc(clubId).collection("events").doc(eventId).collection("participants");rows.forEach(row=>batch.set(base.doc(row.participantId),row));await batch.commit();return rows;}
   async function submitScoreProposal(publicCode,input){
     await ready();if(!auth.currentUser)await auth.signInAnonymously();const row=root.LaTeamClubV2.scoreProposal({...input,publicCode,proposedByUid:auth.currentUser.uid});
     await db.collection("tournaments").doc(publicCode).collection("scoreProposals").doc(row.proposalId).set(row);return row;
   }
   async function listScoreProposals(publicCode){await account();const snapshot=await db.collection("tournaments").doc(publicCode).collection("scoreProposals").where("status","==","pending").get();return snapshot.docs.map(doc=>doc.data());}
+  async function subscribeScoreProposals(publicCode,callback){
+    await account();proposalStop?.();proposalStop=db.collection("tournaments").doc(publicCode).collection("scoreProposals").where("status","==","pending").onSnapshot(snapshot=>callback(snapshot.docs.map(doc=>doc.data())),()=>callback([]));return proposalStop;
+  }
   async function saveOfficialMatch(clubId,tournamentId,input){
     const {user}=await organizer(clubId),row=root.LaTeamClubV2.officialMatch({...input,clubId,tournamentId,validatedByUid:user.uid});
     await db.collection("clubs").doc(clubId).collection("tournaments").doc(tournamentId).collection("matches").doc(row.matchId).set(row);return row;
@@ -64,5 +70,5 @@
     const {user}=await organizer(clubId),row=root.LaTeamClubV2.roundSummary({...input,clubId,tournamentId,validatedByUid:user.uid});
     await db.collection("clubs").doc(clubId).collection("tournaments").doc(tournamentId).collection("roundSummaries").doc(String(row.roundNumber)).set(row);return row;
   }
-  root.LaTeamV2Cloud={createPlayerProfile,getMyPlayerProfile,getMyMatchHistory,addPlayerToClub,searchClubPlayers,createSeason,createEvent,registerPlayer,addGuest,listRegistrations,createParticipants,submitScoreProposal,listScoreProposals,saveOfficialMatch,reviewScoreProposal,recordHistoricalCorrection,saveRoundSummary};
+  root.LaTeamV2Cloud={createPlayerProfile,getMyPlayerProfile,getMyMatchHistory,addPlayerToClub,searchClubPlayers,createSeason,listSeasons,createEvent,listEvents,registerPlayer,addGuest,listRegistrations,cancelRegistration,linkGuestRegistration,createParticipants,submitScoreProposal,listScoreProposals,subscribeScoreProposals,saveOfficialMatch,reviewScoreProposal,recordHistoricalCorrection,saveRoundSummary};
 })(typeof window!=="undefined"?window:globalThis);

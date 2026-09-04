@@ -53,13 +53,18 @@
     if(!Number.isInteger(capacity)||capacity<4||capacity>256)throw new Error("Capacité invalide");
     const start=timestamp(startsAt),end=plannedEndsAt===null?null:timestamp(plannedEndsAt);
     if(end!==null&&end<=start)throw new Error("La fin prévue doit suivre le début");
-    return {schemaVersion:SCHEMA_VERSION,eventId,clubId:clean(clubId),seasonId:seasonId?clean(seasonId):null,tournamentId:tournamentId?clean(tournamentId):null,name:clean(name,100),startsAt:start,plannedEndsAt:end,actualEndedAt:null,timezone:"Europe/Brussels",capacity,registrationStatus:"open",status:"draft",createdAt:timestamp(now),updatedAt:timestamp(now)};
+    return {schemaVersion:SCHEMA_VERSION,eventId,clubId:clean(clubId),seasonId:seasonId?clean(seasonId):null,tournamentId:tournamentId?clean(tournamentId):null,competitionType:seasonId?"championship":"friendly",name:clean(name,100),startsAt:start,plannedEndsAt:end,actualEndedAt:null,timezone:"Europe/Brussels",capacity,registrationStatus:"open",status:"draft",createdAt:timestamp(now),updatedAt:timestamp(now)};
   }
-  function registration({registrationId=immutableId("registration"),eventId,clubId,type="registered",playerId=null,displayName,registeredByUid,now=Date.now()}){
+  function registration({registrationId=immutableId("registration"),eventId,clubId,type="registered",playerId=null,displayName,registeredByUid,status="registered",now=Date.now()}){
     if(!["registered","guest"].includes(type))throw new Error("Type d’inscription invalide");
+    if(!["registered","waiting","cancelled"].includes(status))throw new Error("Statut d’inscription invalide");
     if(type==="registered"&&!playerId)throw new Error("Un joueur enregistré exige un playerId");
     if(type==="guest"&&playerId)throw new Error("Un invité ne reçoit pas de playerId permanent");
-    return {schemaVersion:SCHEMA_VERSION,registrationId,eventId:clean(eventId),clubId:clean(clubId),type,playerId:playerId?clean(playerId):null,displayName:clean(displayName,80),normalizedName:normalizeName(displayName),status:"registered",registeredByUid:clean(registeredByUid),createdAt:timestamp(now),updatedAt:timestamp(now)};
+    return {schemaVersion:SCHEMA_VERSION,registrationId,eventId:clean(eventId),clubId:clean(clubId),type,playerId:playerId?clean(playerId):null,displayName:clean(displayName,80),normalizedName:normalizeName(displayName),status,linkedPlayerId:null,linkedByUid:null,linkedAt:null,registeredByUid:clean(registeredByUid),createdAt:timestamp(now),updatedAt:timestamp(now)};
+  }
+  function registrationStatus(confirmedCount,capacity){
+    if(!Number.isInteger(confirmedCount)||confirmedCount<0||!Number.isInteger(capacity)||capacity<1)throw new Error("Capacité d’événement invalide");
+    return confirmedCount<capacity?"registered":"waiting";
   }
   function participantsFromRegistrations(registrations,options={}){
     const seenPlayers=new Set(),seenRegistrations=new Set();
@@ -91,5 +96,5 @@
   function roundSummary({clubId,tournamentId,eventId,seasonId=null,roundNumber,byePlayerIds=[],validatedByUid,now=Date.now()}){
     return {schemaVersion:SCHEMA_VERSION,clubId:clean(clubId),tournamentId:clean(tournamentId),eventId:clean(eventId),seasonId:seasonId?clean(seasonId):null,roundNumber:Number(roundNumber),byePlayerIds:[...new Set(byePlayerIds.filter(Boolean))],validatedByUid:clean(validatedByUid),validatedAt:timestamp(now)};
   }
-  return {SCHEMA_VERSION,SCORING_VERSION,DEFAULT_SCORING,normalizeName,immutableId,publicPlayerId,scoringConfig,playerProfile,clubPlayer,season,event,registration,participantsFromRegistrations,enginePlayers,participantByEngineIndex,officialMatch,scoreProposal,historicalCorrection,roundSummary};
+  return {SCHEMA_VERSION,SCORING_VERSION,DEFAULT_SCORING,normalizeName,immutableId,publicPlayerId,scoringConfig,playerProfile,clubPlayer,season,event,registration,registrationStatus,participantsFromRegistrations,enginePlayers,participantByEngineIndex,officialMatch,scoreProposal,historicalCorrection,roundSummary};
 });

@@ -22,14 +22,15 @@
     return {schemaVersion:ACCOUNT_SCHEMA_VERSION,email:normalizeEmail(user.email),displayName:String(user.displayName||"").trim().slice(0,80),defaultClubId:String(defaultClubId),createdAt:now,updatedAt:now};
   }
   function clubDocument({clubId,name,ownerUid,now=Date.now()}){
-    return {schemaVersion:ACCOUNT_SCHEMA_VERSION,clubId:String(clubId),name:String(name||"").trim().slice(0,80),ownerUid:String(ownerUid),memberUids:[String(ownerUid)],status:"active",createdAt:now,updatedAt:now};
+    return {schemaVersion:ACCOUNT_SCHEMA_VERSION,clubId:String(clubId),name:String(name||"").trim().slice(0,80),ownerUid:String(ownerUid),memberUids:[String(ownerUid)],status:"active",plan:"free",subscriptionStatus:"inactive",trialEndsAt:null,billingCustomerId:null,createdAt:now,updatedAt:now};
   }
   function memberDocument({uid,role="owner",email="",now=Date.now()}){
     if(!ROLES.includes(role))throw new Error("Rôle invalide");
     return {schemaVersion:ACCOUNT_SCHEMA_VERSION,uid:String(uid),role,email:normalizeEmail(email),status:"active",createdAt:now,updatedAt:now};
   }
   function privateTournament({tournamentId,clubId,ownerUid,createdByUid,state,now=Date.now()}){
-    return {schemaVersion:ACCOUNT_SCHEMA_VERSION,tournamentId:String(tournamentId),clubId:String(clubId),ownerUid:String(ownerUid),createdByUid:String(createdByUid),publicCode:state?.sharedTournament?.code||null,status:state?.tournamentStatus==="finished"?"finished":"live",roundNumber:Number(state?.matchIndex||0)+1,updatedAt:now,state};
+    const competitionType=state?.seasonId?"championship":"friendly";
+    return {schemaVersion:2,tournamentId:String(tournamentId),clubId:String(clubId),ownerUid:String(ownerUid),createdByUid:String(createdByUid),publicCode:state?.sharedTournament?.code||null,eventId:state?.eventId||null,seasonId:state?.seasonId||null,competitionType,status:state?.tournamentStatus==="finished"?"finished":"live",roundNumber:Number(state?.matchIndex||0)+1,updatedAt:now,state};
   }
   function canManage(role){return ROLES.includes(role);}
   function canManageMembers(role){return role==="owner"||role==="admin";}

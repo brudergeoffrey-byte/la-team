@@ -11,7 +11,7 @@ const member=(uid,role,email=`${uid}@example.test`)=>({schemaVersion:1,uid,role,
 const club=(id,ownerUid,members)=>({schemaVersion:1,clubId:id,name:id,ownerUid,memberUids:members,status:"active",createdAt:now,updatedAt:now});
 const state={matchIndex:0,tournamentStatus:"live",players:[{name:"A"},{name:"B"},{name:"C"},{name:"D"}],schedule:[{courts:[{teamA:[0,1],teamB:[2,3]}],rest:[]}],sharedTournament:{code:"K7F2"}};
 const privateTournament=(clubId,ownerUid,creator="ownerA")=>({schemaVersion:1,tournamentId:"tour-1",clubId,ownerUid,createdByUid:creator,publicCode:"K7F2",status:"live",roundNumber:1,updatedAt:now,state});
-const publicTournament={schemaVersion:4,code:"K7F2",clubId:"clubA",ownerUid:"ownerA",revision:1,updatedAt:now,status:"live",mode:"americano",roundNumber:1,maxPoints:21,endMode:"time",roundDurationMinutes:10,players:[{id:0,name:"A"},{id:1,name:"B"},{id:2,name:"C"},{id:3,name:"D"}],currentRound:{rest:[],courts:[{number:1,teamA:[0,1],teamB:[2,3],necessaryDuplicate:false,validated:false,score:null,destinations:{}}]},ranking:[0,1,2,3].map((id,index)=>({position:index+1,diff:0,id,name:["A","B","C","D"][id],matches:0,wins:0,plus:0,minus:0})),previousResults:[]};
+const publicTournament={schemaVersion:5,code:"K7F2",clubId:"clubA",ownerUid:"ownerA",revision:1,updatedAt:now,status:"live",mode:"americano",roundNumber:1,maxPoints:21,endMode:"time",roundDurationMinutes:10,players:[{id:0,name:"A"},{id:1,name:"B"},{id:2,name:"C"},{id:3,name:"D"}],participantIds:["participant-a","participant-b","participant-c","participant-d"],currentRound:{rest:[],courts:[{number:1,teamA:[0,1],teamB:[2,3],necessaryDuplicate:false,validated:false,score:null,destinations:{}}]},ranking:[0,1,2,3].map((id,index)=>({position:index+1,diff:0,id,name:["A","B","C","D"][id],matches:0,wins:0,plus:0,minus:0})),previousResults:[]};
 
 (async()=>{
   const env=await initializeTestEnvironment({projectId,firestore:{rules,host:"127.0.0.1",port:8088}});
@@ -55,13 +55,13 @@ const publicTournament={schemaVersion:4,code:"K7F2",clubId:"clubA",ownerUid:"own
   await assertSucceeds(setDoc(doc(dbFor("adminA"),"clubs/clubA/seasons/season-a"),season));
   await assertFails(setDoc(doc(dbFor("organizerA"),"clubs/clubA/seasons/season-b"),{...season,seasonId:"season-b"}));
   await assertFails(setDoc(doc(dbFor("adminA"),"clubs/clubA/seasons/season-bad"),{...season,seasonId:"season-bad",scoring:{...scoring,winPoints:1,lossPoints:3}}));
-  const event={schemaVersion:2,eventId:"event-a",clubId:"clubA",seasonId:"season-a",tournamentId:"tour-1",name:"Soirée",startsAt:now,plannedEndsAt:null,actualEndedAt:null,timezone:"Europe/Brussels",capacity:16,registrationStatus:"open",status:"draft",createdAt:now,updatedAt:now};
+  const event={schemaVersion:2,eventId:"event-a",clubId:"clubA",seasonId:"season-a",tournamentId:"tour-1",competitionType:"championship",name:"Soirée",startsAt:now,plannedEndsAt:null,actualEndedAt:null,timezone:"Europe/Brussels",capacity:16,registrationStatus:"open",status:"draft",createdAt:now,updatedAt:now};
   await assertSucceeds(setDoc(doc(dbFor("organizerA"),"clubs/clubA/events/event-a"),event));
-  const registration={schemaVersion:2,registrationId:"reg-a",eventId:"event-a",clubId:"clubA",type:"registered",playerId:"player_a",displayName:"Élise",normalizedName:"elise",status:"registered",registeredByUid:"playerA",createdAt:now,updatedAt:now};
-  await assertSucceeds(setDoc(doc(playerDb,"clubs/clubA/events/event-a/registrations/reg-a"),registration));
+  const registration={schemaVersion:2,registrationId:"reg-a",eventId:"event-a",clubId:"clubA",type:"registered",playerId:"player_a",displayName:"Élise",normalizedName:"elise",status:"registered",linkedPlayerId:null,linkedByUid:null,linkedAt:null,registeredByUid:"playerA",createdAt:now,updatedAt:now};
+  await assertFails(setDoc(doc(playerDb,"clubs/clubA/events/event-a/registrations/reg-a"),registration));
   await assertFails(setDoc(doc(dbFor("outsider"),"clubs/clubA/events/event-a/registrations/guest-x"),{...registration,registrationId:"guest-x",type:"guest",playerId:null,registeredByUid:"outsider"}));
   const guest={...registration,registrationId:"guest-a",type:"guest",playerId:null,displayName:"Invité",normalizedName:"invite",registeredByUid:"organizerA"};
-  await assertSucceeds(setDoc(doc(dbFor("organizerA"),"clubs/clubA/events/event-a/registrations/guest-a"),guest));
+  await assertFails(setDoc(doc(dbFor("organizerA"),"clubs/clubA/events/event-a/registrations/guest-a"),guest));
   const participant={schemaVersion:2,participantId:"participant-a",registrationId:"reg-a",playerId:"player_a",displayNameSnapshot:"Élise",type:"registered",engineIndex:0};
   await assertSucceeds(setDoc(doc(dbFor("organizerA"),"clubs/clubA/events/event-a/participants/participant-a"),participant));
   await assertFails(setDoc(doc(playerDb,"clubs/clubA/seasons/season-a/standings/player_a"),{playerId:"player_a",matches:1}));
@@ -98,6 +98,7 @@ const publicTournament={schemaVersion:4,code:"K7F2",clubId:"clubA",ownerUid:"own
   await assertFails(setDoc(doc(viewer,"tournaments/K7F2/courtTimers/1"),{legacy:true}));
   const proposal={schemaVersion:2,proposalId:"proposal-a",publicCode:"K7F2",clubId:"clubA",tournamentId:"tour-1",roundNumber:1,courtNumber:1,proposedByUid:"viewer1",proposedByParticipantId:"participant-a",engineIndex:0,scoreA:12,scoreB:8,status:"pending",createdAt:now,updatedAt:now};
   await assertSucceeds(setDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),proposal));
+  await assertFails(setDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-fake-player"),{...proposal,proposalId:"proposal-fake-player",proposedByParticipantId:"participant-c"}));
   await assertFails(setDoc(doc(viewer2,"tournaments/K7F2/scoreProposals/proposal-forged"),{...proposal,proposalId:"proposal-forged",proposedByUid:"viewer2",engineIndex:7}));
   await assertFails(updateDoc(doc(viewer,"tournaments/K7F2/scoreProposals/proposal-a"),{scoreA:20,updatedAt:now+1}));
   await assertSucceeds(updateDoc(doc(dbFor("organizerA"),"tournaments/K7F2/scoreProposals/proposal-a"),{status:"accepted",updatedAt:now+1}));
