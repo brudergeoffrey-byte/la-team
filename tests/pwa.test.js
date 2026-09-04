@@ -105,10 +105,10 @@ async function navigate(pathname="/"){
 
   // Une mise à jour change uniquement le cache applicatif, jamais les données du tournoi.
   const userData=new Map([["la-team-autosave-v1","tournoi-32-8"],["la-team-saves-index-v1","sauvegarde"]]);
-  const updatedSource=swSource.replace("la-team-shell-v30-test","la-team-shell-v31-test");
+  const updatedSource=swSource.replace("la-team-shell-v31-test","la-team-shell-v32-test");
   vm.runInContext("(function(){"+updatedSource+"\n})()",context);online=true;
   await dispatchLifecycle("install");await dispatchLifecycle("activate");
-  assert.deepEqual([...stores.keys()],["la-team-shell-v31-test"],"ancien cache applicatif nettoyé");
+  assert.deepEqual([...stores.keys()],["la-team-shell-v32-test"],"ancien cache applicatif nettoyé");
   assert.equal(userData.get("la-team-autosave-v1"),"tournoi-32-8","autosave conservé après mise à jour");
   assert.equal(userData.get("la-team-saves-index-v1"),"sauvegarde","sauvegarde conservée après mise à jour");
 

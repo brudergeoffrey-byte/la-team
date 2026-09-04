@@ -59,7 +59,7 @@ assert.match(html,/if\(viewerCode\)[\s\S]*showViewerMode\(\)/);
 assert.ok(html.includes("localStorage.setItem(viewerIdentityKey(),viewerPlayerSelectEl.value)"));
 assert.doesNotMatch(html,/function changeViewerIdentity\(\)[\s\S]{0,400}localStorage\.removeItem\(viewerIdentityKey\(\)\)/,"Changer de joueur reste annulable et conserve l'identité choisie");
 assert.match(html,/id="viewer"[\s\S]{0,180}id="viewerIdentityHome"[\s\S]{0,120}← Accueil/,"Accueil immédiatement visible en haut du Viewer");
-assert.match(html,/function leavePlayerMode\(\)[\s\S]{0,300}location\.assign/,'Accueil quitte le Viewer par une navigation propre');
+assert.match(html,/function leavePlayerMode\(\)[\s\S]{0,500}history\.replaceState[\s\S]*LaTeamV2Experience\?\.landing/,'Accueil quitte le Viewer vers l’accueil V2 sans rechargement');
 assert.doesNotMatch(html,/function leavePlayerMode\(\)[\s\S]{0,300}localStorage\.(?:removeItem|clear)/,"Accueil conserve le joueur mémorisé");
 const viewerMarkup=html.slice(html.indexOf('id="viewer"'),html.indexOf('<!-- SETUP -->'));
 for(const forbidden of ["Valider le score","ROUND SUIVANT","Remplacer un joueur","Terminer le tournoi"]){

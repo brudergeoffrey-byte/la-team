@@ -4,4 +4,12 @@ for(const marker of ["Bienvenue","JE SUIS JOUEUR","JE SUIS CLUB / ORGANISATEUR",
 for(const field of ["v2xName","v2xDate","v2xTime","v2xCapacity","v2xCourts","v2xFormat","v2xEndMode","v2xOpen"]){assert.ok(source.includes(field),`champ événement : ${field}`);}
 for(const feature of ["createPlayerAccount","registerPlayerSpark","cancelRegistrationSpark","subscribeEvents","subscribeRegistrations","addGuestSpark","createParticipants"]){assert.ok(cloud.includes(feature),`parcours Firestore réel : ${feature}`);}
 assert.doesNotMatch(source,/laTeam\.v2\.demoExperience/);assert.match(source,/registration_\$\{runtime\.context\.user\.uid\}/);assert.match(source,/prepareV2EventRoster/);assert.match(source,/DOMContentLoaded.*landing/);assert.match(html,/font-size:18px/);
+for(const marker of ["Bienvenue 👋","SE CONNECTER","CRÉER MON COMPTE","Gérez votre club avec La Team","CRÉER MON CLUB","facultatif"]){assert.ok(source.includes(marker),`entrée authentification explicite : ${marker}`);}
+assert.match(source,/function openPlayer[\s\S]*roleWelcome\("JOUEUR"\)/,"Joueur non connecté dirigé vers ses actions d’authentification");
+assert.match(source,/function openClub[\s\S]*roleWelcome\("CLUB"\)/,"Club non connecté dirigé vers ses actions d’authentification");
+assert.match(source,/function openViewer[\s\S]*history\.pushState/,"entrée Viewer inscrite dans l’historique V2");
+assert.match(source,/popstate[\s\S]*landing/,"retour navigateur vers l’accueil V2");
+assert.match(source,/v2x-entry-stack[\s\S]*v2x-entries[\s\S]*v2x-viewer-link/,"les trois portes partagent le même conteneur");
+assert.match(html,/\.v2x-entry-stack\{width:min\(650px,100%\)\}[\s\S]*\.v2x-entry-stack \.v2x-viewer-link\{[^}]*width:100%/,"Viewer aligné sur le conteneur desktop et mobile");
+assert.doesNotMatch(source,/openPlayer[\s\S]{0,500}authForm\("JOUEUR",false\)/,"aucun formulaire Joueur implicite");
 console.log("V2_EXPERIENCE_OK — comptes réels, événements, inscriptions temps réel, invités et préparation tournoi validés");
