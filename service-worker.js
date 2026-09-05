@@ -1,4 +1,4 @@
-const CACHE_VERSION = "la-team-shell-v40-fixed-canvas-navigation-test";
+const CACHE_VERSION = "la-team-shell-v41-unified-global-navigation-test";
 const APP_SHELL = [
   "/",
   "/index.html",

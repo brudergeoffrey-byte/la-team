@@ -586,6 +586,52 @@ body,.v2x{
   .v2x-public-nav .v2x-landing-brand strong{font-size:12px;white-space:nowrap;}
   .v2x-public-nav>div button{font-size:10px;padding-inline:5px;}
 }
+/* One navigation system for public, Player and Club spaces. */
+.v2x-global-nav{grid-template-columns:auto 1fr auto;min-height:72px;}
+.v2x-global-nav .v2x-main-links{display:flex;align-items:center;justify-content:center;gap:8px;overflow:visible;}
+.v2x-global-nav .v2x-main-links>button,.v2x-menu-dropdown>summary{
+  width:auto;min-height:42px;margin:0;padding:9px 12px;border:0;border-radius:11px;
+  background:transparent;color:#c5d2d6;font:inherit;font-size:13px;font-weight:850;cursor:pointer;list-style:none;
+}
+.v2x-menu-dropdown>summary::-webkit-details-marker{display:none;}
+.v2x-global-nav .v2x-main-links>button:hover,.v2x-menu-dropdown>summary:hover,
+.v2x-global-nav .v2x-main-links>button.active,.v2x-menu-dropdown[data-active=true]>summary{color:var(--lime);background:rgba(184,243,74,.1);}
+.v2x-menu-dropdown{position:relative;}
+.v2x-menu-dropdown>div{
+  position:absolute;z-index:80;top:calc(100% + 8px);left:0;display:grid;min-width:230px;padding:8px;
+  border:1px solid var(--premium-border);border-radius:15px;background:rgba(3,24,31,.97);
+  box-shadow:0 20px 46px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+.v2x-menu-dropdown>div button{margin:0;min-height:40px;padding:9px 11px;text-align:left;background:transparent;color:#e8f0f2;font-size:12px;}
+.v2x-menu-dropdown>div button:hover,.v2x-menu-dropdown>div button:focus-visible{background:rgba(184,243,74,.12);color:var(--lime);}
+.v2x-menu-toggle{display:none;width:44px;min-height:44px;margin:0;justify-self:end;padding:6px;background:rgba(255,255,255,.08);color:#fff;font-size:22px;}
+.v2x-role-line{display:flex;justify-content:flex-end;padding:16px 18px 0;color:var(--lime);font-size:11px;font-weight:950;letter-spacing:.12em;}
+.v2x-role-club,.v2x-role-player{display:block!important;padding:0 18px!important;}
+.v2x-role-club .v2x-title,.v2x-role-player .v2x-title{margin:0!important;padding:18px 0 25px!important;}
+.v2x-club{padding-left:0!important;}
+.v2x-nav,.v2x-header .v2x-top{display:none!important;}
+.v2-tournament-nav{top:0;bottom:auto!important;left:auto!important;right:auto!important;display:grid;grid-template-columns:auto 1fr auto;align-items:center;justify-content:stretch;min-height:72px;margin:0;border-radius:0 0 18px 18px;}
+.v2-tournament-nav .v2x-main-links{display:flex;align-items:center;justify-content:center;gap:8px;}
+.v2-tournament-nav button,.v2-tournament-nav summary{min-height:42px;font-size:12px!important;}
+.container.v2-module-open>.topbar{display:none!important;}
+@media(max-width:760px){
+  .v2x-global-nav{grid-template-columns:1fr auto;min-height:60px;}
+  .v2x-global-nav>small{display:none;}
+  .v2x-menu-toggle{display:block;}
+  .v2x-global-nav .v2x-main-links{
+    position:absolute;z-index:75;top:calc(100% + 7px);left:8px;right:8px;display:none;padding:9px;
+    border:1px solid var(--premium-border);border-radius:16px;background:rgba(3,24,31,.98);
+    box-shadow:0 22px 48px rgba(0,0,0,.44);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  }
+  .v2x-global-nav.menu-open .v2x-main-links{display:grid;}
+  .v2x-global-nav .v2x-main-links>button,.v2x-menu-dropdown>summary{width:100%;text-align:left;font-size:14px;padding:11px 13px;}
+  .v2x-menu-dropdown>div{position:static;margin:3px 7px 8px;min-width:0;background:rgba(255,255,255,.05);box-shadow:none;}
+  .v2x-role-line{padding-top:12px;}
+  .v2-tournament-nav{position:sticky!important;grid-template-columns:1fr auto;left:auto!important;right:auto!important;bottom:auto!important;padding:6px 10px;}
+  .v2-tournament-nav .v2x-main-links{position:absolute;z-index:75;top:calc(100% + 7px);left:8px;right:8px;display:none;padding:9px;border:1px solid var(--premium-border);border-radius:16px;background:rgba(3,24,31,.98);box-shadow:0 22px 48px rgba(0,0,0,.44);}
+  .v2-tournament-nav.menu-open .v2x-main-links{display:grid;}
+  .v2-tournament-nav .v2x-main-links>button,.v2-tournament-nav .v2x-menu-dropdown>summary{width:100%;text-align:left;font-size:14px!important;padding:11px 13px;}
+}
 </style>
 </head>
 
@@ -606,12 +652,24 @@ body,.v2x{
 </div>
 <div class="container">
 
-  <nav id="v2TournamentNav" class="v2-tournament-nav hidden" aria-label="Navigation Club pendant le tournoi">
-    <button onclick="LaTeamV2Experience.landing()">⌂ Accueil</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('more')">▣ Tournois</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">● Mon club</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('players')">♟ Joueurs</button>
-    <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">← Retour</button>
+  <nav id="v2TournamentNav" class="v2-tournament-nav v2x-public-nav v2x-persistent-nav v2x-global-nav hidden" aria-label="Navigation principale pendant le tournoi">
+    <button class="v2x-landing-brand" onclick="LaTeamV2Experience.returnFromTournament('dashboard')"><span>●</span><strong>LA TEAM <i>V2</i></strong></button>
+    <button class="v2x-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false" onclick="LaTeamV2Experience.toggleMainMenu(this)">☰</button>
+    <div class="v2x-main-links">
+      <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">Accueil</button>
+      <details class="v2x-menu-dropdown" data-active="true"><summary>Tournois⌄</summary><div>
+        <button onclick="LaTeamV2Experience.returnFromTournament('events')">Tous les tournois</button>
+        <button onclick="LaTeamV2Experience.returnFromTournament('more')">Module King / Americano</button>
+      </div></details>
+      <details class="v2x-menu-dropdown"><summary>Mon club⌄</summary><div>
+        <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">Tableau de bord</button>
+        <button onclick="LaTeamV2Experience.returnFromTournament('events')">Inscriptions</button>
+        <button onclick="LaTeamV2Experience.returnFromTournament('players')">Joueurs</button>
+        <button onclick="LaTeamV2Experience.returnFromTournament('championships')">Classement &amp; championnat</button>
+        <button onclick="LaTeamV2Experience.returnFromTournament('more')">Paramètres</button>
+      </div></details>
+    </div>
+    <small>PRÉPRODUCTION</small>
   </nav>
 
   <div class="topbar">

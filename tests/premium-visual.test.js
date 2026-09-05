@@ -19,7 +19,10 @@ for(const marker of [
 for(const marker of ["The photographic canvas never changes", "background:transparent!important", ".v2x-public-nav", "position:sticky", "v2x-main-back"]){
   assert.ok(html.includes(marker),`fond fixe ou navigation persistante manquante : ${marker}`);
 }
-assert.ok(sw.includes('la-team-shell-v40-fixed-canvas-navigation-test'),"cache PWA visuel non versionné");
+for(const marker of ["One navigation system", "v2x-menu-dropdown", "v2x-menu-toggle", "v2x-global-nav.menu-open", ".v2x-nav,.v2x-header .v2x-top{display:none"]){
+  assert.ok(html.includes(marker),`navigation globale unifiée manquante : ${marker}`);
+}
+assert.ok(sw.includes('la-team-shell-v41-unified-global-navigation-test'),"cache PWA visuel non versionné");
 assert.ok(sw.includes('"/padel-hero-v2.jpg"'),"asset premium absent du shell hors connexion");
 assert.strictEqual((sw.match(/\/padel-hero-v2\.jpg/g)||[]).length,1,"asset premium dupliqué dans le cache PWA");
 assert.ok(fs.statSync("padel-hero-v2.jpg").size<300*1024,"photographie premium trop lourde pour le mobile");
