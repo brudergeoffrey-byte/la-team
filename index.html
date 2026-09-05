@@ -636,6 +636,19 @@ body,.v2x{
   .v2-tournament-nav.menu-open .v2x-main-links{display:grid;}
   .v2-tournament-nav .v2x-main-links>button,.v2-tournament-nav .v2x-menu-dropdown>summary{width:100%;text-align:left;font-size:14px!important;padding:11px 13px;}
 }
+/* Micro-interactions NextPadel — couche de présentation uniquement. */
+:root{--np-ease:cubic-bezier(.2,.8,.2,1)}
+button,.v2x-entry,.v2x-event,.v2x-card,.court-card,.viewer-live-court,.v2x-section,.v2x-next-event{transition:transform .18s var(--np-ease),filter .18s ease,box-shadow .22s ease,border-color .22s ease,opacity .18s ease}
+button:active{transform:translateY(1px) scale(.985);filter:brightness(.96)}
+@media(hover:hover) and (pointer:fine){button:not(:disabled):hover{transform:translateY(-1px);filter:brightness(1.07)}.v2x-entry:hover,.v2x-event:hover,.v2x-card:hover,.court-card:hover,.viewer-live-court:hover,.v2x-section:hover,.v2x-next-event:hover{transform:translateY(-2px);border-color:rgba(184,243,74,.44);box-shadow:0 20px 52px rgba(0,0,0,.27)}}
+.v2x-menu-dropdown>div,.v2x-global-nav.menu-open .v2x-main-links{transform-origin:top left;animation:np-menu-in .14s var(--np-ease) both}
+.v2x>main,.v2x-detail,.v2x-player-home,.v2x-club,#game:not(.hidden),#viewer:not(.hidden){animation:np-content-in .22s var(--np-ease) both}
+.np-toast-rail{position:fixed;z-index:12000;right:18px;bottom:max(18px,env(safe-area-inset-bottom));display:grid;gap:8px;pointer-events:none}.np-toast{max-width:min(360px,calc(100vw - 28px));padding:12px 16px;border:1px solid rgba(184,243,74,.45);border-radius:13px;background:rgba(3,30,37,.96);color:#f4ffd9;font-weight:850;box-shadow:0 16px 40px rgba(0,0,0,.32);opacity:0;transform:translateY(8px);transition:opacity .18s ease,transform .18s var(--np-ease)}.np-toast.visible{opacity:1;transform:none}.np-toast.error{border-color:rgba(255,113,113,.5)}
+.np-score{animation:np-score .85s ease}.np-round{animation:np-round .65s var(--np-ease)}.np-rank-up,.np-rank-down{position:relative;animation:np-rank .85s ease}.np-rank-up::after,.np-rank-down::after{content:attr(data-rank-move);margin-left:7px;font-weight:950}.np-rank-up::after{color:#63d897}.np-rank-down::after{color:#ffad70}
+.np-timer-warning{color:#ffd261!important}.np-timer-critical{color:#ffad70!important;animation:np-timer-pulse 1s ease-in-out infinite}.np-timer-finished{color:#ff7d72!important;animation:np-finish .7s ease both}.tv-courts article.done{animation:np-tv-score .8s var(--np-ease)}.tv-cycle{animation:np-cycle .7s var(--np-ease) both}
+@keyframes np-menu-in{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}@keyframes np-content-in{from{opacity:.6;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes np-score{35%{box-shadow:0 0 0 3px rgba(184,243,74,.55),0 18px 46px rgba(0,0,0,.3)}}@keyframes np-round{from{opacity:.65;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes np-rank{30%{background:rgba(184,243,74,.16)}}@keyframes np-timer-pulse{50%{transform:scale(1.025);text-shadow:0 0 18px rgba(255,173,112,.3)}}@keyframes np-finish{35%{transform:scale(1.035)}100%{transform:none}}@keyframes np-tv-score{35%{border-color:rgba(184,243,74,.8);transform:scale(1.012)}}@keyframes np-cycle{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@media(max-width:700px){.np-toast-rail{left:14px;right:14px}.np-toast{max-width:none;text-align:center}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important;transform:none!important}.np-toast{opacity:1!important}.np-rank-up::after,.np-rank-down::after{content:""}}
 </style>
 </head>
 
@@ -1006,6 +1019,7 @@ body,.v2x{
 <script src="/round-timer.js"></script>
 <script src="/dynamic-participants.js"></script>
 <script src="/tv-mode.js"></script>
+<script src="/micro-interactions.js"></script>
 <script src="/vendor/qrcode.min.js"></script>
 <script src="/firebase-client.js?v=2"></script>
 <script src="/club-v2.js?v=2"></script>
@@ -2767,6 +2781,8 @@ function validateCourt(courtIndex){
   renderRanking();
   renderMatch();
   renderRecapInGame();
+  window.NextPadelMotion?.toast("✓ Score validé");
+  window.NextPadelMotion?.flash(`#court_${courtIndex}`,"score");
 
   nextBtn.disabled = !state.validatedCourts.every(Boolean);
   const nextMissing=state.validatedCourts.findIndex(done=>!done);
@@ -2886,7 +2902,7 @@ async function openParticipantManager(){
 function renderPendingParticipantChanges(){const target=document.getElementById("participantPending"),changes=state.pendingParticipantChanges||[];target.innerHTML=changes.length?`Changements prévus : ${changes.map(change=>`${change.type==="add"?"＋":"−"} ${escapePublic(change.name)} · round ${change.effectiveRound}`).join(" · ")}`:"Aucun changement en attente.";}
 function queueParticipantAddition(){
   const select=document.getElementById("dynamicRegisteredPlayer"),option=select.options[select.selectedIndex],guest=document.getElementById("dynamicGuestName").value.trim(),name=guest||option?.dataset?.name,playerId=guest?null:select.value;
-  try{const change=window.NextPadelDynamicParticipants.queueAdd(state,{name,playerId});document.getElementById("participantManagerStatus").textContent=`✓ ${change.name} rejoindra au round ${change.effectiveRound}.`;document.getElementById("dynamicGuestName").value="";renderPendingParticipantChanges();writeAutoSave();}catch(error){document.getElementById("participantManagerStatus").textContent=error.message;}
+  try{const change=window.NextPadelDynamicParticipants.queueAdd(state,{name,playerId});document.getElementById("participantManagerStatus").textContent=`✓ ${change.name} rejoindra au round ${change.effectiveRound}.`;document.getElementById("dynamicGuestName").value="";renderPendingParticipantChanges();writeAutoSave();window.NextPadelMotion?.toast("✓ Joueur ajouté au prochain round");}catch(error){document.getElementById("participantManagerStatus").textContent=error.message;}
 }
 function queueParticipantRemoval(when){
   const index=Number(document.getElementById("dynamicRemovePlayer").value),name=state.players[index]?.name;if(!name)return;
@@ -2894,7 +2910,7 @@ function queueParticipantRemoval(when){
     if(!confirm(`RETRAIT IMMÉDIAT DE ${name}\n\nLe match en cours sera marqué interrompu, sans score inventé. Confirmer ?`))return;
     const interruption=window.NextPadelDynamicParticipants.interruptCurrentMatch(state,index);if(interruption)alert(`Terrain ${interruption.courtIndex+1} marqué interrompu. L’Organisateur doit traiter le résultat avant de poursuivre.`);
   }else if(!confirm(`${name} terminera le round actuel et sera retiré au prochain round. Confirmer ?`))return;
-  try{const change=window.NextPadelDynamicParticipants.queueRemove(state,index,when);document.getElementById("participantManagerStatus").textContent=`✓ Retrait de ${change.name} prévu au round ${change.effectiveRound}.`;renderPendingParticipantChanges();writeAutoSave();renderMatch();}catch(error){document.getElementById("participantManagerStatus").textContent=error.message;}
+  try{const change=window.NextPadelDynamicParticipants.queueRemove(state,index,when);document.getElementById("participantManagerStatus").textContent=`✓ Retrait de ${change.name} prévu au round ${change.effectiveRound}.`;renderPendingParticipantChanges();writeAutoSave();renderMatch();window.NextPadelMotion?.toast("✓ Retrait enregistré");}catch(error){document.getElementById("participantManagerStatus").textContent=error.message;}
 }
 
 function nextMatch(){
@@ -2922,6 +2938,7 @@ function nextMatch(){
 
   renderMatch();
   renderRecapInGame();
+  window.NextPadelMotion?.toast(`✓ Round ${state.matchIndex+1} prêt`);
 }
 
 function undoLast(){

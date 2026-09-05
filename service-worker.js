@@ -1,4 +1,4 @@
-const CACHE_VERSION = "nextpadel-shell-v43-tv-dynamic-roster-test";
+const CACHE_VERSION = "nextpadel-shell-v44-motion-test";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/offline.html",
@@ -12,6 +12,7 @@ const APP_SHELL = [
   "/round-timer.js",
   "/dynamic-participants.js",
   "/tv-mode.js",
+  "/micro-interactions.js",
   "/firebase-client.js",
   "/club-v2.js",
   "/club-journey-v2.js",

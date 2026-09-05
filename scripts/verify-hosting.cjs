@@ -2,7 +2,7 @@
 const fs=require("node:fs"),path=require("node:path"),root=path.resolve(__dirname,"..");
 const allowed=new Set([
   "index.html","offline.html","manifest.webmanifest","service-worker.js","preproduction-config.js","padel-hero-v2.jpg",
-  "firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","dynamic-participants.js","tv-mode.js","firebase-client.js","club-v2.js","club-journey-v2.js","commerce-v2.js","v2-experience.js","firebase-v2.js",
+  "firebase-sharing.js","organizer-accounts.js","player-experience.js","organizer-lock.js","tournament-timer.js","court-timers.js","round-timer.js","dynamic-participants.js","tv-mode.js","micro-interactions.js","firebase-client.js","club-v2.js","club-journey-v2.js","commerce-v2.js","v2-experience.js","firebase-v2.js",
   "vendor/qrcode.min.js","vendor/qrcode-LICENSE.txt","icons/app-icon.svg","icons/icon-180.png","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png"
 ]);
 const requiredIgnores=[".git/**","**/node_modules/**","functions/**","tests/**","scripts/**","*.md","package*.json","firestore.rules","firestore.indexes.json","*-debug.log","firebase.json",".firebaserc"];
