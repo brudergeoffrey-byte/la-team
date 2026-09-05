@@ -5,7 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function(){
   "use strict";
 
-  const SCHEMA_VERSION = 5;
+  const SCHEMA_VERSION = 6;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const FIREBASE_CONFIG = Object.freeze((typeof globalThis!=="undefined"&&globalThis.LA_TEAM_ENV?.firebaseConfig)||{
     apiKey:"PREPRODUCTION_NOT_CONFIGURED",authDomain:"la-team-v2-test-unconfigured.firebaseapp.com",projectId:"la-team-v2-test-unconfigured",storageBucket:"la-team-v2-test-unconfigured.firebasestorage.app",messagingSenderId:"000000000000",appId:"1:000000000000:web:preproduction"
@@ -29,16 +29,17 @@
   function publicCourt(appState, court, courtIndex, result){
     const teamA = [...court.teamA];
     const teamB = [...court.teamB];
+    const validResult = result && !result.interrupted && Number.isFinite(Number(result.a)) && Number.isFinite(Number(result.b));
     const published = {
       number:courtIndex+1,
       teamA,
       teamB,
       necessaryDuplicate:Array.isArray(court.necessaryDuplicates) && court.necessaryDuplicates.length>0,
-      validated:Boolean(result),
-      score:result ? {a:Number(result.a),b:Number(result.b)} : null,
+      validated:Boolean(validResult),
+      score:validResult ? {a:Number(result.a),b:Number(result.b)} : null,
       destinations:{}
     };
-    if(result && appState.mode === "ladder"){
+    if(validResult && appState.mode === "ladder"){
       const winner = result.a > result.b ? teamA : teamB;
       const loser = result.a > result.b ? teamB : teamA;
       const winCourt = Math.max(1,courtIndex);
@@ -57,7 +58,7 @@
       if(!round) continue;
       (round.courts||[]).forEach((court,courtIndex)=>{
         const result=appState.results?.[r]?.[courtIndex];
-        if(result) rows.push({round:r+1,court:courtIndex+1,teamA:[...court.teamA],teamB:[...court.teamB],a:Number(result.a),b:Number(result.b)});
+        if(result && !result.interrupted && Number.isFinite(Number(result.a)) && Number.isFinite(Number(result.b))) rows.push({round:r+1,court:courtIndex+1,teamA:[...court.teamA],teamB:[...court.teamB],a:Number(result.a),b:Number(result.b)});
       });
     }
     return rows.slice(-256);
@@ -75,6 +76,7 @@
       revision:Number(sharing.revision),
       updatedAt:Number(timestamp),
       status:appState.tournamentStatus === "finished" ? "finished" : "live",
+      tournamentName:String(appState.tournamentName||"Tournoi NextPadel"),
       mode:appState.mode,
       roundNumber:appState.matchIndex+1,
       maxPoints:appState.maxPoints,
@@ -88,25 +90,26 @@
       },
       ranking:rankingFromPlayers(appState.players),
       previousResults:previousResults(appState)
+      ,cycleMilestone:appState.kingCycleReachedAt?{round:Number(appState.kingCycleReachedAt),pendingDecision:Boolean(appState.kingCycleDecisionPending),ranking:(appState.cycleMilestones?.[appState.cycleMilestones.length-1]?.ranking||[]).slice(0,32)}:null
     };
   }
 
   function validateViewerSnapshot(snapshot){
     const baseKeys=["schemaVersion","code","ownerUid","revision","updatedAt","status","mode","roundNumber","maxPoints","players","currentRound","ranking","previousResults"];
-    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:snapshot?.schemaVersion===3?[...baseKeys,"endMode","roundDurationMinutes"]:snapshot?.schemaVersion===4?[...baseKeys,"clubId","endMode","roundDurationMinutes"]:snapshot?.schemaVersion===5?[...baseKeys,"clubId","endMode","roundDurationMinutes","participantIds"]:baseKeys;
+    const keys=snapshot?.schemaVersion===2?[...baseKeys,"endMode","roundDurationMinutes","roundEndsAt"]:snapshot?.schemaVersion===3?[...baseKeys,"endMode","roundDurationMinutes"]:snapshot?.schemaVersion===4?[...baseKeys,"clubId","endMode","roundDurationMinutes"]:snapshot?.schemaVersion===5?[...baseKeys,"clubId","endMode","roundDurationMinutes","participantIds"]:snapshot?.schemaVersion===6?[...baseKeys,"clubId","endMode","roundDurationMinutes","participantIds","tournamentName","cycleMilestone"]:baseKeys;
     return Boolean(snapshot && Object.keys(snapshot).length===keys.length && Object.keys(snapshot).every(key=>keys.includes(key))
-      && [1,2,3,4,5].includes(snapshot.schemaVersion)
-      && (![4,5].includes(snapshot.schemaVersion) || (typeof snapshot.clubId==="string"&&snapshot.clubId.length>=4))
-      && (snapshot.schemaVersion!==5 || (Array.isArray(snapshot.participantIds)&&snapshot.participantIds.length===snapshot.players.length&&snapshot.participantIds.every(id=>typeof id==="string"&&id.length>0)))
+      && [1,2,3,4,5,6].includes(snapshot.schemaVersion)
+      && (![4,5,6].includes(snapshot.schemaVersion) || (typeof snapshot.clubId==="string"&&snapshot.clubId.length>=4))
+      && (![5,6].includes(snapshot.schemaVersion) || (Array.isArray(snapshot.participantIds)&&snapshot.participantIds.length===snapshot.players.length&&snapshot.participantIds.every(id=>typeof id==="string"&&id.length>0)))
       && /^(?:[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}|[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8})$/.test(snapshot.code)
       && ["americano","ladder"].includes(snapshot.mode)
       && ["live","finished"].includes(snapshot.status)
-      && snapshot.players.length>=4 && snapshot.players.length<=32
+      && snapshot.players.length>=4 && snapshot.players.length<=64
       && snapshot.ranking.length===snapshot.players.length
       && Array.isArray(snapshot.currentRound?.courts)
       && (snapshot.schemaVersion===1 || (["points","time"].includes(snapshot.endMode)
         && (snapshot.endMode!=="time" || (snapshot.roundDurationMinutes>=1
-          && ([3,4,5].includes(snapshot.schemaVersion) || snapshot.roundEndsAt>0))))));
+          && ([3,4,5,6].includes(snapshot.schemaVersion) || snapshot.roundEndsAt>0))))));
   }
 
   function playerMatch(snapshot,playerId){

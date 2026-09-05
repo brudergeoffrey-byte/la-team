@@ -16,11 +16,11 @@ function state(n=32,courts=8,mode="ladder"){
 const appState=state();
 const snapshot=sharing.buildViewerSnapshot(appState,{code:"K7F4P2AB",revision:4},"owner-1",123456);
 assert.equal(sharing.validateViewerSnapshot(snapshot),true,"schéma compact valide");
-assert.equal(snapshot.schemaVersion,5,"projection publique V2");
+assert.equal(snapshot.schemaVersion,6,"projection publique NextPadel avec Mode TV");
 assert.deepEqual(snapshot.participantIds,appState.players.map((_,index)=>`engine_${index}`),"identités de participation publiques sans playerId permanent");
 assert.equal(JSON.stringify(snapshot).includes("playerId"),false,"identité métier privée absente du Viewer");
 assert.deepEqual(Object.keys(snapshot).sort(),[
-  "clubId","code","currentRound","endMode","maxPoints","mode","ownerUid","participantIds","players","previousResults","ranking","revision","roundDurationMinutes","roundNumber","schemaVersion","status","updatedAt"
+  "clubId","code","currentRound","cycleMilestone","endMode","maxPoints","mode","ownerUid","participantIds","players","previousResults","ranking","revision","roundDurationMinutes","roundNumber","schemaVersion","status","tournamentName","updatedAt"
 ].sort(),"aucune donnée interne publiée");
 for(const forbidden of ["history","ladderOpp","ladderPartner","ladderTeams","partnersSeen","schedule","autosave"]){
   assert.equal(JSON.stringify(snapshot).includes(forbidden),false,`${forbidden} absent`);

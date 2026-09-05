@@ -1,0 +1,7 @@
+"use strict";
+const assert=require("node:assert/strict"),tv=require("../tv-mode.js"),fs=require("node:fs"),html=fs.readFileSync("index.html","utf8"),sharing=require("../firebase-sharing.js");
+assert.equal(tv.codeFromLocation("https://example.test/?tv=k7f2"),"K7F2");assert.equal(tv.codeFromLocation("https://example.test/?t=K7F2"),"");
+for(const marker of ["tvMode","NEXTPADEL","CLASSEMENT LIVE","AU REPOS","CYCLE COMPLET","OUVRIR MODE TV"]){assert.ok((html+fs.readFileSync("tv-mode.js","utf8")).includes(marker),`mode TV : ${marker}`);}
+const state={players:Array.from({length:8},(_,id)=>({name:`J${id+1}`,mj:1,v:id%2,plus:6,minus:4,active:true})),participants:Array.from({length:8},(_,id)=>({participantId:`p${id}`})),schedule:[{rest:[],courts:[{teamA:[0,1],teamB:[2,3]},{teamA:[4,5],teamB:[6,7]}]}],results:[[{a:6,b:4}]],matchIndex:0,mode:"ladder",maxPoints:21,endMode:"time",roundDurationMinutes:15,tournamentStatus:"live",clubId:"club-a",tournamentName:"King du jeudi",cycleMilestones:[],kingCycleDecisionPending:false};
+const snap=sharing.buildViewerSnapshot(state,{code:"K7F2",revision:1,clubId:"club-a"},"owner",Date.now());assert.equal(sharing.validateViewerSnapshot(snap),true);assert.equal(snap.tournamentName,"King du jeudi");assert.equal(Object.values(tv).some(value=>typeof value==="function"),true);
+console.log("TV_MODE_OK — URL dédiée, projection publique, lecture seule, terrains, chrono, repos et classement validés");

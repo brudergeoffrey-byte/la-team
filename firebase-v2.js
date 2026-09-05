@@ -8,7 +8,7 @@
     if(!auth.currentUser)await new Promise(resolve=>{const stop=auth.onAuthStateChanged(()=>{stop();resolve();},()=>resolve());});
     return {db,auth};
   }
-  async function account(){await ready();const user=auth.currentUser;if(!user||user.isAnonymous)throw new Error("Un compte La Team est nécessaire.");return user;}
+  async function account(){await ready();const user=auth.currentUser;if(!user||user.isAnonymous)throw new Error("Un compte NextPadel est nécessaire.");return user;}
   async function organizer(clubId){
     const user=await account(),member=await db.collection("clubs").doc(clubId).collection("members").doc(user.uid).get();
     if(!member.exists||member.data().status!=="active"||!["owner","admin","organizer"].includes(member.data().role))throw new Error("Accès club refusé.");

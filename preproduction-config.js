@@ -4,7 +4,7 @@
   // Aucune référence au projet Firebase de production n'est autorisée ici.
   root.LA_TEAM_ENV=Object.freeze({
     name:"preproduction",
-    label:"La Team V2 — TEST",
+    label:"NextPadel — TEST",
     demoEnabled:true,
     firebaseConfigured:true,
     firebaseConfig:Object.freeze({

@@ -45,6 +45,8 @@ assert.ok(html.includes("Hors connexion"));
 assert.ok(html.includes("NOUVELLE VERSION DISPONIBLE · METTRE À JOUR"));
 assert.ok(html.includes("applyPwaUpdate"),"mise à jour PWA explicitement applicable");
 assert.ok(swSource.includes("skipWaiting"),"la nouvelle version ne reste pas bloquée en attente sur un ancien iPad");
+assert.equal(swSource.includes('  "/",'),false,"la racine HTML n'est jamais précachée pendant un déploiement");
+assert.equal(swSource.includes('  "/index.html",'),false,"index.html est toujours récupéré réseau-d'abord");
 assert.ok(!swSource.includes("?."),"le Service Worker reste analysable par les anciens Safari avec support PWA");
 for(const marker of ["v2CompatLanding","JE SUIS JOUEUR","JE SUIS CLUB / ORGANISATEUR","ACCÈS VIEWER","Navigateur trop ancien","iOS/iPadOS 13.4"]){assert.ok(html.includes(marker),`accueil V2 statique de compatibilité : ${marker}`);}
 assert.ok(!swSource.includes("localStorage"),"aucune donnée utilisateur dans le cache applicatif");

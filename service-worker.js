@@ -1,7 +1,5 @@
-const CACHE_VERSION = "la-team-shell-v41-unified-global-navigation-test";
+const CACHE_VERSION = "nextpadel-shell-v43-tv-dynamic-roster-test";
 const APP_SHELL = [
-  "/",
-  "/index.html",
   "/manifest.webmanifest",
   "/offline.html",
   "/preproduction-config.js",
@@ -12,6 +10,8 @@ const APP_SHELL = [
   "/tournament-timer.js",
   "/court-timers.js",
   "/round-timer.js",
+  "/dynamic-participants.js",
+  "/tv-mode.js",
   "/firebase-client.js",
   "/club-v2.js",
   "/club-journey-v2.js",

@@ -7,11 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="La Team V2 TEST" />
+<meta name="apple-mobile-web-app-title" content="NextPadel" />
 <link rel="manifest" href="/manifest.webmanifest?v=2" />
 <link rel="apple-touch-icon" href="/icons/icon-180.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
-<title>La Team V2 — TEST</title>
+<title>NextPadel — TEST</title>
 
 <style>
 :root{
@@ -614,6 +614,10 @@ body,.v2x{
 .v2-tournament-nav .v2x-main-links{display:flex;align-items:center;justify-content:center;gap:8px;}
 .v2-tournament-nav button,.v2-tournament-nav summary{min-height:42px;font-size:12px!important;}
 .container.v2-module-open>.topbar{display:none!important;}
+.participant-manager{margin:12px 0;padding:14px;border:1px solid rgba(184,243,74,.28);border-radius:16px;background:rgba(3,24,31,.94)}
+.participant-manager-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.participant-manager-actions{display:flex;gap:8px;flex-wrap:wrap}.participant-manager-status{color:var(--lime);font-weight:800}.participant-pending{margin-top:10px;color:#ffd261}
+@media(max-width:700px){.participant-manager-grid{grid-template-columns:1fr}}
+.tv-hidden{display:none!important}.nextpadel-tv{position:fixed;inset:0;z-index:9999;overflow:auto;background:linear-gradient(120deg,rgba(2,15,20,.96),rgba(3,24,31,.86)),url('/padel-hero-v2.jpg?v=1') center/cover fixed;color:#fff}.tv-shell{min-height:100vh;padding:clamp(20px,3vw,48px)}.tv-shell header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;padding-bottom:22px;border-bottom:2px solid rgba(184,243,74,.35)}.tv-shell header>strong{font-size:clamp(24px,3vw,48px);color:var(--lime)}.tv-shell header>div{text-align:center}.tv-shell header span,.tv-shell header b{display:block;font-size:clamp(18px,2vw,34px)}.tv-shell header time{font-size:clamp(36px,6vw,92px);font-weight:950;color:var(--lime)}.tv-shell main{display:grid;grid-template-columns:minmax(0,2.5fr) minmax(280px,1fr);gap:24px;margin-top:24px}.tv-courts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.tv-courts article{padding:20px;border:1px solid rgba(255,255,255,.17);border-radius:18px;background:rgba(4,30,38,.88)}.tv-courts article>div{display:flex;justify-content:space-between;color:var(--lime)}.tv-courts p,.tv-courts article>strong{display:block;margin:12px 0;font-size:clamp(20px,2.2vw,36px)}.tv-courts article>strong{text-align:center;color:#ffd261}.tv-shell aside,.tv-cycle{padding:22px;border-radius:20px;background:rgba(238,245,246,.94);color:#08242d}.tv-shell ol{list-style:none;padding:0}.tv-shell li{display:grid;grid-template-columns:42px 1fr auto;gap:12px;padding:10px 0;border-bottom:1px solid rgba(8,36,45,.12);font-size:clamp(18px,1.7vw,28px)}.tv-cycle{text-align:center;margin:7vh auto;max-width:1000px}.tv-cycle h1{font-size:clamp(48px,8vw,110px);color:#198d66}@media(max-width:850px){.tv-shell main{grid-template-columns:1fr}.tv-courts{grid-template-columns:1fr}.tv-shell header{grid-template-columns:1fr;text-align:center}.tv-shell header>strong,.tv-shell header time{text-align:center}}
 @media(max-width:760px){
   .v2x-global-nav{grid-template-columns:1fr auto;min-height:60px;}
   .v2x-global-nav>small{display:none;}
@@ -636,11 +640,12 @@ body,.v2x{
 </head>
 
 <body>
-<div id="testEnvironmentBanner" class="test-environment">⚠ La Team V2 — environnement TEST · aucune donnée de production</div>
+<div id="testEnvironmentBanner" class="test-environment">⚠ NextPadel — environnement TEST · aucune donnée de production</div>
+<div id="tvMode" class="nextpadel-tv hidden" aria-live="polite"></div>
 <div id="v2CompatLanding" class="v2-compat-landing">
   <div class="v2-compat-inner">
-    <div class="v2-compat-brand">🎾 LA TEAM V2 · TEST</div>
-    <h1>Bienvenue sur La Team V2</h1>
+    <div class="v2-compat-brand">🎾 NEXTPADEL · TEST</div>
+    <h1>Bienvenue sur NextPadel</h1>
     <p>Choisissez votre espace.</p>
     <div class="v2-compat-choices">
       <span class="v2-compat-choice">JE SUIS JOUEUR<small>Événements, inscriptions et statistiques</small></span>
@@ -653,7 +658,7 @@ body,.v2x{
 <div class="container">
 
   <nav id="v2TournamentNav" class="v2-tournament-nav v2x-public-nav v2x-persistent-nav v2x-global-nav hidden" aria-label="Navigation principale pendant le tournoi">
-    <button class="v2x-landing-brand" onclick="LaTeamV2Experience.returnFromTournament('dashboard')"><span>●</span><strong>LA TEAM <i>V2</i></strong></button>
+    <button class="v2x-landing-brand" onclick="LaTeamV2Experience.returnFromTournament('dashboard')"><span>●</span><strong>NEXTPADEL</strong></button>
     <button class="v2x-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false" onclick="LaTeamV2Experience.toggleMainMenu(this)">☰</button>
     <div class="v2x-main-links">
       <button onclick="LaTeamV2Experience.returnFromTournament('dashboard')">Accueil</button>
@@ -673,7 +678,7 @@ body,.v2x{
   </nav>
 
   <div class="topbar">
-    <div class="topbar-context"><div class="brand"><span class="dot"></span> La Team</div><div class="mode-label">Mode Organisateur</div></div>
+    <div class="topbar-context"><div class="brand"><span class="dot"></span> NextPadel</div><div class="mode-label">Mode Organisateur</div></div>
     <div class="actions">
       <button id="topHomeBtn" class="secondary" onclick="returnOrganizerHome()" aria-label="Accueil"><span class="home-icon" aria-hidden="true">⌂</span><span class="home-text">Accueil</span></button>
       <button id="topQrBtn" class="secondary hidden" onclick="openSharePanel()">▦ QR</button>
@@ -699,17 +704,17 @@ body,.v2x{
   <div id="pwaStatus" class="pwa-status" aria-live="polite">
     <span id="offlineStatus" class="pwa-pill pwa-offline hidden">Hors connexion</span>
     <button id="updateStatus" type="button" class="pwa-pill pwa-update hidden" onclick="applyPwaUpdate()">NOUVELLE VERSION DISPONIBLE · METTRE À JOUR</button>
-    <button id="installPwaBtn" type="button" class="pwa-pill pwa-install hidden" onclick="installPwa()">Installer La Team</button>
+    <button id="installPwaBtn" type="button" class="pwa-pill pwa-install hidden" onclick="installPwa()">Installer NextPadel</button>
   </div>
 
   <!-- ACCUEIL -->
   <div id="home" class="home-shell hidden">
-    <div class="eyebrow">LA TEAM · PADEL EN DIRECT</div>
+    <div class="eyebrow">NEXTPADEL · PADEL EN DIRECT</div>
     <h1 class="home-title">Comment voulez-vous jouer ?</h1>
     <p class="home-subtitle">Organisez le tournoi ou rejoignez vos partenaires en quelques secondes.</p>
     <div class="entry-grid">
-      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2 id="organizerCardTitle">Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><div id="activeTournamentInfo" class="active-tournament hidden"></div><div class="entry-actions"><button id="organizerPrimaryBtn" onclick="openOrganizerMode()">Organiser un tournoi →</button><button class="v2-demo-action" onclick="LaTeamV2Experience.openClub()">Découvrir l’espace Club V2</button><button id="newTournamentBtn" class="secondary hidden" onclick="startFreshOrganizerMode()">Créer un nouveau tournoi</button></div><div id="organizerAccountLine" class="account-line"></div></article>
-      <article class="entry-card player"><div class="entry-icon">📱</div><h2>Espace Joueur et direct</h2><ul><li>Voir tes événements et t’inscrire</li><li>Retrouver classement et statistiques</li><li>Suivre ton terrain et tes matchs</li></ul><button onclick="LaTeamV2Experience.openPlayer()">Mon espace Joueur V2 →</button><button class="secondary" onclick="openJoinMode()">Rejoindre un tournoi →</button></article>
+      <article class="entry-card organizer"><div class="entry-icon">🏟️</div><h2 id="organizerCardTitle">Créer et gérer un tournoi</h2><ul><li>Encoder les scores</li><li>Gérer les terrains et le classement</li><li>Partager le tournoi avec les joueurs</li></ul><div id="activeTournamentInfo" class="active-tournament hidden"></div><div class="entry-actions"><button id="organizerPrimaryBtn" onclick="openOrganizerMode()">Organiser un tournoi →</button><button class="v2-demo-action" onclick="LaTeamV2Experience.openClub()">Découvrir l’espace Club</button><button id="newTournamentBtn" class="secondary hidden" onclick="startFreshOrganizerMode()">Créer un nouveau tournoi</button></div><div id="organizerAccountLine" class="account-line"></div></article>
+      <article class="entry-card player"><div class="entry-icon">📱</div><h2>Espace Joueur et direct</h2><ul><li>Voir tes événements et t’inscrire</li><li>Retrouver classement et statistiques</li><li>Suivre ton terrain et tes matchs</li></ul><button onclick="LaTeamV2Experience.openPlayer()">Mon espace Joueur →</button><button class="secondary" onclick="openJoinMode()">Rejoindre un tournoi →</button></article>
     </div>
   </div>
 
@@ -781,12 +786,12 @@ body,.v2x{
     <button class="back-link" onclick="showHomeMode()">← Retour à l’accueil</button>
     <div class="eyebrow">Nouveau tournoi</div>
     <h1 class="screen-title">Prêts à jouer ?</h1>
-    <p class="screen-intro">Créez votre tournoi en quelques secondes. La Team s’occupe des rotations, des repos et du classement.</p>
+    <p class="screen-intro">Créez votre tournoi en quelques secondes. NextPadel s’occupe des rotations, des repos et du classement.</p>
     <button id="demoDataBtn" class="secondary hidden" onclick="createDemoData()">Créer des données de démonstration</button>
     <div id="clubWorkspace" class="auth-note hidden"><strong id="clubWorkspaceName"></strong><div id="cloudTournaments" class="cloud-tournaments"></div></div>
     <details id="v2Workspace" class="card hidden">
       <summary>Club · joueurs, saisons et événements</summary>
-      <div class="small">Fondation V2 additive. Un tournoi peut rester amical ou compter pour une saison.</div>
+      <div class="small">Fondation championnat additive. Un tournoi peut rester amical ou compter pour une saison.</div>
       <label for="v2ProfileName">Mon profil joueur permanent</label><input id="v2ProfileName" maxlength="80" placeholder="Nom affiché" /><button class="secondary" onclick="createMyPlayerProfile()">Créer / afficher mon profil</button><div id="v2ProfileStatus" class="small"></div>
       <hr class="sep"><h3>Nouvelle saison</h3><input id="v2SeasonName" placeholder="Championnat HighT5" maxlength="80" /><input id="v2SeasonLabel" placeholder="Saison 2026/2027" maxlength="80" /><div class="row"><input id="v2SeasonStart" type="date" aria-label="Début de saison" /><input id="v2SeasonEnd" type="date" aria-label="Fin de saison" /></div><button class="secondary" onclick="createClubSeason()">Créer la saison</button>
       <hr class="sep"><h3>Nouvel événement</h3><input id="v2EventName" placeholder="King du jeudi" maxlength="100" /><div class="row"><input id="v2EventStart" type="datetime-local" aria-label="Début événement" /><input id="v2EventEnd" type="datetime-local" aria-label="Fin événement, même après minuit" /></div><input id="v2EventCapacity" type="number" min="4" max="256" value="32" aria-label="Capacité" /><select id="v2EventSeason"><option value="">Tournoi amical</option></select><button class="secondary" onclick="createClubEvent()">Créer l’événement</button>
@@ -882,7 +887,13 @@ body,.v2x{
       <div id="movementOverview" class="movement-overview hidden"></div>
       <div class="organizer-tools">
         <button class="secondary" onclick="replacePlayer()">⇄ Remplacer un joueur</button>
+        <button class="secondary" onclick="openParticipantManager()">＋ AJOUTER / RETIRER</button>
         <button class="secondary" onclick="openSharePanel()">📱 Joueurs / QR</button>
+        <button class="secondary" onclick="openTvMode()">▣ OUVRIR MODE TV</button>
+      </div>
+      <div id="participantManager" class="participant-manager hidden">
+        <div class="participant-manager-grid"><section><h3>Ajouter au prochain round</h3><label>Joueur du club<select id="dynamicRegisteredPlayer"><option value="">Sélectionner…</option></select></label><label>ou invité<input id="dynamicGuestName" maxlength="80" placeholder="Nom de l’invité"></label><button onclick="queueParticipantAddition()">AJOUTER AU PROCHAIN ROUND</button></section><section><h3>Retirer du tournoi</h3><label>Joueur actif<select id="dynamicRemovePlayer"></select></label><div class="participant-manager-actions"><button class="secondary" onclick="queueParticipantRemoval('next')">APRÈS CE ROUND</button><button class="danger" onclick="queueParticipantRemoval('immediate')">RETRAIT IMMÉDIAT</button></div></section></div>
+        <p id="participantManagerStatus" class="participant-manager-status"></p><div id="participantPending" class="participant-pending"></div>
       </div>
       <div id="partnerProgress" class="rotation-meter"></div>
       <div id="fullCycleNotice" class="cycle-notice hidden"></div>
@@ -993,6 +1004,8 @@ body,.v2x{
 <script src="/tournament-timer.js"></script>
 <script src="/court-timers.js"></script>
 <script src="/round-timer.js"></script>
+<script src="/dynamic-participants.js"></script>
+<script src="/tv-mode.js"></script>
 <script src="/vendor/qrcode.min.js"></script>
 <script src="/firebase-client.js?v=2"></script>
 <script src="/club-v2.js?v=2"></script>
@@ -1007,6 +1020,7 @@ let state = {
   mode: "americano",
   n: 8,
   courts: 2,
+  configuredCourts: 2,
   maxPoints: 21,
   endMode: "points",
   roundDurationMinutes: 10,
@@ -1040,11 +1054,15 @@ let state = {
   kingCycleReachedAt: null,
   kingCycleDecisionPending: false,
   kingCycleContinued: false,
+  cycleMilestones: [],
+  pendingParticipantChanges: [],
+  rosterHistory: [],
 
   activeSaveId: null,
   clubId: null,
   cloudTournamentId: null,
   tournamentStatus: "live",
+  tournamentName: "Tournoi NextPadel",
   sharedTournament: null,
   participants: [],
   eventId: null,
@@ -1319,6 +1337,10 @@ function writeActiveSaveId(id){
 function totalPartnerPairs(n){
   return (n * (n - 1)) / 2;
 }
+function activePartnerCycle(){
+  const active=window.NextPadelDynamicParticipants?.activeIndexes(state)||[...Array(state.n||0).keys()],set=new Set(active),seen=Object.keys(state.partnersSeen||{}).filter(key=>key.split("-").map(Number).every(index=>set.has(index))).length;
+  return {active,seen,total:totalPartnerPairs(active.length)};
+}
 function addPartnerPair(team){
   const t = normalizeTeam(team);
   const key = `${t[0]}-${t[1]}`;
@@ -1328,8 +1350,7 @@ function addPartnerPair(team){
 function maybeNotifyFullPartnerCycle(){
   if(state.partnersFullCycleNotified) return;
   if(!state.partnersSeen) state.partnersSeen = {};
-  const seen = Object.keys(state.partnersSeen).length;
-  const total = totalPartnerPairs(state.n);
+  const {seen,total}=activePartnerCycle();
 
   if(seen >= total){
     state.partnersFullCycleNotified = true;
@@ -1337,6 +1358,8 @@ function maybeNotifyFullPartnerCycle(){
       state.kingCycleReachedAt = state.matchIndex + 1;
       state.kingCycleDecisionPending = true;
       state.kingCycleContinued = false;
+      state.cycleMilestones=state.cycleMilestones||[];
+      state.cycleMilestones.push({round:state.matchIndex+1,ranking:sortPlayersForRanking(state.players.filter(player=>player.active!==false)).map((player,index)=>({position:index+1,name:player.name,matches:player.mj,wins:player.v,diff:player.plus-player.minus}))});
     }
     renderPartnerProgress();
   }
@@ -1344,8 +1367,7 @@ function maybeNotifyFullPartnerCycle(){
 
 function renderPartnerProgress(){
   if(!partnerProgressEl || !fullCycleNoticeEl) return;
-  const total = totalPartnerPairs(state.n || 0);
-  const seen = Math.min(total, Object.keys(state.partnersSeen || {}).length);
+  const progress=activePartnerCycle(),total=progress.total,seen=Math.min(total,progress.seen);
   const percent = total ? Math.round((seen / total) * 100) : 0;
   partnerProgressEl.innerHTML = `
     <div class="rotation-meter-head">
@@ -1362,8 +1384,9 @@ function renderPartnerProgress(){
     return;
   }
   const round=state.schedule?.[state.matchIndex],roundComplete=Boolean(round?.courts?.length)&&state.validatedCourts?.length===round.courts.length&&state.validatedCourts.every(Boolean);
-  const actions=state.kingCycleDecisionPending&&roundComplete?`<div class="cycle-actions"><button class="danger" onclick="finishAfterKingCycle()">TERMINER LE TOURNOI</button><button class="continue-cycle" onclick="continueKingAfterCycle()">CONTINUER</button></div>`:"";
-  fullCycleNoticeEl.innerHTML=`<strong>✅ Cycle complet atteint</strong><span>Tous les joueurs ont parcouru le cycle idéal. Vous pouvez terminer le tournoi ou continuer à jouer.</span>${state.kingCycleContinued?'<div class="small" style="margin-top:7px">Le tournoi continue · historique et classement conservés.</div>':actions}`;
+  const actions=state.kingCycleDecisionPending&&roundComplete?`<div class="cycle-actions"><button class="danger" onclick="finishAfterKingCycle()">TERMINER LE TOURNOI</button><button class="continue-cycle" onclick="continueKingAfterCycle()">CONTINUER À JOUER</button></div>`:"";
+  const milestone=state.cycleMilestones?.[state.cycleMilestones.length-1],cycleRanking=milestone?`<details><summary>CLASSEMENT FINAL DU CYCLE</summary>${milestone.ranking.slice(0,10).map(row=>`<div>${row.position}. ${escapePublic(row.name)}</div>`).join("")}</details>`:"";
+  fullCycleNoticeEl.innerHTML=`<strong>✅ CYCLE COMPLET ATTEINT</strong><span>Toutes les rotations idéales ont été effectuées. Vous pouvez terminer le tournoi ou continuer à jouer.</span>${cycleRanking}${state.kingCycleContinued?'<div class="small" style="margin-top:7px">Le tournoi continue · historique, classement et jalon du cycle conservés.</div>':actions}`;
 }
 function continueKingAfterCycle(){
   if(state.mode!=="ladder"||!state.kingCycleDecisionPending)return;
@@ -1441,6 +1464,11 @@ function normalizeLoadedState(){
   if(!Array.isArray(state.results)) state.results = [];
   if(!Array.isArray(state.validatedCourts)) state.validatedCourts = [];
   if(!Array.isArray(state.history)) state.history = [];
+  if(!Array.isArray(state.pendingParticipantChanges))state.pendingParticipantChanges=[];
+  if(!Array.isArray(state.rosterHistory))state.rosterHistory=[];
+  if(!Array.isArray(state.cycleMilestones))state.cycleMilestones=[];
+  if(!Number.isInteger(state.configuredCourts))state.configuredCourts=state.courts;
+  state.players.forEach(player=>{if(typeof player.active!=="boolean")player.active=true;});
   if(!state.mode) state.mode = "americano";
   if(!["points","time"].includes(state.endMode)) state.endMode="points";
   state.roundDurationMinutes=window.LaTeamTimer.normalizeDuration(state.roundDurationMinutes||10);
@@ -2250,7 +2278,7 @@ async function refreshClubV2Workspace(){
     document.getElementById("v2ProfileStatus").textContent=profile?`ID joueur : ${profile.publicId} · ${profile.displayName}`:"Aucun profil joueur permanent (facultatif pour jouer).";
     document.getElementById("v2EventSeason").innerHTML='<option value="">Tournoi amical</option>'+seasons.map(row=>`<option value="${escapePublic(row.seasonId)}">${escapePublic(row.name)} · ${escapePublic(row.label)}</option>`).join("");
     document.getElementById("v2Events").innerHTML=events.length?events.map(row=>`<div class="cloud-tournament"><span><b>${escapePublic(row.name)}</b><br><span class="small">${new Date(row.startsAt).toLocaleString()} · ${row.capacity} places · ${row.competitionType==="championship"?"Championnat":"Amical"}</span></span><div><button class="secondary" onclick="addGuestToEvent('${escapePublic(row.eventId)}')">+ Invité</button>${profile?`<button class="secondary" onclick="registerMyProfile('${escapePublic(row.eventId)}')">M’inscrire</button>`:""}<button class="secondary" onclick="useEventRoster('${escapePublic(row.eventId)}')">Utiliser les inscrits</button></div></div>`).join(""):"<p class=\"small\">Aucun événement.</p>";
-  }catch(error){document.getElementById("v2WorkspaceStatus").textContent="Les données Club V2 seront disponibles avec les règles et fonctions V2.";}
+  }catch(error){document.getElementById("v2WorkspaceStatus").textContent="Les données Club seront disponibles avec les règles et services correspondants.";}
 }
 async function createMyPlayerProfile(){const status=document.getElementById("v2WorkspaceStatus");try{if(window.v2PlayerProfile)throw new Error("Votre profil existe déjà.");const profile=await window.LaTeamV2Cloud.createPlayerProfile(document.getElementById("v2ProfileName").value);await window.LaTeamV2Cloud.addPlayerToClub(state.clubId,profile);status.textContent="✓ Profil joueur créé et rattaché au club.";await refreshClubV2Workspace();}catch(error){status.textContent=error.message;}}
 async function createClubSeason(){const status=document.getElementById("v2WorkspaceStatus");try{const startsAt=new Date(document.getElementById("v2SeasonStart").value+"T00:00:00").getTime(),endsAt=new Date(document.getElementById("v2SeasonEnd").value+"T23:59:59").getTime();await window.LaTeamV2Cloud.createSeason(state.clubId,{name:document.getElementById("v2SeasonName").value,label:document.getElementById("v2SeasonLabel").value,startsAt,endsAt});status.textContent="✓ Saison créée. Son barème restera figé après activation.";await refreshClubV2Workspace();}catch(error){status.textContent=error.message;}}
@@ -2265,6 +2293,7 @@ function prepareV2EventRoster(event,registrations){
   confirmed.slice(0,32).forEach((row,index)=>document.getElementById(`p${index}`).value=row.displayName);
   state.pendingParticipants=window.LaTeamClubV2.participantsFromRegistrations(confirmed.slice(0,32));
   state.eventId=event.eventId;state.seasonId=event.seasonId||null;state.clubId=event.clubId;
+  state.tournamentName=event.name||"Tournoi NextPadel";
   courtCountEl.value=String(Math.min(event.courtCount||Math.floor(confirmed.length/4),Math.floor(confirmed.length/4)));
   endModeEl.value=event.endMode||"points";timerMinutesEl.value=String(event.roundDurationMinutes||15);
   updateCourtChoiceUI();selectGameMode(event.format||"ladder");
@@ -2420,6 +2449,7 @@ function startNewTournament(){
 
   const maxC = maxCourtsForN(state.n);
   state.courts = (maxC > 1) ? (+courtCountEl.value || maxC) : 1;
+  state.configuredCourts=state.courts;
 
   state.maxPoints = clamp(+maxPointsEl.value || 21, 1, 31);
   state.endMode=endModeEl.value;
@@ -2428,12 +2458,13 @@ function startNewTournament(){
   state.timerSoundEnabled=timerSoundEnabledEl.checked;
   state.timerSoundVolume=timerSoundVolumeEl.value;
   state.timerTournamentId=`${now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+  state.tournamentName=state.tournamentName||"Tournoi NextPadel";
   ensureAudioContext();
 
   state.players = [];
   for(let i=0;i<state.n;i++){
     const name = (document.getElementById("p"+i)?.value || ("J"+(i+1))).trim();
-    state.players.push({ name, mj:0, v:0, plus:0, minus:0 });
+    state.players.push({ name, mj:0, v:0, plus:0, minus:0, active:true, joinedAtRound:1 });
   }
   state.participants=Array.isArray(state.pendingParticipants)&&state.pendingParticipants.length===state.players.length
     ? state.pendingParticipants.map((row,engineIndex)=>({...row,engineIndex,displayNameSnapshot:state.players[engineIndex].name}))
@@ -2450,6 +2481,9 @@ function startNewTournament(){
   state.kingCycleReachedAt = null;
   state.kingCycleDecisionPending = false;
   state.kingCycleContinued = false;
+  state.cycleMilestones=[];
+  state.pendingParticipantChanges=[];
+  state.rosterHistory=[];
 
   state.ladderOpp = (state.mode === "ladder")
     ? Array.from({length: state.n}, ()=>Array(state.n).fill(0))
@@ -2541,7 +2575,7 @@ function renderMatch(){
        <span class="badge">${state.mode === "ladder" ? "King · Montée-Descente" : "Americano"}</span>
        <span class="badge">${state.endMode==="time"?`${state.roundDurationMinutes} min`:state.maxPoints+" points"}</span>
        <span class="badge">${state.courts} terrain${state.courts>1?"s":""}</span>
-       <span class="badge">${state.n} joueurs</span>
+       <span class="badge">${window.NextPadelDynamicParticipants?.activeIndexes(state).length||state.n} joueurs actifs</span>
      </span>`;
 
   restText.innerHTML = match.rest.length
@@ -2582,10 +2616,13 @@ function renderMatch(){
       ? `<button type="button" class="necessary-duplicate" onclick="explainNecessaryDuplicate()" aria-label="Doublon nécessaire, toucher pour comprendre">🟠 Doublon nécessaire</button>`
       : "";
     const result = state.results?.[state.matchIndex]?.[idx];
-    const teamAWon = result && result.a > result.b;
-    const winner = result ? (teamAWon ? A : B) : null;
+    const interrupted=Boolean(result?.interrupted);
+    const teamAWon = result && !interrupted && result.a > result.b;
+    const winner = result && !interrupted ? (teamAWon ? A : B) : null;
     let movement = "";
-    if(result && state.mode === "ladder"){
+    if(interrupted){
+      movement='<div class="ladderArrows"><div class="move-down">⚠ MATCH INTERROMPU — résultat à traiter par l’Organisateur</div></div>';
+    }else if(result && state.mode === "ladder"){
       const loser = teamAWon ? B : A;
       const winnerMove = idx === 0 ? `reste T1` : `↑ monte en T${idx}`;
       const loserMove = idx === state.courts-1 ? `reste T${state.courts}` : `↓ descend en T${idx+2}`;
@@ -2836,11 +2873,39 @@ function replacePlayer(){
   renderRecapInGame();
 }
 
+async function openParticipantManager(){
+  const panel=document.getElementById("participantManager"),registered=document.getElementById("dynamicRegisteredPlayer"),remove=document.getElementById("dynamicRemovePlayer");
+  panel.classList.remove("hidden");
+  const active=window.NextPadelDynamicParticipants.activeIndexes(state);
+  remove.innerHTML=active.map(index=>`<option value="${index}">${escapePublic(state.players[index].name)}</option>`).join("");
+  let clubPlayers=[];try{if(state.clubId&&window.LaTeamV2Cloud)clubPlayers=await window.LaTeamV2Cloud.listClubPlayers(state.clubId);}catch(error){}
+  const activeIds=new Set((state.participants||[]).filter((_,index)=>state.players[index]?.active!==false).map(row=>row.playerId).filter(Boolean));
+  registered.innerHTML='<option value="">Sélectionner…</option>'+clubPlayers.filter(player=>!activeIds.has(player.playerId)).map(player=>`<option value="${escapePublic(player.playerId)}" data-name="${escapePublic(player.displayName)}">${escapePublic(player.displayName)}</option>`).join("");
+  renderPendingParticipantChanges();panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function renderPendingParticipantChanges(){const target=document.getElementById("participantPending"),changes=state.pendingParticipantChanges||[];target.innerHTML=changes.length?`Changements prévus : ${changes.map(change=>`${change.type==="add"?"＋":"−"} ${escapePublic(change.name)} · round ${change.effectiveRound}`).join(" · ")}`:"Aucun changement en attente.";}
+function queueParticipantAddition(){
+  const select=document.getElementById("dynamicRegisteredPlayer"),option=select.options[select.selectedIndex],guest=document.getElementById("dynamicGuestName").value.trim(),name=guest||option?.dataset?.name,playerId=guest?null:select.value;
+  try{const change=window.NextPadelDynamicParticipants.queueAdd(state,{name,playerId});document.getElementById("participantManagerStatus").textContent=`✓ ${change.name} rejoindra au round ${change.effectiveRound}.`;document.getElementById("dynamicGuestName").value="";renderPendingParticipantChanges();writeAutoSave();}catch(error){document.getElementById("participantManagerStatus").textContent=error.message;}
+}
+function queueParticipantRemoval(when){
+  const index=Number(document.getElementById("dynamicRemovePlayer").value),name=state.players[index]?.name;if(!name)return;
+  if(when==="immediate"){
+    if(!confirm(`RETRAIT IMMÉDIAT DE ${name}\n\nLe match en cours sera marqué interrompu, sans score inventé. Confirmer ?`))return;
+    const interruption=window.NextPadelDynamicParticipants.interruptCurrentMatch(state,index);if(interruption)alert(`Terrain ${interruption.courtIndex+1} marqué interrompu. L’Organisateur doit traiter le résultat avant de poursuivre.`);
+  }else if(!confirm(`${name} terminera le round actuel et sera retiré au prochain round. Confirmer ?`))return;
+  try{const change=window.NextPadelDynamicParticipants.queueRemove(state,index,when);document.getElementById("participantManagerStatus").textContent=`✓ Retrait de ${change.name} prévu au round ${change.effectiveRound}.`;renderPendingParticipantChanges();writeAutoSave();renderMatch();}catch(error){document.getElementById("participantManagerStatus").textContent=error.message;}
+}
+
 function nextMatch(){
   if(!state.validatedCourts.every(Boolean)) return;
   if(state.mode==="ladder" && state.kingCycleDecisionPending) return;
 
   pushHistory();
+  const rosterChanges=window.NextPadelDynamicParticipants?.applyForNextRound(state)||[];
+  if(rosterChanges.length){state.cycleMilestones=state.cycleMilestones||[];state.partnersFullCycleNotified=false;state.kingCycleDecisionPending=false;state.kingCycleContinued=false;}
+
+  if(!state.schedule[state.matchIndex+1]&&state.rosterHistory?.length)state.schedule[state.matchIndex+1]=window.NextPadelDynamicParticipants.buildNextRound(state);
 
   if(state.mode === "ladder" && !state.schedule[state.matchIndex + 1]){
     const cur = state.schedule[state.matchIndex];
@@ -2932,6 +2997,10 @@ function renderRecap(targetEl, includeAll){
       const court = courts[c];
       const res = resArr[c];
       if(!res) continue;
+      if(res.interrupted){
+        html += `<div class="recapLine"><div class="recapLeft"><b>Round ${r+1} · Terrain ${c+1}</b><br><span class="move-down">⚠ Match interrompu — aucun score enregistré</span></div><div class="recapRight">⚠</div></div>`;
+        continue;
+      }
       const winner = res.a > res.b ? court.teamA : court.teamB;
 
       html += `
@@ -3113,6 +3182,7 @@ function newGameChoosePlayers(){
     mode: gameModeEl.value,
     n,
     courts,
+    configuredCourts:courts,
     maxPoints: clamp(+maxPointsEl.value || 21, 1, 31),
     endMode:"points",roundDurationMinutes:10,roundEndsAt:null,courtTimers:{},roundTimer:null,timerSoundEnabled:true,timerSoundVolume:"normal",timerTournamentId:null,
     totalRounds: null,
@@ -3139,6 +3209,9 @@ function newGameChoosePlayers(){
     kingCycleReachedAt: null,
     kingCycleDecisionPending: false,
     kingCycleContinued: false,
+    cycleMilestones: [],
+    pendingParticipantChanges: [],
+    rosterHistory: [],
 
     activeSaveId: keptActiveSaveId,
     clubId: keptClubId,
@@ -3179,6 +3252,11 @@ async function openSharePanel(){
   else await enableTournamentSharing();
 }
 function closeSharePanel(){ shareModalEl.classList.add("hidden"); document.body.style.overflow=""; }
+async function openTvMode(){
+  if(!state.sharedTournament?.code){await enableTournamentSharing();}
+  const code=state.sharedTournament?.code;if(!code)return;
+  const url=new URL("./",location.href);url.search="";url.hash="";url.searchParams.set("tv",code);window.open(url.toString(),"_blank","noopener");
+}
 
 function renderSharePanel(){
   const sharing=state.sharedTournament;
@@ -3215,6 +3293,7 @@ function onShareStatus(info){
   else if(info.state==="pending") shareStatusEl.textContent="🟠 Hors connexion — mise à jour en attente";
 }
 function onRoundTimer(timer){
+  if(window.NextPadelTv?.codeFromLocation(location.href)){window.NextPadelTv.updateTimer(timer||null);return;}
   if(viewerSnapshot){viewerRoundTimer=timer||null;renderViewer();}
   else{state.roundTimer=timer||null;if(canSaveCurrent())writeAutoSave();}
   updateTimerDisplays();
@@ -3230,6 +3309,7 @@ function showViewerMode(){
 }
 
 function onViewerSnapshot(snapshot,metadata){
+  if(window.NextPadelTv?.codeFromLocation(location.href)){viewerSnapshot=snapshot;window.NextPadelTv.show(snapshot);return;}
   showViewerMode(); viewerErrorEl.classList.add("hidden"); viewerSnapshot=snapshot;
   document.getElementById("viewerUpdatedAt").textContent=`Mis à jour à ${new Date(snapshot.updatedAt||Date.now()).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`;
   const stored=localStorage.getItem(viewerIdentityKey());
@@ -3407,7 +3487,7 @@ function setupPwa(){
 /* -------------------- INIT -------------------- */
 (function init(){
   if(window.LA_TEAM_ENV?.demoEnabled)document.getElementById("demoDataBtn")?.classList.remove("hidden");
-  const viewerCode=window.LaTeamCloud?.init({
+  const tvCode=window.NextPadelTv?.codeFromLocation(location.href),viewerCode=window.LaTeamCloud?.init({
     getState:()=>state,
     onShareStatus,
     onViewerSnapshot,
@@ -3418,6 +3498,7 @@ function setupPwa(){
   });
   setupPwa();
   ensureTimerTicker();
+  if(tvCode){window.LaTeamCloud.subscribeViewer(tvCode).catch(onViewerError);return;}
   if(viewerCode){
     showViewerMode();
     viewerErrorEl.classList.remove("hidden");

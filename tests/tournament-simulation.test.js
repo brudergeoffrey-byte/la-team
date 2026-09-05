@@ -69,7 +69,7 @@ function loadApp(sharedStorage){
 function initialState(n, courts, mode){
   return {
     mode, eventName:"Tournoi Test", clubName:"Club Test", n, courts, maxPoints:21, totalRounds:null,
-    players:Array.from({length:n},(_,i)=>({name:`J${i+1}`,mj:0,v:0,plus:0,minus:0})),
+    players:Array.from({length:n},(_,i)=>({name:`J${i+1}`,mj:0,v:0,plus:0,minus:0,active:true})),
     schedule:[], matchIndex:0, validatedCourts:[], courtScores:[], results:[],
     history:[], savedAt:null,
     ladderOpp:mode==="ladder"?Array.from({length:n},()=>Array(n).fill(0)):null,
@@ -80,7 +80,8 @@ function initialState(n, courts, mode){
     kingCycleReachedAt:null,kingCycleDecisionPending:false,kingCycleContinued:false,
     activeSaveId:null, tournamentStatus:"live", sharedTournament:null,
     endMode:"points", roundDurationMinutes:10, roundEndsAt:null, courtTimers:{}, roundTimer:null,
-    timerSoundEnabled:true, timerSoundVolume:"normal", timerTournamentId:"test-tournament"
+    timerSoundEnabled:true, timerSoundVolume:"normal", timerTournamentId:"test-tournament",
+    pendingParticipantChanges:[],rosterHistory:[],cycleMilestones:[],configuredCourts:courts
   };
 }
 
@@ -257,7 +258,7 @@ for(const [n,courts] of [[4,1],[8,2],[12,3],[16,4],[32,8],[10,2]]){
   }
   assert.ok(s.kingCycleDecisionPending,`cycle King atteint pour ${n}/${courts}`);
   assert.equal(s.kingCycleReachedAt,s.matchIndex+1);
-  assert.ok(elements.get("fullCycleNotice").innerHTML.includes("✅ Cycle complet atteint"));
+  assert.ok(elements.get("fullCycleNotice").innerHTML.includes("✅ CYCLE COMPLET ATTEINT"));
   assert.ok(elements.get("fullCycleNotice").innerHTML.includes("TERMINER LE TOURNOI"));
   const stoppedRound=s.matchIndex,statsBefore=JSON.stringify(s.players),scheduleBefore=s.schedule.length;
   app.nextMatch();assert.equal(s.matchIndex,stoppedRound,"choix explicite exigé au jalon");

@@ -54,7 +54,7 @@ service cloud.firestore {
         && data.maxPoints <= 31
         && data.players is list
         && data.players.size() >= 4
-        && data.players.size() <= 32
+        && data.players.size() <= 64
         && data.currentRound is map
         && data.ranking is list
         && data.ranking.size() == data.players.size()
@@ -142,12 +142,31 @@ service cloud.firestore {
         && hasCommonPublicShape(data, code);
     }
 
+    function hasNextPadelPublicShape(data, code) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'code', 'clubId', 'ownerUid', 'revision', 'updatedAt',
+          'status', 'tournamentName', 'mode', 'roundNumber', 'maxPoints', 'endMode',
+          'roundDurationMinutes', 'players', 'participantIds', 'currentRound', 'ranking',
+          'previousResults', 'cycleMilestone'
+        ])
+        && data.schemaVersion == 6
+        && data.clubId is string && data.clubId.size() >= 4
+        && data.tournamentName is string && data.tournamentName.size() > 0 && data.tournamentName.size() <= 100
+        && data.participantIds is list && data.participantIds.size() == data.players.size()
+        && (data.cycleMilestone == null || data.cycleMilestone is map)
+        && data.endMode in ['points', 'time']
+        && (data.endMode == 'points' || (data.roundDurationMinutes is int
+          && data.roundDurationMinutes >= 1 && data.roundDurationMinutes <= 180))
+        && hasCommonPublicShape(data, code);
+    }
+
     function hasValidPublicShape(data, code) {
       return hasLegacyPublicShape(data, code)
         || hasTimedPublicShape(data, code)
         || hasCourtTimerPublicShape(data, code)
         || hasClubPublicShape(data, code)
-        || hasV2ClubPublicShape(data, code);
+        || hasV2ClubPublicShape(data, code)
+        || hasNextPadelPublicShape(data, code);
     }
 
     match /users/{uid} {
@@ -574,7 +593,7 @@ service cloud.firestore {
       allow create: if isValidCode(code)
         && request.auth != null
         && ((request.resource.data.schemaVersion < 4 && request.resource.data.ownerUid == request.auth.uid)
-          || (request.resource.data.schemaVersion in [4, 5]
+          || (request.resource.data.schemaVersion in [4, 5, 6]
             && activeMember(request.resource.data.clubId)
             && request.resource.data.ownerUid == get(/databases/$(database)/documents/clubs/$(request.resource.data.clubId)).data.ownerUid))
         && hasValidPublicShape(request.resource.data, code);
@@ -583,7 +602,7 @@ service cloud.firestore {
       // aucun droit. Le propriétaire et le schéma ne peuvent pas être changés.
       allow update: if request.auth != null
         && ((resource.data.schemaVersion < 4 && resource.data.ownerUid == request.auth.uid)
-          || (resource.data.schemaVersion in [4, 5] && activeMember(resource.data.clubId)))
+          || (resource.data.schemaVersion in [4, 5, 6] && activeMember(resource.data.clubId)))
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.code == resource.data.code
         && request.resource.data.revision > resource.data.revision
@@ -591,7 +610,7 @@ service cloud.firestore {
 
       allow delete: if request.auth != null
         && ((resource.data.schemaVersion < 4 && resource.data.ownerUid == request.auth.uid)
-          || (resource.data.schemaVersion in [4, 5] && clubAdmin(resource.data.clubId)));
+          || (resource.data.schemaVersion in [4, 5, 6] && clubAdmin(resource.data.clubId)));
 
       match /viewerSessions/{uid} {
         allow get: if request.auth != null && request.auth.uid == uid;
@@ -621,7 +640,7 @@ service cloud.firestore {
             && data.courtNumber is int && data.courtNumber >= 1
             && data.courtNumber <= proposalTournament().currentRound.courts.size()
             && data.engineIndex == proposalSession().playerId
-            && proposalTournament().schemaVersion == 5
+            && proposalTournament().schemaVersion in [5, 6]
             && data.proposedByParticipantId == proposalTournament().participantIds[data.engineIndex]
             && (data.engineIndex in proposalTournament().currentRound.courts[data.courtNumber - 1].teamA
               || data.engineIndex in proposalTournament().currentRound.courts[data.courtNumber - 1].teamB)
@@ -631,7 +650,7 @@ service cloud.firestore {
             && data.scoreA != data.scoreB && data.status == 'pending';
         }
         function proposalOrganizer() {
-          return request.auth != null && proposalTournament().schemaVersion in [4, 5]
+          return request.auth != null && proposalTournament().schemaVersion in [4, 5, 6]
             && activeMember(proposalTournament().clubId);
         }
         allow get: if request.auth != null && (resource.data.proposedByUid == request.auth.uid || proposalOrganizer());
@@ -660,7 +679,7 @@ service cloud.firestore {
         function organizer() {
           return request.auth != null
             && ((tournament().schemaVersion < 4 && tournament().ownerUid == request.auth.uid)
-              || (tournament().schemaVersion in [4, 5] && activeMember(tournament().clubId)));
+              || (tournament().schemaVersion in [4, 5, 6] && activeMember(tournament().clubId)));
         }
         function validCommon(data) {
           return timerId == 'current'

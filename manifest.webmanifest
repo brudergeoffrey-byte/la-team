@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "La Team V2 — TEST",
-  "short_name": "La Team TEST",
-  "description": "Organisez vos tournois de padel Americano et King, même hors connexion.",
+  "name": "NextPadel — TEST",
+  "short_name": "NextPadel",
+  "description": "NextPadel organise vos tournois Americano et King, même hors connexion.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",
